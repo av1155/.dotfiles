@@ -219,7 +219,7 @@ alias vim="nvim"
 # Searches files with 'fd', previews with 'bat', and opens in 'nvim' via 'fzf'.
 command -v fd &>/dev/null && command -v fzf &>/dev/null &&
     command -v bat &>/dev/null && command -v vim &>/dev/null &&
-    alias f="fd --type f --hidden --exclude .git | fzf --preview 'bat --color=always {1}' | xargs nvim"
+    alias f="fd --type f --hidden --exclude .git --follow | fzf --preview 'bat --color=always {1}' | xargs nvim"
 
 # Check if Git is installed
 if command -v git &>/dev/null; then
@@ -386,6 +386,7 @@ if command -v fd &>/dev/null && command -v fzf &>/dev/null && command -v colorls
             --exclude '.temp' \
             --exclude 'Trash' \
             --exclude '.Trash' \
+            --follow \
             . 2>/dev/null | fzf --preview 'eza --tree --level 2 --color=always {}' +m) && z "$dir" || return
     }
 fi
