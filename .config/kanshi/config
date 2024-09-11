@@ -1,0 +1,12 @@
+# Profile for when the external monitor (ASUS PG32UCDM) is connected
+profile {
+    output "InfoVision Optoelectronics (Kunshan) Co.,Ltd China 0x8C78 0x00000004" disable
+    output "ASUSTek COMPUTER INC PG32UCDM S7LMQS045515" mode 3840x2160@120Hz position 0,0 scale 2
+}
+
+# Profile for when only the laptop screen (InfoVision Optoelectronics) is connected
+profile {
+    output "InfoVision Optoelectronics (Kunshan) Co.,Ltd China 0x8C78 0x00000004" enable mode 1920x1080@60.01Hz position 0,0 scale 1.50
+    output "ASUSTek COMPUTER INC PG32UCDM S7LMQS045515" disable
+}
+
