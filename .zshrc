@@ -88,6 +88,14 @@ alias mkdir='mkdir -p'
 #Display Pokemon
 #pokemon-colorscripts --no-title -r 1,3,6
 
+if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
+  if tmux has-session -t main &>/dev/null; then
+    exec tmux attach-session -t main
+  else
+    exec tmux new-session -s main
+  fi
+fi
+
 # NVM
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
@@ -370,14 +378,26 @@ CLASSPATH_PREFIX="/home/archbtw/javaClasspath"
 export CLASSPATH=""
 
 # Add each jar file found in the directory and its subdirectories to the CLASSPATH
-for jar in $(find "$CLASSPATH_PREFIX" -name '*.jar'); do
-    export CLASSPATH="$CLASSPATH:$jar"
+for jar in "$CLASSPATH_PREFIX"/*.jar; do
+    if [ -e "$jar" ]; then
+        if [ -z "$CLASSPATH" ]; then
+            export CLASSPATH="$jar"
+        else
+            export CLASSPATH="$CLASSPATH:$jar"
+        fi
+    fi
 done
 
+# GitHuB CLI Copilot
 eval "$(gh copilot alias -- zsh)"
 
-# neofetch if installed
-if command -v neofetch &>/dev/null; then
-    neofetch
+# # neofetch if installed
+# if command -v neofetch &>/dev/null; then
+#     neofetch
+# fi
+
+# fastfetch if installed
+if command -v fastfetch &>/dev/null; then
+    fastfetch --logo small --logo-padding-top 1
 fi
 
