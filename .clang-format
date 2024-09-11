@@ -1,5 +1,26 @@
+---
+# Defaults from the Google style + global configs:
 BasedOnStyle: LLVM
 IndentWidth: 4
 BreakBeforeBraces: Allman
 ColumnLimit: 120
+AlignArrayOfStructures: Left
 SpacesInParentheses: true
+
+# Language specific configs:
+
+---
+Language: Cpp
+# Add your formatting settings for Cpp here:
+
+---
+Language: CSharp
+# Add your formatting settings for CSharp here:
+
+---
+Language: JavaScript
+# Add your formatting settings for JavaScript here:
+
+---
+Language: Java
+# Add your formatting settings for Java here:
