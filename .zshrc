@@ -88,13 +88,34 @@ alias mkdir='mkdir -p'
 #Display Pokemon
 #pokemon-colorscripts --no-title -r 1,3,6
 
+
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
-  if tmux has-session -t main &>/dev/null; then
-    exec tmux attach-session -t main
-  else
+  # Check if any tmux sessions are running
+  if ! tmux ls &>/dev/null; then
+    # No sessions exist, create or attach to "main"
     exec tmux new-session -s main
+  else
+    # Check if "main" exists and is not attached
+    if tmux has-session -t main &>/dev/null; then
+      # If "main" exists and is not attached, attach to it
+      if ! tmux list-clients -t main | grep -q .; then
+        exec tmux attach-session -t main
+      fi
+    fi
+    
+    # If "main" is already attached or another session is needed, create a new unique session
+    new_session_name=$(tmux list-sessions -F "#S" | grep -E 'session[0-9]*' | awk -F 'session' '{print $2}' | sort -n | tail -n1)
+    
+    if [ -z "$new_session_name" ]; then
+      new_session_name=1
+    else
+      new_session_name=$((new_session_name + 1))
+    fi
+    
+    exec tmux new-session -s "session$new_session_name"
   fi
 fi
+
 
 # NVM
 export NVM_DIR="$HOME/.nvm"
