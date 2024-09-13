@@ -1,4 +1,4 @@
-# ------------------- PATH CONFIGURATIONS -------------------
+# <------------------- OH-MY-ZSH AND PLUGINS ------------------->
 
 # Path to your oh-my-zsh installation.
 ZSH=/usr/share/oh-my-zsh/
@@ -6,11 +6,17 @@ ZSH=/usr/share/oh-my-zsh/
 # Path to powerlevel10k theme
 source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 
+plugins=( git sudo zsh-256color zsh-autosuggestions zsh-syntax-highlighting )
+source $ZSH/oh-my-zsh.sh
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
 
 # <------------------ Auto Start Tmux Session ------------------>
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
   # Check if any tmux sessions are running
-  if ! tmux /bin/ls &>/dev/null; then
+  if ! tmux list-sessions &>/dev/null; then
     # No sessions exist, create or attach to "main"
     exec tmux new-session -s main
   else
@@ -132,20 +138,14 @@ fi
 # python3_host_prog = "$NVIM_PYTHON_PATH",
 
 
-# <------------------- OH-MY-ZSH AND PLUGINS ------------------->
 
-plugins=( git sudo zsh-256color zsh-autosuggestions zsh-syntax-highlighting )
-source $ZSH/oh-my-zsh.sh
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 
 # <-------------------- ALIASES -------------------->
 # General
 alias mkdir='mkdir -p' # Always mkdir a path
 alias c='clear'
-alias vim='nvim'
+alias v='nvim'
 alias vc='code'
 alias lg='lazygit'
 alias zen-browser='io.github.zen_browser.zen'
@@ -190,8 +190,13 @@ alias .5='cd ../../../../..'
 # Fuzzy Finder + Nvim
 # Searches files with 'fd', previews with 'bat', and opens in 'nvim' via 'fzf'.
 command -v fd &>/dev/null && command -v fzf &>/dev/null &&
-    command -v bat &>/dev/null && command -v vim &>/dev/null &&
-    alias f="fd --type f --hidden --exclude .git --follow | fzf --preview 'bat --color=always {1}' | xargs nvim"
+    command -v bat &>/dev/null && command -v nvim &>/dev/null &&
+    function fzf_find_edit() {
+        local file
+        file=$(fd --type f --hidden --exclude .git --follow | fzf --preview 'bat --color=always {1}')
+        [ -n "$file" ] && nvim "$file"
+    }
+alias f='fzf_find_edit'
 
 # Git Aliases
 # Staging and Committing
