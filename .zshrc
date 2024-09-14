@@ -148,6 +148,7 @@ alias c='clear'
 alias v='nvim'
 alias vc='code'
 alias lg='lazygit'
+alias lzd='lazydocker'
 alias zen-browser='io.github.zen_browser.zen'
 # alias fd='fdfind'
 
@@ -166,11 +167,17 @@ alias cd="z"
 eval "$(gh copilot alias -- zsh)"
 
 # Listing
-alias  l='eza -lh  --icons=auto' # long list
-alias ls='eza -1   --icons=auto' # short list
-alias ll='eza -lha --icons=auto --sort=name --group-directories-first' # long list all
-alias ld='eza -lhD --icons=auto' # long list dirs
-alias lt='eza --icons=auto --tree' # list folder as tree
+alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first' # short list
+alias  l='eza -A -lh --git --icons=auto --sort=name --group-directories-first' # long list
+alias la='eza -lha --git --icons=auto --sort=name --group-directories-first' # long list all
+alias ld='eza -A -lhD --git --icons=auto --sort=name' # long list dirs
+alias lt='eza -A --git --icons=auto --tree --level=2' # list folder as tree
+
+# # Colorls
+# alias ls="colorls -A --gs --sd"                   # Lists most files, directories first, with git status.
+# alias la="colorls -oA --sd --gs"                  # Full listing of all files, directories first, with git status.
+# alias lf="colorls -foa --sd --gs"                 # File-only listing, directories first, with git status.
+# alias lt="colorls --tree=3 --sd --gs --hyperlink" # Tree view of directories with git status and hyperlinks.
 
 # Pacman and AUR helpers
 alias un='$aurhelper -Rns' # uninstall package
@@ -186,17 +193,6 @@ alias ...='cd ../..'
 alias .3='cd ../../..'
 alias .4='cd ../../../..'
 alias .5='cd ../../../../..'
-
-# Fuzzy Finder + Nvim
-# Searches files with 'fd', previews with 'bat', and opens in 'nvim' via 'fzf'.
-command -v fd &>/dev/null && command -v fzf &>/dev/null &&
-    command -v bat &>/dev/null && command -v nvim &>/dev/null &&
-    function fzf_find_edit() {
-        local file
-        file=$(fd --type f --hidden --exclude .git --follow | fzf --preview 'bat --color=always {1}')
-        [ -n "$file" ] && nvim "$file"
-    }
-alias f='fzf_find_edit'
 
 # Git Aliases
 # Staging and Committing
@@ -230,11 +226,6 @@ alias gsp="git stash pop"        # Apply stashed changes and remove them from th
 alias gclean="git clean -df"                                # Remove untracked files and directories
 alias cleanstate="unwip && git checkout . && git clean -df" # Undo last commit, revert changes, and clean untracked files
 
-# Other Aliases
-alias pear="git pair "                                                # Set up git pair for pair programming (requires git-pair gem)
-alias rspec_units="rspec --exclude-pattern \"**/features/*_spec.rb\"" # Run RSpec tests excluding feature specs
-alias awsume=". awsume sso;. awsume"                                  # Alias for AWS role assumption
-
 # Tmux Aliases
 alias ta="tmux attach -t"                   # Attaches tmux to a session (example: ta portal)
 alias tn="tmux new-session -s "             # Creates a new session
@@ -242,12 +233,6 @@ alias tk="tmux kill-session -t "            # Kill session
 alias tl="tmux list-sessions"               # Lists all ongoing sessions
 alias td="tmux detach"                      # Detach from session
 alias tc="clear; tmux clear-history; clear" # Tmux Clear pane
-
-# Colorls
-alias ls="colorls -A --gs --sd"                   # Lists most files, directories first, with git status.
-alias la="colorls -oA --sd --gs"                  # Full listing of all files, directories first, with git status.
-alias lf="colorls -foa --sd --gs"                 # File-only listing, directories first, with git status.
-alias lt="colorls --tree=3 --sd --gs --hyperlink" # Tree view of directories with git status and hyperlinks.
 
 
 # <------------------- CUSTOM FUNCTIONS ------------------->
@@ -333,6 +318,28 @@ if command -v fd &>/dev/null && command -v fzf &>/dev/null && command -v colorls
             . 2>/dev/null | fzf --preview 'eza --tree --level 2 --color=always {}' +m) && z "$dir" || return
     }
 fi
+
+# Fuzzy Finder + Nvim
+# Searches files with 'fd', previews with 'bat', and opens in 'nvim' via 'fzf'.
+command -v fd &>/dev/null && command -v fzf &>/dev/null &&
+    command -v bat &>/dev/null && command -v nvim &>/dev/null &&
+    function fzf_find_edit() {
+        local file
+        file=$(fd --type f --hidden --exclude .git --follow | fzf --preview 'bat --color=always {1}')
+        [ -n "$file" ] && nvim "$file"
+    }
+alias f='fzf_find_edit'
+
+# Yazi: A directory navigator with fzf
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+
 
 # <-------------------- FZF INITIALIZATION -------------------->
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
