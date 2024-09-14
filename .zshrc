@@ -1,12 +1,124 @@
+# <------------------- SYSTEM DETECTION ------------------->
+# Identify the operating system and architecture
+
+case "$(uname -s)" in
+Darwin) # macOS
+    if command -v brew &>/dev/null; then
+        HOMEBREW_PATH=$(brew --prefix)
+        if [ ! -d "$HOMEBREW_PATH/share/powerlevel10k" ]; then
+            brew install powerlevel10k
+        fi
+    fi
+    CONDA_PATH="$HOMEBREW_PATH/Caskroom/miniforge/base"
+    export ZSH="$HOME/.oh-my-zsh"
+    POWERLEVEL10K_DIR="$HOME/powerlevel10k"
+    AUR_HELPER_NOT_AVAILABLE=true
+    ;;
+
+Linux)
+    if [[ "$(uname -m)" == "aarch64" ]]; then
+        # Raspberry Pi 5 or other ARM-based systems
+        CONDA_PATH="$HOME/miniforge3"
+        export ZSH="/usr/share/oh-my-zsh"
+        POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
+        if [ ! -d "$POWERLEVEL10K_DIR" ]; then
+            git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+        fi
+        AUR_HELPER_NOT_AVAILABLE=true
+
+    elif [[ "$(uname -m)" == "x86_64" ]]; then
+        # Arch Linux (x86_64)
+        CONDA_PATH="$HOME/miniforge3"
+        export ZSH="/usr/share/oh-my-zsh"
+        POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
+
+        # Install paru if not installed
+        if ! command -v paru &>/dev/null; then
+            sudo pacman -S --needed base-devel
+            git clone https://aur.archlinux.org/paru.git
+            cd paru
+            makepkg -si
+            cd ~
+        fi
+
+        # Only install Powerlevel10k if it's not installed
+        if [ ! -d "$POWERLEVEL10K_DIR" ]; then
+            paru -S --noconfirm zsh-theme-powerlevel10k-git
+        fi
+    fi
+    ;;
+
+CYGWIN* | MINGW32* | MSYS* | MINGW*) # Windows (WSL or native)
+    CONDA_PATH="$HOME/miniforge3"
+    export ZSH="$HOME/.oh-my-zsh"
+    POWERLEVEL10K_DIR="$HOME/.oh-my-zsh/themes/powerlevel10k"
+    if [ ! -d "$POWERLEVEL10K_DIR" ]; then
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+    fi
+    AUR_HELPER_NOT_AVAILABLE=true
+    ;;
+
+*)
+    # Any other OS
+    POWERLEVEL10K_DIR="$HOME/powerlevel10k"
+    if [ ! -d "$POWERLEVEL10K_DIR" ]; then
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+    fi
+    ;;
+esac
+
+
 # <------------------- OH-MY-ZSH AND PLUGINS ------------------->
 
-# Path to your oh-my-zsh installation.
-ZSH=/usr/share/oh-my-zsh/
+# Oh My Zsh configuration
+zstyle ':omz:update' mode auto # Enable automatic updates without prompt
+
+# ZPLUG
+export ZPLUG_HOME="$HOME/.zplug"
+
+# If Zplug is not already installed, clone it manually
+if [ ! -d "$ZPLUG_HOME" ]; then
+    git clone https://github.com/zplug/zplug "$ZPLUG_HOME"
+fi
+
+# Source Zplug and configure plugins
+if [ -d "$ZPLUG_HOME" ]; then
+    source $ZPLUG_HOME/init.zsh
+
+    # Configuration (PLUGINS):
+    zplug "mafredri/zsh-async", from:github
+    # zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+    zplug "plugins/git", from:oh-my-zsh, defer:2
+    zplug "plugins/sudo", from:oh-my-zsh, defer:2
+    zplug "plugins/conda", from:oh-my-zsh, defer:2
+    zplug "plugins/heroku", from:oh-my-zsh, defer:2
+    zplug "plugins/fzf", from:oh-my-zsh, defer:2
+    zplug "plugins/zoxide", from:oh-my-zsh, defer:2
+    zplug "chrissicool/zsh-256color", defer:2
+    zplug "zsh-users/zsh-autosuggestions", defer:2
+    zplug "zsh-users/zsh-syntax-highlighting", defer:2
+    zplug load
+
+    # Clean up orphaned plugins (run manually if needed):
+    # zplug clean
+
+    # Install missing plugins
+    if ! zplug check --verbose; then
+        printf "Install? [y/N]: "
+        if read -q; then
+            echo
+            zplug install
+        fi
+    fi
+
+    # Pure Prompt Configuration
+    zstyle :prompt:pure:git:stash show yes
+fi
 
 # Path to powerlevel10k theme
-source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
+source "$POWERLEVEL10K_DIR/powerlevel10k.zsh-theme"
 
-plugins=( git sudo zsh-256color zsh-autosuggestions zsh-syntax-highlighting )
+# plugins=( git sudo zsh-256color zsh-autosuggestions zsh-syntax-highlighting )
 source $ZSH/oh-my-zsh.sh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
@@ -59,39 +171,47 @@ path+=(
     $(ruby -e 'puts File.join(Gem.user_dir, "bin")')
 )
 
+if ! gem which colorls &>/dev/null; then
+    gem install colorls
+fi
+
 # colorls tab completion
 source $(dirname $(gem which colorls))/tab_complete.sh
 
 
 # <-------------------- CONDA INITIALIZATION ------------------>
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/archbtw/miniforge3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/home/archbtw/miniforge3/etc/profile.d/conda.sh" ]; then
-        . "/home/archbtw/miniforge3/etc/profile.d/conda.sh"
-    else
-        export PATH="/home/archbtw/miniforge3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
+# Set the Conda executable path
+CONDA_EXEC_PATH="$CONDA_PATH/bin/conda"
 
-if [ -f "/home/archbtw/miniforge3/etc/profile.d/mamba.sh" ]; then
-    . "/home/archbtw/miniforge3/etc/profile.d/mamba.sh"
+# Initialize Conda
+if [ -f "$CONDA_EXEC_PATH" ]; then
+    __conda_setup="$("$CONDA_EXEC_PATH" 'shell.zsh' 'hook' 2>/dev/null)"
+    if [ $? -eq 0 ]; then
+        eval "$__conda_setup"
+    else
+        CONDA_SH_PATH="$CONDA_PATH/etc/profile.d/conda.sh"
+        if [ -f "$CONDA_SH_PATH" ]; then
+            . "$CONDA_SH_PATH"
+        else
+            export PATH="$CONDA_PATH/bin:$PATH"
+        fi
+    fi
+
+    # Conda auto-activation
+    "$CONDA_EXEC_PATH" config --set auto_activate_base true
+else
+    echo "Conda executable not found at $CONDA_EXEC_PATH"
 fi
-# <<< conda initialize <<<
+
+unset __conda_setup
+# <<< END CONDA INITIALIZATION
 
 
 # <------------------ NVIM PYTHON PATH CONFIGURATION ------------------>
 
-# Check if Conda is installed
-if command -v conda >/dev/null 2>&1; then
-    # Conda-specific configuration
-
-    # Function to set NVIM_PYTHON_PATH
+# Function to set NVIM_PYTHON_PATH
+if command -v conda &>/dev/null; then
     set_python_path_for_neovim() {
         if [[ -n "$CONDA_PREFIX" ]]; then
             export NVIM_PYTHON_PATH="$CONDA_PREFIX/bin/python"
@@ -134,11 +254,25 @@ else
     fi
 fi
 
-# Add the following line in `~/.config/nvim/lua/user/options.lua` to set the dynamic Python executable for pynvim
-# python3_host_prog = "$NVIM_PYTHON_PATH",
+# Add the following line in `~/.config/nvim/lua/plugins/astrocore.lua` (vim.g.python3_host_prog = os.getenv "NVIM_PYTHON_PATH",) to set the dynamic Python executable for pynvim
+# python3_host_prog = os.getenv "NVIM_PYTHON_PATH",
 
 
 # <-------------------- ALIASES -------------------->
+
+# Detect the operating system and set aliases accordingly (EXAMPLE)
+case "$(uname -s)" in
+Darwin) # macOS
+    alias ls='ls -G'
+    ;;
+Linux) # Linux
+    alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first'
+    ;;
+CYGWIN* | MINGW32* | MSYS* | MINGW*) # Windows
+    alias ls='ls --color=auto'
+    ;;
+esac
+
 # General
 alias mkdir='mkdir -p' # Always mkdir a path
 alias c='clear'
@@ -149,7 +283,22 @@ alias lzd='lazydocker'
 alias zen-browser='io.github.zen_browser.zen'
 # alias fd='fdfind'
 
+if command -v nvim &>/dev/null; then
+    export EDITOR='nvim'
+fi
+
 # ----- Bat (better cat) -----
+if [ ! -d "$(bat --config-dir)/themes" ]; then
+    mkdir -p "$(bat --config-dir)/themes"
+
+    wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Latte.tmTheme
+    wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Frappe.tmTheme
+    wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Macchiato.tmTheme
+    wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Mocha.tmTheme
+
+    bat cache --build
+    bat --list-themes
+fi
 export BAT_THEME="Catppuccin Macchiato"
 
 # ----thefuck alias ----
@@ -176,13 +325,15 @@ alias lt='eza -A --git --icons=auto --tree --level=2' # list folder as tree
 # alias lf="colorls -foa --sd --gs"                 # File-only listing, directories first, with git status.
 # alias lt="colorls --tree=3 --sd --gs --hyperlink" # Tree view of directories with git status and hyperlinks.
 
-# Pacman and AUR helpers
-alias un='$aurhelper -Rns' # uninstall package
-alias up='$aurhelper -Syu' # update system/package/aur
-alias pl='$aurhelper -Qs' # list installed package
-alias pa='$aurhelper -Ss' # list available package
-alias pc='$aurhelper -Sc' # remove unused cache
-alias po='$aurhelper -Qtdq | $aurhelper -Rns -' # remove unused packages, also try > $aurhelper -Qqd | $aurhelper -Rsu --print -
+# Pacman and AUR helpers (Linux-specific)
+if [[ "$(uname -s)" == "Linux" && "$AUR_HELPER_NOT_AVAILABLE" != true ]]; then
+    alias un='$aurhelper -Rns' # uninstall package
+    alias up='$aurhelper -Syu' # update system/package/aur
+    alias pl='$aurhelper -Qs' # list installed package
+    alias pa='$aurhelper -Ss' # list available package
+    alias pc='$aurhelper -Sc' # remove unused cache
+    alias po='$aurhelper -Qtdq | $aurhelper -Rns -' # remove unused packages, also try > $aurhelper -Qqd | $aurhelper -Rsu --print -
+fi
 
 # Quick directory navigation
 alias ..='cd ..'
@@ -371,6 +522,9 @@ _fzf_compgen_dir() {
 }
 
 # https://github.com/junegunn/fzf-git.sh
+if [ ! -f ~/fzf-git.sh/fzf-git.sh ]; then
+    git clone https://github.com/junegunn/fzf-git.sh.git ~/fzf-git.sh
+fi
 source ~/fzf-git.sh/fzf-git.sh
 
 export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always --line-range :500 {}'"
@@ -404,7 +558,7 @@ _fzf_comprun() {
 # <------------------- ENVIROMENT VARIABLES ------------------->
 
 # Define the base directory where the jars are stored
-JAVA_CLASSPATH_PREFIX="/home/archbtw/javaClasspath"
+JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/configs/javaClasspath"
 
 # Clear existing java classpath entries
 export CLASSPATH=""
@@ -420,6 +574,15 @@ for jar in "$JAVA_CLASSPATH_PREFIX"/*.jar; do
     fi
 done
 
+export PRETTIERD_DEFAULT_CONFIG="$HOME/.config/.prettierrc.json"
+
+# <-------------------CS50 Library Configuration ------------------>
+# https://github.com/cs50/libcs50
+
+export LIBRARY_PATH=~/cs50lib
+export C_INCLUDE_PATH=~/cs50lib
+export LD_LIBRARY_PATH=~/cs50lib   # For Linux systems
+export DYLD_LIBRARY_PATH=~/cs50lib # For macOS systems
 
 # <-------------------- API KEY CONFIGURATIONS -------------------->
 # Anthropic API Key
