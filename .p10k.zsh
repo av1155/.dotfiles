@@ -187,7 +187,31 @@
   typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=232
   typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=7
   # Custom icon.
-  typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=''
+# Custom icon depending on the OS.
+case "$(uname -s)" in
+  Darwin) # macOS
+    typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='' # macOS icon
+    ;;
+  Linux)
+    case "$(uname -m)" in
+      aarch64)
+        typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='' # Raspberry Pi icon (or other aarch64 devices)
+        ;;
+      x86_64)
+        typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='' # Arch Linux icon
+        ;;
+      *) 
+        typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='' # Generic Linux icon
+        ;;
+    esac
+    ;;
+  CYGWIN* | MINGW32* | MSYS* | MINGW*) # Windows (WSL or native)
+    typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='' # Windows icon
+    ;;
+  *)
+    typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='' # Unknown OS icon
+    ;;
+esac
 
   ################################[ prompt_char: prompt symbol ]################################
   # Transparent background.
