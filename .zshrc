@@ -138,9 +138,6 @@ fi
 # python3_host_prog = "$NVIM_PYTHON_PATH",
 
 
-
-
-
 # <-------------------- ALIASES -------------------->
 # General
 alias mkdir='mkdir -p' # Always mkdir a path
