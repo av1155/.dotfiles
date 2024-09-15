@@ -8,25 +8,29 @@ HOSTNAME=$(uname -n)
 
 case "$OS" in
 Darwin) # macOS
-    if command -v brew &>/dev/null; then
-        HOMEBREW_PATH=$(brew --prefix)
-        if [ ! -d "$HOMEBREW_PATH/share/powerlevel10k" ]; then
-            brew install powerlevel10k
-        fi
-    fi
-    CONDA_PATH="$HOMEBREW_PATH/Caskroom/miniforge/base"
+
+    # homebrew
+    ! command -v brew &>/dev/null && /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    HOMEBREW_PATH=$(brew --prefix)
+
+    # Oh-my-zsh
+    ! command -v omz &>/dev/null && brew install oh-my-zsh
     export ZSH="$HOME/.oh-my-zsh"
+
+    # powerlevel10k
+    [ ! -d "$HOMEBREW_PATH/share/powerlevel10k" ] && brew install powerlevel10k
     POWERLEVEL10K_DIR="$HOME/powerlevel10k"
+
+    # miniforge3
+    ! command -v conda &>/dev/null && brew install miniforge
+    CONDA_PATH="$HOMEBREW_PATH/Caskroom/miniforge/base"
     ;;
 
 Linux)
-    if grep -qi "microsoft" /proc/version; then
-        # WSL detected
-        if [[ "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
+    if grep -qi "microsoft" /proc/version; then # WSL detected
+
+        if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then 
             # Arch-based WSL
-            CONDA_PATH="$HOME/miniforge3"
-            export ZSH="/usr/share/oh-my-zsh"
-            POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
 
             # Install paru if not installed
             if ! command -v paru &>/dev/null; then
@@ -37,34 +41,60 @@ Linux)
                 cd ~ || return
             fi
 
-            # Only install Powerlevel10k if it's not installed
-            if [ ! -d "$POWERLEVEL10K_DIR" ]; then
-                paru -S --noconfirm zsh-theme-powerlevel10k-git
+            # Oh-my-zsh
+            ! command -v omz &>/dev/null && paru -S --noconfirm oh-my-zsh-git
+            export ZSH="/usr/share/oh-my-zsh"
+
+            # powerlevel10k
+            POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
+            [ ! -d "$POWERLEVEL10K_DIR" ] && paru -S --noconfirm zsh-theme-powerlevel10k-git
+
+            # miniforge3
+            if ! command -v conda &>/dev/null; then
+                curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+                bash Miniforge3-$(uname)-$(uname -m).sh
             fi
+            CONDA_PATH="$HOME/miniforge3"
+
         else
             # Non-Arch WSL
-            CONDA_PATH="$HOME/miniforge3"
+            
+            # Oh-my-zsh
+            ! command -v omz &>/dev/null && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
             export ZSH="$HOME/.oh-my-zsh"
+
+            # powerlevel10k
             POWERLEVEL10K_DIR="$HOME/.oh-my-zsh/themes/powerlevel10k"
-            if [ ! -d "$POWERLEVEL10K_DIR" ]; then
-                git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+            [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+
+            # miniforge3
+            if ! command -v conda &>/dev/null; then
+                curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+                bash Miniforge3-$(uname)-$(uname -m).sh
             fi
-        fi
-    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then
-        # Raspberry Pi 5 or other ARM-based Linux systems
-        CONDA_PATH="$HOME/miniforge3"
-        export ZSH="/usr/share/oh-my-zsh"
-        POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
-        
-        if [ ! -d "$POWERLEVEL10K_DIR" ]; then
-            git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+            CONDA_PATH="$HOME/miniforge3"
         fi
 
-    elif [[ "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]] && [[ "$ARCHITECTURE" == "x86_64" ]]; then
-        # Arch Linux (x86_64)
-        CONDA_PATH="$HOME/miniforge3"
-        export ZSH="/usr/share/oh-my-zsh"
+    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then 
+        # Raspberry Pi 5 or other ARM-based Linux systems
+
+        # Oh-my-zsh
+        ! command -v omz &>/dev/null && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        export ZSH="$HOME/.oh-my-zsh"
+
+        # powerlevel10k
         POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
+        [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+
+        # miniforge3
+        if ! command -v conda &>/dev/null; then
+            curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+            bash Miniforge3-$(uname)-$(uname -m).sh
+        fi
+        CONDA_PATH="$HOME/miniforge3"
+
+    elif [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]] && [[ "$ARCHITECTURE" == "x86_64" ]]; then
+        # Arch Linux (x86_64)
 
         # Install paru if not installed
         if ! command -v paru &>/dev/null; then
@@ -75,10 +105,20 @@ Linux)
             cd ~ || return
         fi
 
-        # Only install Powerlevel10k if it's not installed
-        if [ ! -d "$POWERLEVEL10K_DIR" ]; then
-            paru -S --noconfirm zsh-theme-powerlevel10k-git
+        # Oh-my-zsh
+        ! command -v omz &>/dev/null && paru -S --noconfirm oh-my-zsh-git
+        export ZSH="/usr/share/oh-my-zsh"
+
+        # powerlevel10k
+        POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
+        [ ! -d "$POWERLEVEL10K_DIR" ] && paru -S --noconfirm zsh-theme-powerlevel10k-git
+
+        # miniforge3
+        if ! command -v conda &>/dev/null; then
+            curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+            bash Miniforge3-$(uname)-$(uname -m).sh
         fi
+        CONDA_PATH="$HOME/miniforge3"
     fi
     ;;
 
@@ -350,7 +390,7 @@ alias lt='eza -A --git --icons=auto --tree --level=2 --ignore-glob .git' # list 
 # alias lt="colorls --tree=3 --sd --gs --hyperlink" # Tree view of directories with git status and hyperlinks.
 
 # Pacman and AUR helpers (Linux-specific)
-if [[ "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
+if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
     alias un='$aurhelper -Rns' # uninstall package
     alias up='$aurhelper -Syu' # update system/package/aur
     alias pl='$aurhelper -Qs' # list installed package
@@ -412,7 +452,7 @@ alias tc="clear; tmux clear-history; clear" # Tmux Clear pane
 #Display Pokemon
 #pokemon-colorscripts --no-title -r 1,3,6
 
-if [[ "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
+if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
 
     # Command Not Found Handler
     # In case a command is not found, try to find the package that has it
