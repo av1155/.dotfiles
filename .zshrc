@@ -180,6 +180,7 @@ source $(dirname $(gem which colorls))/tab_complete.sh
 
 
 # <-------------------- CONDA INITIALIZATION ------------------>
+export AUTO_ACTIVATE_CONDA=false # Set to true to auto-activate the base environment
 
 # Set the Conda executable path
 CONDA_EXEC_PATH="$CONDA_PATH/bin/conda"
@@ -198,8 +199,11 @@ if [ -f "$CONDA_EXEC_PATH" ]; then
         fi
     fi
 
-    # Conda auto-activation
-    "$CONDA_EXEC_PATH" config --set auto_activate_base true
+    if [ "$AUTO_ACTIVATE_CONDA" = "true" ]; then
+        "$CONDA_EXEC_PATH" config --set auto_activate_base true
+    else
+        "$CONDA_EXEC_PATH" config --set auto_activate_base false
+    fi
 else
     echo "Conda executable not found at $CONDA_EXEC_PATH"
 fi

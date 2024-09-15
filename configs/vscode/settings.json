@@ -1,0 +1,137 @@
+{
+    "workbench.colorTheme": "Catppuccin Mocha",
+    "catppuccin.accentColor": "lavender",
+    "window.zoomLevel": 1,
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.editor.empty.hint": "hidden",
+    "security.workspace.trust.untrustedFiles": "open",
+    "editor.minimap.enabled": false,
+    "workbench.settings.editor": "json",
+    "zenMode.hideLineNumbers": false,
+    "window.density.editorTabHeight": "compact",
+    "editor.wordWrap": "on",
+    "editor.bracketPairColorization.enabled": true,
+    "editor.fontFamily": "JetBrainsMono Nerd Font",
+    "editor.fontSize": 16,
+    "editor.lineHeight": 22,
+    "editor.fontLigatures": true,
+    "editor.formatOnSave": true,
+    "editor.accessibilitySupport": "off",
+    "editor.codeActionsOnSave": {
+        "source.addMissingImports": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.cursorSurroundingLines": 5,
+    "editor.fontWeight": "300",
+    "editor.inlineSuggest.enabled": true,
+    "editor.lineNumbers": "on",
+    "editor.linkedEditing": true,
+    "editor.smoothScrolling": true,
+    "editor.stickyScroll.enabled": true,
+    "editor.suggest.insertMode": "replace",
+    "editor.suggestFontSize": 14,
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnType": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "[c]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
+    "terminal.integrated.fontSize": 14,
+    "terminal.integrated.env.osx": {},
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.ignoreRebaseWarning": true,
+    "code-runner.executorMap": {
+        "javascript": "node",
+        "php": "C:\\php\\php.exe",
+        "python": "python",
+        "perl": "perl",
+        "ruby": "C:\\Ruby23-x64\\bin\\ruby.exe",
+        "go": "go run",
+        "html": "\"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe\"",
+        "java": "cd $dir && javac $fileName && java $fileNameWithoutExt",
+        "c": "cd $dir && gcc $fileName -o $fileNameWithoutExt.o && $dir$fileNameWithoutExt.o"
+    },
+    "code-runner.runInTerminal": true,
+    "code-runner.showExecutionMessage": false,
+    "code-runner.clearPreviousOutput": true,
+    "code-runner.enableAppInsights": false,
+    "isort.args": [
+        "--profile",
+        "black"
+    ],
+    "console-ninja.featureSet": "Community",
+    "redhat.telemetry.enabled": false,
+    "errorLens.fontStyleItalic": true,
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "extensions.autoUpdate": "onlyEnabledExtensions",
+    "extensions.ignoreRecommendations": false,
+    "files.exclude": {
+        "**/node_modules": true
+    },
+    "prettier.semi": false,
+    "prettier.singleAttributePerLine": true,
+    "prettier.singleQuote": true,
+    "prettier.trailingComma": "all",
+    "projectManager.git.baseFolders": [
+        "$home/workspace"
+    ],
+    "projectManager.sortList": "Recent",
+    "sortJSON.orderOverride": [
+        "name",
+        "version",
+        "main",
+        "module",
+        "types",
+        "typings",
+        "files",
+        "publishConfig",
+        "repository",
+        "scripts",
+        "prefix",
+        "description",
+        "body"
+    ],
+    "sortJSON.orderUnderride": [
+        "resolutions",
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "cSpell.userWords"
+    ],
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "update.showReleaseNotes": false,
+    "gitlens.hovers.currentLine.over": "line",
+    "gitlens.currentLine.pullRequests.enabled": false,
+    "gitlens.currentLine.enabled": false,
+    "github.copilot.editor.enableAutoCompletions": true,
+    "terminal.integrated.env.linux": {},
+    "workbench.startupEditor": "none",
+    "terminal.integrated.env.windows": {},
+    "terminal.integrated.defaultProfile.windows": "Arch (WSL)",
+    "git.openRepositoryInParentFolders": "always"
+}
