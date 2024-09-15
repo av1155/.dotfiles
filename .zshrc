@@ -1,7 +1,12 @@
 # <------------------- SYSTEM DETECTION ------------------->
 # Identify the operating system and architecture
 
-case "$(uname -s)" in
+OS=$(uname -s)
+ARCHITECTURE=$(uname -m)
+KERNEL_INFO=$(uname -r)
+HOSTNAME=$(uname -n)
+
+case "$OS" in
 Darwin) # macOS
     if command -v brew &>/dev/null; then
         HOMEBREW_PATH=$(brew --prefix)
@@ -12,21 +17,50 @@ Darwin) # macOS
     CONDA_PATH="$HOMEBREW_PATH/Caskroom/miniforge/base"
     export ZSH="$HOME/.oh-my-zsh"
     POWERLEVEL10K_DIR="$HOME/powerlevel10k"
-    AUR_HELPER_NOT_AVAILABLE=true
     ;;
 
 Linux)
-    if [[ "$(uname -m)" == "aarch64" ]]; then
-        # Raspberry Pi 5 or other ARM-based systems
+    if grep -qi "microsoft" /proc/version; then
+        # WSL detected
+        if [[ "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
+            # Arch-based WSL
+            CONDA_PATH="$HOME/miniforge3"
+            export ZSH="/usr/share/oh-my-zsh"
+            POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
+
+            # Install paru if not installed
+            if ! command -v paru &>/dev/null; then
+                sudo pacman -S --needed base-devel
+                git clone https://aur.archlinux.org/paru.git
+                cd paru || return
+                makepkg -si
+                cd ~ || return
+            fi
+
+            # Only install Powerlevel10k if it's not installed
+            if [ ! -d "$POWERLEVEL10K_DIR" ]; then
+                paru -S --noconfirm zsh-theme-powerlevel10k-git
+            fi
+        else
+            # Non-Arch WSL
+            CONDA_PATH="$HOME/miniforge3"
+            export ZSH="$HOME/.oh-my-zsh"
+            POWERLEVEL10K_DIR="$HOME/.oh-my-zsh/themes/powerlevel10k"
+            if [ ! -d "$POWERLEVEL10K_DIR" ]; then
+                git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+            fi
+        fi
+    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then
+        # Raspberry Pi 5 or other ARM-based Linux systems
         CONDA_PATH="$HOME/miniforge3"
         export ZSH="/usr/share/oh-my-zsh"
         POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
+        
         if [ ! -d "$POWERLEVEL10K_DIR" ]; then
             git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
         fi
-        AUR_HELPER_NOT_AVAILABLE=true
 
-    elif [[ "$(uname -m)" == "x86_64" ]]; then
+    elif [[ "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]] && [[ "$ARCHITECTURE" == "x86_64" ]]; then
         # Arch Linux (x86_64)
         CONDA_PATH="$HOME/miniforge3"
         export ZSH="/usr/share/oh-my-zsh"
@@ -36,9 +70,9 @@ Linux)
         if ! command -v paru &>/dev/null; then
             sudo pacman -S --needed base-devel
             git clone https://aur.archlinux.org/paru.git
-            cd paru
+            cd paru || return
             makepkg -si
-            cd ~
+            cd ~ || return
         fi
 
         # Only install Powerlevel10k if it's not installed
@@ -55,7 +89,6 @@ CYGWIN* | MINGW32* | MSYS* | MINGW*) # Windows (WSL or native)
     if [ ! -d "$POWERLEVEL10K_DIR" ]; then
         git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
     fi
-    AUR_HELPER_NOT_AVAILABLE=true
     ;;
 
 *)
@@ -176,7 +209,7 @@ if ! gem which colorls &>/dev/null; then
 fi
 
 # colorls tab completion
-source $(dirname $(gem which colorls))/tab_complete.sh
+source "$(dirname "$(gem which colorls)")/tab_complete.sh"
 
 
 # <-------------------- CONDA INITIALIZATION ------------------>
@@ -221,7 +254,8 @@ if command -v conda &>/dev/null; then
             export NVIM_PYTHON_PATH="$CONDA_PREFIX/bin/python"
         else
             # Fallback to system Python (Python 3) if Conda is not active
-            local system_python_path=$(which python3)
+            local system_python_path
+            system_python_path=$(which python3)
             if [[ -z "$system_python_path" ]]; then
                 echo "Python is not installed. Please install Python to use with Neovim."
             else
@@ -263,20 +297,6 @@ fi
 
 
 # <-------------------- ALIASES -------------------->
-
-# Detect the operating system and set aliases accordingly (EXAMPLE)
-case "$(uname -s)" in
-Darwin) # macOS
-    alias ls='ls -G'
-    ;;
-Linux) # Linux
-    alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first'
-    ;;
-CYGWIN* | MINGW32* | MSYS* | MINGW*) # Windows
-    alias ls='ls --color=auto'
-    ;;
-esac
-
 # General
 alias mkdir='mkdir -p' # Always mkdir a path
 alias c='clear'
@@ -330,7 +350,7 @@ alias lt='eza -A --git --icons=auto --tree --level=2 --ignore-glob .git' # list 
 # alias lt="colorls --tree=3 --sd --gs --hyperlink" # Tree view of directories with git status and hyperlinks.
 
 # Pacman and AUR helpers (Linux-specific)
-if [[ "$(uname -s)" == "Linux" && "$AUR_HELPER_NOT_AVAILABLE" != true ]]; then
+if [[ "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
     alias un='$aurhelper -Rns' # uninstall package
     alias up='$aurhelper -Syu' # update system/package/aur
     alias pl='$aurhelper -Qs' # list installed package
@@ -392,56 +412,59 @@ alias tc="clear; tmux clear-history; clear" # Tmux Clear pane
 #Display Pokemon
 #pokemon-colorscripts --no-title -r 1,3,6
 
-# Command Not Found Handler
-# In case a command is not found, try to find the package that has it
-function command_not_found_handler {
-    local purple='\e[1;35m' bright='\e[0;1m' green='\e[1;32m' reset='\e[0m'
-    printf 'zsh: command not found: %s\n' "$1"
-    local entries=( ${(f)"$(/usr/bin/pacman -F --machinereadable -- "/usr/bin/$1")"} )
-    if (( ${#entries[@]} )) ; then
-        printf "${bright}$1${reset} may be found in the following packages:\n"
-        local pkg
-        for entry in "${entries[@]}" ; do
-            local fields=( ${(0)entry} )
-            if [[ "$pkg" != "${fields[2]}" ]] ; then
-                printf "${purple}%s/${bright}%s ${green}%s${reset}\n" "${fields[1]}" "${fields[2]}" "${fields[3]}"
-            fi
-            printf '    /%s\n' "${fields[4]}"
-            pkg="${fields[2]}"
-        done
-    fi
-    return 127
-}
+if [[ "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
 
-# Detect the AUR wrapper
-if pacman -Qi yay &>/dev/null ; then
-   aurhelper="yay"
-elif pacman -Qi paru &>/dev/null ; then
-   aurhelper="paru"
-fi
-
-# Function to install packages
-function in {
-    local -a inPkg=("$@")
-    local -a arch=()
-    local -a aur=()
-
-    for pkg in "${inPkg[@]}"; do
-        if pacman -Si "${pkg}" &>/dev/null ; then
-            arch+=("${pkg}")
-        else 
-            aur+=("${pkg}")
+    # Command Not Found Handler
+    # In case a command is not found, try to find the package that has it
+    function command_not_found_handler {
+        local purple='\e[1;35m' bright='\e[0;1m' green='\e[1;32m' reset='\e[0m'
+        printf 'zsh: command not found: %s\n' "$1"
+        local entries=( ${(f)"$(/usr/bin/pacman -F --machinereadable -- "/usr/bin/$1")"} )
+        if (( ${#entries[@]} )) ; then
+            printf "${bright}$1${reset} may be found in the following packages:\n"
+            local pkg
+            for entry in "${entries[@]}" ; do
+                local fields=( ${(0)entry} )
+                if [[ "$pkg" != "${fields[2]}" ]] ; then
+                    printf "${purple}%s/${bright}%s ${green}%s${reset}\n" "${fields[1]}" "${fields[2]}" "${fields[3]}"
+                fi
+                printf '    /%s\n' "${fields[4]}"
+                pkg="${fields[2]}"
+            done
         fi
-    done
+        return 127
+    }
 
-    if [[ ${#arch[@]} -gt 0 ]]; then
-        sudo pacman -S "${arch[@]}"
+    # Detect the AUR wrapper
+    if pacman -Qi yay &>/dev/null ; then
+    aurhelper="yay"
+    elif pacman -Qi paru &>/dev/null ; then
+    aurhelper="paru"
     fi
 
-    if [[ ${#aur[@]} -gt 0 ]]; then
-        ${aurhelper} -S "${aur[@]}"
-    fi
-}
+    # Function to install packages
+    function in {
+        local -a inPkg=("$@")
+        local -a arch=()
+        local -a aur=()
+
+        for pkg in "${inPkg[@]}"; do
+            if pacman -Si "${pkg}" &>/dev/null ; then
+                arch+=("${pkg}")
+            else 
+                aur+=("${pkg}")
+            fi
+        done
+
+        if [[ ${#arch[@]} -gt 0 ]]; then
+            sudo pacman -S "${arch[@]}"
+        fi
+
+        if [[ ${#aur[@]} -gt 0 ]]; then
+            ${aurhelper} -S "${aur[@]}"
+        fi
+    }
+fi
 
 # FCD: Navigate directories using fd, fzf, and colorls
 if command -v fd &>/dev/null && command -v fzf &>/dev/null && command -v colorls &>/dev/null; then
@@ -552,16 +575,19 @@ _fzf_comprun() {
 
 # <-------------------- SCRIPTS -------------------->
 
-# Sourced + Aliased Scripts ------------------------------------------------------->
-[ -f ~/scripts/scripts/JavaProjectManager/JavaProjectManager.zsh ] && alias jcr="~/scripts/scripts/JavaProjectManager/JavaProjectManager.zsh"
-[ -f ~/scripts/scripts/sqlurl.sh ] && alias sqlurl="~/scripts/scripts/sqlurl.sh"
-[ -f ~/scripts/scripts/nvim_surround_usage.sh ] && alias nvims="~/scripts/scripts/nvim_surround_usage.sh"
-[ -f ~/scripts/scripts/html-to-text.zsh ] && alias h2t="~/scripts/scripts/html-to-text.zsh"
-[ -f ~/scripts/scripts/package_updater.zsh ] && alias upall-mac="~/scripts/scripts/package_updater.zsh"
-[ -f ~/scripts/scripts/package_updater_rpi.zsh ] && alias upall-rpi="~/scripts/scripts/package_updater_rpi.zsh"
+if [ -d ~/scripts/scripts ]; then
+    alias jcr="~/scripts/scripts/JavaProjectManager/JavaProjectManager.zsh"
+    alias sqlurl="~/scripts/scripts/sqlurl.sh"
+    alias nvims="~/scripts/scripts/nvim_surround_usage.sh"
+    alias h2t="~/scripts/scripts/html-to-text.zsh"
+    alias upall-mac="~/scripts/scripts/package_updater.zsh"
+    alias upall-rpi="~/scripts/scripts/package_updater_rpi.zsh"
+fi
 
 
 # <------------------- ENVIROMENT VARIABLES ------------------->
+
+export PRETTIERD_DEFAULT_CONFIG="$HOME/.config/.prettierrc.json"
 
 # Detect the architecture
 if [[ "$(uname -msn)" == "Darwin MacBook-M1-Pro-16.local arm64" ]]; then
@@ -588,7 +614,7 @@ fi
 # Create the dynamic kitty config file
 printf "font_size %s\nbackground_opacity %s" "$FONT_SIZE" "$BACKGROUND_OPACITY" > "$kitty_config_dir/dynamic.conf"
 
-# Define the base directory where the jars are stored
+# JAVA CLASSPATH CONFIGURATION
 JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/configs/javaClasspath"
 
 # Clear existing java classpath entries
@@ -604,8 +630,6 @@ for jar in "$JAVA_CLASSPATH_PREFIX"/*.jar; do
         fi
     fi
 done
-
-export PRETTIERD_DEFAULT_CONFIG="$HOME/.config/.prettierrc.json"
 
 # <-------------------CS50 Library Configuration ------------------>
 # https://github.com/cs50/libcs50
@@ -623,3 +647,12 @@ export ANTHROPIC_API_KEY
 # OpenAI API Key
 OPENAI_API_KEY=$(cat ~/.config/openai/api_key)
 export OPENAI_API_KEY
+
+# fix paru: sudo ln -s /usr/lib/libalpm.so.15 /usr/lib/libalpm.so.14
+# When paru is updated (fixed), then: sudo rm /usr/lib/libalpm.so.14
+
+# Then reinstall paru:
+# sudo pacman -S --needed base-devel
+# git clone https://aur.archlinux.org/paru.git
+# cd paru
+# makepkg -si
