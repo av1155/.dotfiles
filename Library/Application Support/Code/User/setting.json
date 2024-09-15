@@ -78,10 +78,7 @@
     "code-runner.showExecutionMessage": false,
     "code-runner.clearPreviousOutput": true,
     "code-runner.enableAppInsights": false,
-    "isort.args": [
-        "--profile",
-        "black"
-    ],
+    "isort.args": ["--profile", "black"],
     "console-ninja.featureSet": "Community",
     "redhat.telemetry.enabled": false,
     "errorLens.fontStyleItalic": true,
@@ -96,9 +93,7 @@
     "prettier.singleAttributePerLine": true,
     "prettier.singleQuote": true,
     "prettier.trailingComma": "all",
-    "projectManager.git.baseFolders": [
-        "$home/workspace"
-    ],
+    "projectManager.git.baseFolders": ["$home/workspace"],
     "projectManager.sortList": "Recent",
     "sortJSON.orderOverride": [
         "name",
