@@ -577,8 +577,14 @@ else
     BACKGROUND_OPACITY="0.7"
 fi
 
+# Create the dynamic kitty config directory if it doesn't exist
+kitty_config_dir="$HOME/.dotfiles/.config/kitty"
+if [ ! -d "$kitty_config_dir" ]; then
+    mkdir -p "$kitty_config_dir"
+fi
+
 # Create the dynamic kitty config file
-printf "font_size %s\nbackground_opacity %s" "$FONT_SIZE" "$BACKGROUND_OPACITY" > ~/.dotfiles/.config/kitty/dynamic.conf
+printf "font_size %s\nbackground_opacity %s" "$FONT_SIZE" "$BACKGROUND_OPACITY" > "$kitty_config_dir/dynamic.conf"
 
 # Define the base directory where the jars are stored
 JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/configs/javaClasspath"
