@@ -557,6 +557,8 @@ _fzf_comprun() {
 [ -f ~/scripts/scripts/sqlurl.sh ] && alias sqlurl="~/scripts/scripts/sqlurl.sh"
 [ -f ~/scripts/scripts/nvim_surround_usage.sh ] && alias nvims="~/scripts/scripts/nvim_surround_usage.sh"
 [ -f ~/scripts/scripts/html-to-text.zsh ] && alias h2t="~/scripts/scripts/html-to-text.zsh"
+[ -f ~/scripts/scripts/package_updater.zsh ] && alias upall-mac="~/scripts/scripts/package_updater.zsh"
+[ -f ~/scripts/scripts/package_updater_rpi.zsh ] && alias upall-rpi="~/scripts/scripts/package_updater_rpi.zsh"
 
 
 # <------------------- ENVIROMENT VARIABLES ------------------->
