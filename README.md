@@ -57,6 +57,33 @@ The `.zshrc` file is designed to work across different systems like macOS, Linux
 
 Auto-starts a `tmux` session on terminal login, with custom session naming and attachment logic. This is ideal for maintaining persistent work environments.
 
+#### Issues if tmux configuration does not load:
+
+1. Remove all Tmux plugins or previous symlinks
+
+```bash
+cd ~/.config/tmux/plugins
+rm -rf *
+```
+
+2. Reinstall Tmux Plugin Manager (tpm)
+
+```bash
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+```
+
+3. Reload Tmux Configuration
+
+```bash
+tmux source-file ~/.config/tmux/tmux.conf
+```
+
+4. Install Plugins Using tpm
+
+```bash
+Ctrl + A (your current prefix), then I
+```
+
 ### Neovim Configuration
 
 -   The `.zshrc` includes automatic setup for Neovim's Python provider, ensuring that Neovim is always ready to work with Python and other environments.

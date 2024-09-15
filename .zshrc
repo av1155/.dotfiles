@@ -10,7 +10,10 @@ case "$OS" in
 Darwin) # macOS
 
     # homebrew
-    ! command -v brew &>/dev/null && /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if ! command -v brew &>/dev/null; then
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    fi
     HOMEBREW_PATH=$(brew --prefix)
 
     # Oh-my-zsh
@@ -27,59 +30,29 @@ Darwin) # macOS
     ;;
 
 Linux)
-    if grep -qi "microsoft" /proc/version; then # WSL detected
+    if grep -qi "microsoft" /proc/version && [ ! -f "/etc/arch-release" ]; then
+        # WSL detected and it's not Arch Linux
 
-        if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then 
-            # Arch-based WSL
+        # Oh-my-zsh
+        [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        export ZSH="$HOME/.oh-my-zsh"
 
-            # Install paru if not installed
-            if ! command -v paru &>/dev/null; then
-                sudo pacman -S --needed base-devel
-                git clone https://aur.archlinux.org/paru.git
-                cd paru || return
-                makepkg -si
-                cd ~ || return
-            fi
+        # powerlevel10k
+        POWERLEVEL10K_DIR="$HOME/.oh-my-zsh/themes/powerlevel10k"
+        [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 
-            # Oh-my-zsh
-            ! command -v omz &>/dev/null && paru -S --noconfirm oh-my-zsh-git
-            export ZSH="/usr/share/oh-my-zsh"
-
-            # powerlevel10k
-            POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
-            [ ! -d "$POWERLEVEL10K_DIR" ] && paru -S --noconfirm zsh-theme-powerlevel10k-git
-
-            # miniforge3
-            if ! command -v conda &>/dev/null; then
-                curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-                bash Miniforge3-$(uname)-$(uname -m).sh
-            fi
-            CONDA_PATH="$HOME/miniforge3"
-
-        else
-            # Non-Arch WSL
-            
-            # Oh-my-zsh
-            ! command -v omz &>/dev/null && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-            export ZSH="$HOME/.oh-my-zsh"
-
-            # powerlevel10k
-            POWERLEVEL10K_DIR="$HOME/.oh-my-zsh/themes/powerlevel10k"
-            [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-
-            # miniforge3
-            if ! command -v conda &>/dev/null; then
-                curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-                bash Miniforge3-$(uname)-$(uname -m).sh
-            fi
-            CONDA_PATH="$HOME/miniforge3"
+        # miniforge3
+        if [ ! -d "$HOME/miniforge3" ]; then
+            curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+            bash "Miniforge3-$(uname)-$(uname -m).sh"
         fi
+        CONDA_PATH="$HOME/miniforge3"
 
     elif [[ "$ARCHITECTURE" == "aarch64" ]]; then 
         # Raspberry Pi 5 or other ARM-based Linux systems
 
         # Oh-my-zsh
-        ! command -v omz &>/dev/null && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
         export ZSH="$HOME/.oh-my-zsh"
 
         # powerlevel10k
@@ -87,14 +60,14 @@ Linux)
         [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 
         # miniforge3
-        if ! command -v conda &>/dev/null; then
+        if [ ! -d "$HOME/miniforge3" ]; then
             curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-            bash Miniforge3-$(uname)-$(uname -m).sh
+            bash "Miniforge3-$(uname)-$(uname -m).sh"
         fi
         CONDA_PATH="$HOME/miniforge3"
 
-    elif [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]] && [[ "$ARCHITECTURE" == "x86_64" ]]; then
-        # Arch Linux (x86_64)
+    elif [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
+        # Arch Linux
 
         # Install paru if not installed
         if ! command -v paru &>/dev/null; then
@@ -106,7 +79,7 @@ Linux)
         fi
 
         # Oh-my-zsh
-        ! command -v omz &>/dev/null && paru -S --noconfirm oh-my-zsh-git
+        [ ! -d "/usr/share/oh-my-zsh" ] && paru -S --noconfirm oh-my-zsh-git
         export ZSH="/usr/share/oh-my-zsh"
 
         # powerlevel10k
@@ -114,28 +87,11 @@ Linux)
         [ ! -d "$POWERLEVEL10K_DIR" ] && paru -S --noconfirm zsh-theme-powerlevel10k-git
 
         # miniforge3
-        if ! command -v conda &>/dev/null; then
+        if [ ! -d "$HOME/miniforge3" ]; then
             curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-            bash Miniforge3-$(uname)-$(uname -m).sh
+            bash "Miniforge3-$(uname)-$(uname -m).sh"
         fi
         CONDA_PATH="$HOME/miniforge3"
-    fi
-    ;;
-
-CYGWIN* | MINGW32* | MSYS* | MINGW*) # Windows (WSL or native)
-    CONDA_PATH="$HOME/miniforge3"
-    export ZSH="$HOME/.oh-my-zsh"
-    POWERLEVEL10K_DIR="$HOME/.oh-my-zsh/themes/powerlevel10k"
-    if [ ! -d "$POWERLEVEL10K_DIR" ]; then
-        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-    fi
-    ;;
-
-*)
-    # Any other OS
-    POWERLEVEL10K_DIR="$HOME/powerlevel10k"
-    if [ ! -d "$POWERLEVEL10K_DIR" ]; then
-        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
     fi
     ;;
 esac
