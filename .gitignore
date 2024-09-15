@@ -1,2 +1,2 @@
-openai_api_key.sh
 dynamic.conf
+!./configs/javaClasspath/*
