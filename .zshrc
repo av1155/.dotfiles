@@ -557,6 +557,21 @@ _fzf_comprun() {
 
 # <------------------- ENVIROMENT VARIABLES ------------------->
 
+# Detect the architecture
+if [[ "$(uname -msn)" == "Darwin MacBook-M1-Pro-16.local arm64" ]]; then
+    # macOS (macbook pro m1 16")
+    FONT_SIZE="15"
+elif [[ "$(uname -msn)" == "Linux archlinux x86_64" ]]; then
+    # Arch Linux (hyprland)
+    FONT_SIZE="9.5"
+else
+    # Fallback
+    FONT_SIZE="12"
+fi
+
+# Create the dynamic kitty config file
+echo "font_size $FONT_SIZE" > ~/.dotfiles/.config/kitty/dynamic.conf
+
 # Define the base directory where the jars are stored
 JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/configs/javaClasspath"
 
