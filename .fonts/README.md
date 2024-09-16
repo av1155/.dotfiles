@@ -46,3 +46,11 @@ For more information see: [The FAQ](https://github.com/ryanoasis/nerd-fonts/wiki
 
 [SIL-RFN]:http://scripts.sil.org/cms/scripts/page.php?item_id=OFL_web_fonts_and_RFNs#14cbfd4a
 
+
+### Update font cache (Linux):
+
+Update the font cache so that the system recognizes them in the `.fonts/` directory. 
+
+```bash
+fc-cache -fv
+```
