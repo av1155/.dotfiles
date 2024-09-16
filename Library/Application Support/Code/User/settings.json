@@ -12,10 +12,11 @@
     "editor.wordWrap": "on",
     "editor.bracketPairColorization.enabled": true,
     "editor.fontFamily": "JetBrainsMono Nerd Font",
-    "editor.fontSize": 16,
-    "editor.lineHeight": 22,
+    "editor.fontSize": 14,
+    // "editor.lineHeight": 22,
     "editor.fontLigatures": true,
     "editor.formatOnSave": true,
+    "clang-format.executable": "~/.clang-format",
     "editor.accessibilitySupport": "off",
     "editor.codeActionsOnSave": {
         "source.addMissingImports": "explicit",
