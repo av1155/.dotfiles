@@ -17,7 +17,7 @@ Darwin) # macOS
     HOMEBREW_PATH=$(brew --prefix)
 
     # Oh-my-zsh
-    ! command -v omz &>/dev/null && brew install oh-my-zsh
+    [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
     export ZSH="$HOME/.oh-my-zsh"
 
     # powerlevel10k
@@ -588,7 +588,7 @@ export PRETTIERD_DEFAULT_CONFIG="$HOME/.config/.prettierrc.json"
 # Detect the architecture
 if [[ "$(uname -msn)" == "Darwin MacBook-M1-Pro-16.local arm64" ]]; then
     # macOS (macbook pro m1 16")
-    FONT_SIZE="15"
+    FONT_SIZE="17"
     BACKGROUND_OPACITY="0.7"
 
 elif [[ "$(uname -msn)" == "Linux archlinux x86_64" ]]; then
