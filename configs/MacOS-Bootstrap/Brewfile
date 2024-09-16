@@ -94,6 +94,8 @@ brew "ollama", restart_service: true
 brew "php"
 # Python dependency management tool
 brew "pipenv"
+# Paste PNG into files
+brew "pngpaste"
 # Object-relational database system
 brew "postgresql@14", restart_service: true
 # Theme for zsh
@@ -128,6 +130,8 @@ brew "vim"
 brew "viu"
 # Internet file retriever
 brew "wget"
+# Blazing fast terminal file manager written in Rust, based on async I/O
+brew "yazi"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
 # Easily compile and run Java files, manage cleanup, and view syntax-highlighted errors through a user-friendly fuzzy-finding menu.
@@ -307,3 +311,4 @@ vscode "vscjava.vscode-java-test"
 vscode "vscjava.vscode-maven"
 vscode "wallabyjs.console-ninja"
 vscode "wholroyd.jinja"
+vscode "xaver.clang-format"
