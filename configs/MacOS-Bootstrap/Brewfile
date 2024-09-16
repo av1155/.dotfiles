@@ -89,13 +89,13 @@ brew "neovim"
 # Package for scientific computing with Python
 brew "numpy"
 # Create, run, and share large language models (LLMs)
-brew "ollama", restart_service: true
+brew "ollama"
 # General-purpose scripting language
 brew "php"
 # Python dependency management tool
 brew "pipenv"
 # Object-relational database system
-brew "postgresql@14", restart_service: true
+brew "postgresql@14"
 # Theme for zsh
 brew "powerlevel10k"
 # Bundle a Python application and all its dependencies
@@ -180,6 +180,8 @@ cask "imageoptim"
 cask "iterm2"
 # JetBrains tools manager
 cask "jetbrains-toolbox"
+# Open-source keystroke visualiser
+cask "keycastr"
 # GPU-based terminal emulator
 cask "kitty"
 # Utility that shows the latest app updates
@@ -234,19 +236,6 @@ cask "warp"
 cask "whatsapp"
 # Video communication and virtual meeting platform
 cask "zoom"
-mas "1Blocker", id: 1365531024
-mas "1Password for Safari", id: 1569813296
-mas "Bitwarden", id: 1352778147
-mas "CleanMyMac X", id: 1339170533
-mas "Color Picker", id: 1545870783
-mas "Dropover", id: 1355679052
-mas "Encrypto", id: 935235287
-mas "Final Cut Pro", id: 424389933
-mas "Goodnotes", id: 1444383602
-mas "Noir", id: 1592917505
-mas "Sequel Ace", id: 1518036000
-mas "Steam Link", id: 1246969117
-mas "Xcode", id: 497799835
 vscode "adpyke.codesnap"
 vscode "alefragnani.project-manager"
 vscode "batisteo.vscode-django"
