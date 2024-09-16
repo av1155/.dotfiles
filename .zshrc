@@ -590,6 +590,7 @@ if [[ "$(uname -msn)" == "Darwin MacBook-M1-Pro-16.local arm64" ]]; then
     # macOS (macbook pro m1 16")
     FONT_SIZE="17"
     BACKGROUND_OPACITY="0.7"
+    MACOS_OPTION_AS_ALT="left"
 
 elif [[ "$(uname -msn)" == "Linux archlinux x86_64" ]]; then
     # Arch Linux (hyprland)
@@ -608,7 +609,7 @@ if [ ! -d "$kitty_config_dir" ]; then
 fi
 
 # Create the dynamic kitty config file
-printf "font_size %s\nbackground_opacity %s" "$FONT_SIZE" "$BACKGROUND_OPACITY" > "$kitty_config_dir/dynamic.conf"
+printf "font_size %s\nbackground_opacity %s\nmacos_option_as_alt %s" "$FONT_SIZE" "$BACKGROUND_OPACITY" "$MACOS_OPTION_AS_ALT" > "$kitty_config_dir/dynamic.conf"
 
 # JAVA CLASSPATH CONFIGURATION
 JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/configs/javaClasspath"
@@ -626,6 +627,9 @@ for jar in "$JAVA_CLASSPATH_PREFIX"/*.jar; do
         fi
     fi
 done
+
+# Finally, append the current directory to the CLASSPATH
+export CLASSPATH="$CLASSPATH:."
 
 # <-------------------CS50 Library Configuration ------------------>
 # https://github.com/cs50/libcs50
