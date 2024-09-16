@@ -38,7 +38,7 @@ Linux)
         export ZSH="$HOME/.oh-my-zsh"
 
         # powerlevel10k
-        POWERLEVEL10K_DIR="$HOME/.oh-my-zsh/themes/powerlevel10k"
+        POWERLEVEL10K_DIR="$HOME/powerlevel10k"
         [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 
         # miniforge3
@@ -56,7 +56,7 @@ Linux)
         export ZSH="$HOME/.oh-my-zsh"
 
         # powerlevel10k
-        POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
+        POWERLEVEL10K_DIR="$HOME/powerlevel10k"
         [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 
         # miniforge3

@@ -87,7 +87,10 @@ Linux)
     case "$(uname -m)" in
     x86_64) # 64-bit
         ;;
-    aarch64) # ARM 64-bit
+    aarch64) # ARM 64-bit (Raspberry Pi 5 or similar)
+        # Add /snap/bin to the path for Raspberry Pi
+        PATH+=:/snap/bin
+        export PATH
         ;;
     esac
 
