@@ -36,9 +36,8 @@ Darwin) # macOS
     fi
 
     # JAVA
-    JAVA_HOME="$(/usr/libexec/java_home)"
-    export JAVA_HOME
-    path+=("$JAVA_HOME/bin")
+    export JAVA_HOME=$(/usr/libexec/java_home)
+    export PATH=$JAVA_HOME/bin:$PATH
 
     # For compilers to find OpenJDK you may need to set:
     export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
