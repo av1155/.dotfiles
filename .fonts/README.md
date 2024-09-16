@@ -49,7 +49,7 @@ For more information see: [The FAQ](https://github.com/ryanoasis/nerd-fonts/wiki
 
 ### Update font cache (Linux):
 
-Update the font cache so that the system recognizes them in the `.fonts/` directory. 
+Update the font cache so that the system recognizes them in the `~/.fonts/` directory. 
 
 ```bash
 fc-cache -fv
