@@ -579,7 +579,9 @@ _fzf_comprun() {
 
 if [ -d ~/scripts/scripts ]; then
     alias jcr="~/scripts/scripts/JavaProjectManager/JavaProjectManager.zsh"
+    alias ccz="~/scripts/scripts/c_compiler.zsh"
     alias sqlurl="~/scripts/scripts/sqlurl.sh"
+    alias getc="~/scripts/scripts/get_code_context.sh"
     alias nvims="~/scripts/scripts/nvim_surround_usage.sh"
     alias h2t="~/scripts/scripts/html-to-text.zsh"
     alias upall-mac="~/scripts/scripts/package_updater.zsh"

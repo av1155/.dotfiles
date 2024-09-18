@@ -10,6 +10,7 @@ Thumbs.db
 *.swp
 *.tmp
 Icon?
+code_context.txt
 
 # Environment files
 *.env
