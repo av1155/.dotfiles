@@ -3,7 +3,7 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
 BreakBeforeBraces: Allman
-ColumnLimit: 120
+ColumnLimit: 100
 AlignArrayOfStructures: Left
 SpacesInParentheses: true
 
