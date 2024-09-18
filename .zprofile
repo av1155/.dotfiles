@@ -80,6 +80,8 @@ Darwin) # macOS
         export PATH="$homebrew_gem_bin:$PATH"
     fi
     # <<< END RUBY INITIALIZATION
+
+    PATH=~/.console-ninja/.bin:$PATH
     ;;
 
 Linux)

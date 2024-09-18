@@ -663,4 +663,3 @@ export OPENAI_API_KEY
 # cd paru
 # makepkg -si
 
-PATH=~/.console-ninja/.bin:$PATH
