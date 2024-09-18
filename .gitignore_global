@@ -9,8 +9,7 @@ ehthumbs.db
 Thumbs.db
 *.swp
 *.tmp
-Icon\r
-Icon
+Icon?
 
 # Environment files
 *.env
