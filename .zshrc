@@ -343,7 +343,7 @@ alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first' # 
 alias  l='eza -A -lh --git --icons=auto --sort=name --group-directories-first' # long list
 alias la='eza -lha --git --icons=auto --sort=name --group-directories-first' # long list all
 alias ld='eza -A -lhD --git --icons=auto --sort=name' # long list dirs
-alias lt='eza -A --git --icons=auto --tree --level=2 --ignore-glob .git' # list folder as tree
+alias lt='eza -A --git --icons=auto --tree --level=3 --ignore-glob ".git|node_modules|*.log|*.tmp|dist|build|.DS_Store|*.swp|*.swo|.idea|coverage|env|venv"'
 
 # # Colorls
 # alias ls="colorls -A --gs --sd"                   # Lists most files, directories first, with git status.
