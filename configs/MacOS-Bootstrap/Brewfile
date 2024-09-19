@@ -1,4 +1,4 @@
-tap "av1155/scripts", "https://github.com/av1155/scripts"
+tap "av1155/scripts", "https://github.com/av1155/scripts.git"
 tap "heroku/brew"
 tap "homebrew/bundle"
 tap "homebrew/services"
@@ -38,6 +38,8 @@ brew "fastfetch"
 brew "fd"
 # Play, record, convert, and stream audio and video
 brew "ffmpeg"
+# GNU compiler collection
+brew "gcc"
 # Command-line fuzzy finder written in Go
 brew "fzf"
 # Disk usage analyzer with console interface written in Go
@@ -82,8 +84,6 @@ brew "mosh"
 brew "msmtp"
 # Netwide Assembler (NASM) is an 80x86 assembler
 brew "nasm"
-# Fast, highly customisable system info script
-brew "neofetch"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Package for scientific computing with Python
