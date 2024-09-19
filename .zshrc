@@ -642,10 +642,11 @@ export CLASSPATH="$CLASSPATH:."
 # <-------------------CS50 Library Configuration ------------------>
 # https://github.com/cs50/libcs50
 
-export LIBRARY_PATH=~/cs50lib
-export C_INCLUDE_PATH=~/cs50lib
-export LD_LIBRARY_PATH=~/cs50lib   # For Linux systems
-export DYLD_LIBRARY_PATH=~/cs50lib # For macOS systems
+export LIBRARY_PATH=~/.dotfiles/cs50lib
+export C_INCLUDE_PATH=~/.dotfiles/cs50lib
+export LD_LIBRARY_PATH=~/.dotfiles/cs50lib   # For Linux systems
+export DYLD_LIBRARY_PATH=~/.dotfiles/cs50lib # For macOS systems
+
 
 # <-------------------- API KEY CONFIGURATIONS -------------------->
 # Anthropic API Key
