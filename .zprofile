@@ -9,6 +9,9 @@ Darwin) # macOS
     # <============ HOMEBREW PATH + DYNAMIC PATH DETECTION ============>
     eval "$(/opt/homebrew/bin/brew shellenv)"
 
+    # Ensure Homebrew Ruby is prioritized over system Ruby
+    export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+
     if command -v brew &>/dev/null; then
         HOMEBREW_PATH=$(brew --prefix)
     fi

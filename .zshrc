@@ -215,7 +215,7 @@ source "$(dirname "$(gem which colorls)")/tab_complete.sh"
 
 
 # <-------------------- CONDA INITIALIZATION ------------------>
-export AUTO_ACTIVATE_CONDA=false # Set to true to auto-activate the base environment
+export AUTO_ACTIVATE_CONDA=true # Set to true to auto-activate the base environment
 
 # Set the Conda executable path
 CONDA_EXEC_PATH="$CONDA_PATH/bin/conda"
