@@ -214,6 +214,8 @@ cask "onyx"
 cask "qlmarkdown"
 # Environment for statistical computing and graphics
 cask "r"
+# Control your tools with a few keystrokes
+cask "raycast"
 # Move and resize windows using keyboard shortcuts or snap areas
 cask "rectangle"
 # Screenshot measurement and annotation tool
@@ -244,7 +246,6 @@ mas "1Blocker", id: 1365531024
 mas "1Password for Safari", id: 1569813296
 mas "Bitwarden", id: 1352778147
 mas "CleanMyMac X", id: 1339170533
-mas "Color Picker", id: 1545870783
 mas "Dropover", id: 1355679052
 mas "Encrypto", id: 935235287
 mas "Final Cut Pro", id: 424389933
