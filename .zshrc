@@ -307,6 +307,7 @@ alias vc='code'
 alias lg='lazygit'
 alias lzd='lazydocker'
 alias zen-browser='io.github.zen_browser.zen'
+alias h="history"
 # alias fd='fdfind'
 
 if command -v nvim &>/dev/null; then
@@ -656,6 +657,9 @@ export ANTHROPIC_API_KEY
 # OpenAI API Key
 OPENAI_API_KEY=$(cat ~/.config/openai/api_key)
 export OPENAI_API_KEY
+
+
+# <-------------------- GENERAL CONFIGURATIONS -------------------->
 
 # fix paru: sudo ln -s /usr/lib/libalpm.so.15 /usr/lib/libalpm.so.14
 # When paru is updated (fixed), then: sudo rm /usr/lib/libalpm.so.14
