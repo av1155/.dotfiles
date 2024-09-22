@@ -469,8 +469,8 @@ if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "arch
     }
 fi
 
-# FCD: Navigate directories using fd, fzf, and colorls
-if command -v fd &>/dev/null && command -v fzf &>/dev/null && command -v colorls &>/dev/null; then
+# FCD: Navigate directories using fd, fzf, and eza
+if command -v fd &>/dev/null && command -v fzf &>/dev/null && command -v eza &>/dev/null; then
     fcd() {
         local depth="${1:-9}" # Default depth is 9, but can be overridden by first argument
         local dir
