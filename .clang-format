@@ -1,11 +1,12 @@
----
-# Defaults from the Google style + global configs:
+# Global default configurations:
 BasedOnStyle: LLVM
-IndentWidth: 4
-BreakBeforeBraces: Allman
-ColumnLimit: 100
-AlignArrayOfStructures: Left
-SpacesInParentheses: true
+IndentWidth: 4 # Indentation of 4 spaces
+UseTab: Never # Always use spaces, never tabs
+BreakBeforeBraces: Allman # Break braces before starting blocks
+ColumnLimit: 100 # Set column limit to 100 characters (or set to 80 if you prefer)
+AlignArrayOfStructures: Left # Align array elements or struct members on the left
+SpacesInParentheses: true # Ensure spaces inside parentheses for readability
+ContinuationIndentWidth: 4 # Indent continuation lines by 4 spaces
 
 # Language specific configs:
 
