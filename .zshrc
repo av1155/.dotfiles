@@ -116,7 +116,7 @@ if [ -d "$ZPLUG_HOME" ]; then
 
     # Configuration (PLUGINS):
     zplug "mafredri/zsh-async", from:github
-    # zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+    zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
     zplug "plugins/git", from:oh-my-zsh, defer:2
     zplug "plugins/sudo", from:oh-my-zsh, defer:2
     zplug "plugins/conda", from:oh-my-zsh, defer:2
@@ -145,7 +145,7 @@ if [ -d "$ZPLUG_HOME" ]; then
 fi
 
 # Path to powerlevel10k theme
-source "$POWERLEVEL10K_DIR/powerlevel10k.zsh-theme"
+# source "$POWERLEVEL10K_DIR/powerlevel10k.zsh-theme"
 
 # plugins=( git sudo zsh-256color zsh-autosuggestions zsh-syntax-highlighting )
 source $ZSH/oh-my-zsh.sh
