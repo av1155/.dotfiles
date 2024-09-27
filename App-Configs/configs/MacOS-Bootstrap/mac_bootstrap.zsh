@@ -135,8 +135,8 @@ backup_existing_files() {
             color_echo $CYAN "! Skipping $target (not a regular file or doesn't exist)"
         fi
     done
-    
-    color_echo $GREEN "\n|------- Backup Process Completed -------|\n"
+
+    color_echo $GREEN "\n|--------- Backup Process Completed ---------|\n"
 }
 
 # Function to create a symlink
