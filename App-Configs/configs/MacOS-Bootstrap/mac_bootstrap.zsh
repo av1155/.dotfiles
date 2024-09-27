@@ -110,19 +110,33 @@ git_clone_fallback() {
 	exit 1
 }
 
-# Function to move existing conflicting files to .bak
 backup_existing_files() {
-    color_echo $YELLOW "Backing up existing files to .bak..."
-    
-    for target in $(stow --adopt --simulate */ 2>&1 | grep "existing" | awk -F ': ' '{print $2}'); do
-        if [ -f "$target" ]; then
-            mv "$target" "${target}.bak" || {
-                color_echo $RED "Failed to back up $target"
+    color_echo $YELLOW "|------- Backing Up Conflicting Files -------|\n"
+
+    # Use stow --simulate to find conflicts
+    stow --restow --simulate */ 2>&1 | grep "cannot stow" | while read -r line; do
+        
+        # Extract the conflicting file path using pattern matching
+        target=$(echo "$line" | sed -n 's/.*over existing target \(.*\) since.*/\1/p')
+
+        # Check if the target file exists and is a regular file (not a symlink or directory)
+        if [ -f "$HOME/$target" ] && [ ! -L "$HOME/$target" ]; then
+            # Create the directory for the .bak file if it doesn't exist
+            target_dir=$(dirname "$target")
+            mkdir -p "$HOME/$target_dir"
+            
+            # Move the conflicting file to a .bak version
+            mv "$HOME/$target" "$HOME/${target}.bak" || {
+                color_echo $RED "✗ Failed to back up $target"
                 exit 1
             }
-            color_echo $GREEN "Backed up $target to ${target}.bak"
+            color_echo $GREEN "✓ Backed up $target to ${target}.bak"
+        else
+            color_echo $CYAN "! Skipping $target (not a regular file or doesn't exist)"
         fi
     done
+    
+    color_echo $GREEN "\n|------- Backup Process Completed -------|\n"
 }
 
 # Function to create a symlink
@@ -456,7 +470,7 @@ if [ "$brewfile_confirmation" != "y" ] && [ "$brewfile_confirmation" != "Y" ]; t
 	color_echo $RED "Brewfile installation aborted."
 else
 	color_echo $BLUE "Installing software from Brewfile..."
-	brew bundle --file "$DOTFILES_DIR/Brewfile" || {
+	brew bundle --file "$DOTFILES_DIR/App-Configs/configs/MacOS-Bootstrap/Brewfile" || {
 		color_echo $RED "Failed to install software from Brewfile."
 		exit 1
 	}
@@ -544,8 +558,8 @@ cd "$HOME/.dotfiles" || {
 backup_existing_files
 
 # Run stow after backing up files
-color_echo $BLUE "Running stow --restow --adopt */ to create symlinks..."
-stow --restow --adopt */ || {
+color_echo $BLUE "Running stow --restow */ to create symlinks..."
+stow --restow */ || {
     color_echo $RED "Failed to stow dotfiles."
     exit 1
 }
