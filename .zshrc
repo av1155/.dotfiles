@@ -97,6 +97,44 @@ Linux)
 esac
 
 
+# <------------------ Auto Start Tmux Session ------------------>
+
+# Skip terminal-specific commands if run by IntelliJ
+if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
+    # Only run this code if it's an interactive shell (not when loaded by IntelliJ)
+    
+    if command -v tmux &> /dev/null && [ -n "$PS1" ] && [ -t 1 ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
+      # Check if any tmux sessions are running
+      if ! tmux list-sessions &>/dev/null; then
+        # No sessions exist, create or attach to "main"
+        exec tmux new-session -s main
+      else
+        # Check if "main" exists
+        if tmux has-session -t main &>/dev/null; then
+          # If "main" exists, attach to it unless it's already attached
+          if ! tmux list-clients -t main | grep -q .; then
+            exec tmux attach-session -t main
+          fi
+        else
+          # "main" session has been killed, recreate it
+          exec tmux new-session -s main
+        fi
+
+        # If "main" is already attached or unavailable, create a new session with incrementing name
+        new_session_name=$(tmux list-sessions -F "#S" | grep -E 'session[0-9]*' | awk -F 'session' '{print $2}' | sort -n | tail -n1)
+        
+        if [ -z "$new_session_name" ]; then
+          new_session_name=1
+        else
+          new_session_name=$((new_session_name + 1))
+        fi
+        
+        exec tmux new-session -s "session$new_session_name"
+      fi
+    fi
+fi
+
+
 # <------------------- OH-MY-ZSH AND PLUGINS ------------------->
 
 # Oh My Zsh configuration
@@ -154,42 +192,7 @@ source $ZSH/oh-my-zsh.sh
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 
-# <------------------ Auto Start Tmux Session ------------------>
-
-# Skip terminal-specific commands if run by IntelliJ
-if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    # Only run this code if it's an interactive shell (not when loaded by IntelliJ)
-    
-    if command -v tmux &> /dev/null && [ -n "$PS1" ] && [ -t 1 ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
-      # Check if any tmux sessions are running
-      if ! tmux list-sessions &>/dev/null; then
-        # No sessions exist, create or attach to "main"
-        exec tmux new-session -s main
-      else
-        # Check if "main" exists
-        if tmux has-session -t main &>/dev/null; then
-          # If "main" exists, attach to it unless it's already attached
-          if ! tmux list-clients -t main | grep -q .; then
-            exec tmux attach-session -t main
-          fi
-        else
-          # "main" session has been killed, recreate it
-          exec tmux new-session -s main
-        fi
-
-        # If "main" is already attached or unavailable, create a new session with incrementing name
-        new_session_name=$(tmux list-sessions -F "#S" | grep -E 'session[0-9]*' | awk -F 'session' '{print $2}' | sort -n | tail -n1)
-        
-        if [ -z "$new_session_name" ]; then
-          new_session_name=1
-        else
-          new_session_name=$((new_session_name + 1))
-        fi
-        
-        exec tmux new-session -s "session$new_session_name"
-      fi
-    fi
-fi
+# <---------------------- INITIALIZATION ----------------------->
 
 # fastfetch if installed
 if command -v fastfetch &>/dev/null; then
