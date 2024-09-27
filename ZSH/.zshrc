@@ -592,10 +592,12 @@ if [ -d ~/scripts/scripts ]; then
     alias upall-rpi="~/scripts/scripts/package_updater_rpi.zsh"
 fi
 
+[ -f "$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh" ] && alias macOS-bootstrap="$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh"
+
 
 # <------------------- ENVIROMENT VARIABLES ------------------->
 
-export PRETTIERD_DEFAULT_CONFIG="$HOME/.config/.prettierrc.json"
+export PRETTIERD_DEFAULT_CONFIG="$HOME/.dotfiles/Formatting-Files/.prettierrc.json"
 
 # Detect the architecture
 if [[ "$(uname -msn)" == "Darwin MacBook-M1-Pro-16.local arm64" ]]; then
@@ -615,7 +617,7 @@ else
 fi
 
 # Create the dynamic kitty config directory if it doesn't exist
-kitty_config_dir="$HOME/.dotfiles/.config/kitty"
+kitty_config_dir="$HOME/.dotfiles/Config/.config/kitty"
 if [ ! -d "$kitty_config_dir" ]; then
     mkdir -p "$kitty_config_dir"
 fi
@@ -624,7 +626,7 @@ fi
 printf "font_size %s\nbackground_opacity %s\nmacos_option_as_alt %s" "$FONT_SIZE" "$BACKGROUND_OPACITY" "$MACOS_OPTION_AS_ALT" > "$kitty_config_dir/dynamic.conf"
 
 # JAVA CLASSPATH CONFIGURATION
-JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/configs/javaClasspath"
+JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/Java-Jars/javaClasspath"
 
 # Clear existing java classpath entries
 export CLASSPATH=""
@@ -643,23 +645,25 @@ done
 # Finally, append the current directory to the CLASSPATH
 export CLASSPATH="$CLASSPATH:."
 
-# <-------------------CS50 Library Configuration ------------------>
-# https://github.com/cs50/libcs50
-
-export LIBRARY_PATH=~/.dotfiles/cs50lib
-export C_INCLUDE_PATH=~/.dotfiles/cs50lib
-export LD_LIBRARY_PATH=~/.dotfiles/cs50lib   # For Linux systems
-export DYLD_LIBRARY_PATH=~/.dotfiles/cs50lib # For macOS systems
-
 
 # <-------------------- API KEY CONFIGURATIONS -------------------->
 # Anthropic API Key
-ANTHROPIC_API_KEY=$(cat ~/.config/anthropic/api_key)
-export ANTHROPIC_API_KEY
+if [ -f "$HOME/.config/anthropic/api_key" ]; then
+    ANTHROPIC_API_KEY=$(cat ~/.config/anthropic/api_key)
+    export ANTHROPIC_API_KEY
+else
+    echo "Anthropic API key not found at $HOME/.config/anthropic/api_key"
+fi
+
 
 # OpenAI API Key
-OPENAI_API_KEY=$(cat ~/.config/openai/api_key)
-export OPENAI_API_KEY
+if [ -f "$HOME/.config/openai/api_key" ]; then
+    OPENAI_API_KEY=$(cat ~/.config/openai/api_key)
+    export OPENAI_API_KEY
+else
+    echo "OpenAI API key not found at $HOME/.config/openai/api_key"
+fi
+
 
 
 # <-------------------- GENERAL CONFIGURATIONS -------------------->

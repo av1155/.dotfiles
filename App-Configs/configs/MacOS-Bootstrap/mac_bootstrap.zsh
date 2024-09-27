@@ -69,20 +69,32 @@ git_clone_fallback() {
 	local retries=3
 	local count=0
 
-	# Attempt SSH cloning first
+	# Attempt HTTPS cloning without PAT first (for public repositories)
+	color_echo $BLUE "\nAttempting to clone repository using HTTPS (no PAT)..."
+	while [ $count -lt $retries ]; do
+		git clone "$https_url" "$clone_directory" && return 0
+		count=$((count + 1))
+		if [ $count -lt $retries ]; then
+			color_echo $YELLOW "Attempt $count/$retries failed using HTTPS (no PAT). Retrying in 3 seconds..."
+			sleep 2
+		fi
+	done
+
+	# Reset count and attempt SSH cloning next
 	color_echo $BLUE "\nAttempting to clone repository using SSH..."
+	count=0
 	if is_ssh_configured; then
 		while [ $count -lt $retries ]; do
 			git clone "$ssh_url" "$clone_directory" && return 0
 			count=$((count + 1))
 			if [ $count -lt $retries ]; then
 				color_echo $YELLOW "Attempt $count/$retries failed using SSH. Retrying in 3 seconds..."
-				sleep 3
+				sleep 2
 			fi
 		done
 	fi
 
-	# Attempt HTTPS with PAT cloning if both SSH and HTTPS fail
+	# If both SSH and HTTPS (no PAT) fail, fall back to HTTPS with PAT
 	color_echo $YELLOW "\nSSH is not configured or failed. Falling back to HTTPS with PAT."
 	count=0
 	while [ $count -lt $retries ]; do
@@ -90,12 +102,27 @@ git_clone_fallback() {
 		count=$((count + 1))
 		if [ $count -lt $retries ]; then
 			color_echo $YELLOW "\nAttempt $count/$retries failed using HTTPS with PAT. Retrying in 3 seconds..."
-			sleep 3
+			sleep 2
 		fi
 	done
 
 	color_echo $RED "\nFailed to clone repository after $retries attempts. Please check your network connection or credentials and try again."
 	exit 1
+}
+
+# Function to move existing conflicting files to .bak
+backup_existing_files() {
+    color_echo $YELLOW "Backing up existing files to .bak..."
+    
+    for target in $(stow --adopt --simulate */ 2>&1 | grep "existing" | awk -F ': ' '{print $2}'); do
+        if [ -f "$target" ]; then
+            mv "$target" "${target}.bak" || {
+                color_echo $RED "Failed to back up $target"
+                exit 1
+            }
+            color_echo $GREEN "Backed up $target to ${target}.bak"
+        fi
+    done
 }
 
 # Function to create a symlink
@@ -499,6 +526,38 @@ else
 	color_echo $BLUE "Skipping Conda environment restoration."
 fi
 
+
+# Step 6: Backup existing files and then run stow ------------------------------
+echo ""
+
+centered_color_echo $ORANGE "<-------------- Backup Existing Files and Stow -------------->"
+
+echo ""
+
+# Navigate to the .dotfiles directory
+cd "$HOME/.dotfiles" || {
+    color_echo $RED "Failed to change directory to $HOME/.dotfiles."
+    exit 1
+}
+
+# Backup any existing conflicting files
+backup_existing_files
+
+# Run stow after backing up files
+color_echo $BLUE "Running stow --restow --adopt */ to create symlinks..."
+stow --restow --adopt */ || {
+    color_echo $RED "Failed to stow dotfiles."
+    exit 1
+}
+
+color_echo $GREEN "Successfully stowed dotfiles."
+
+cd - || {
+	color_echo $RED "Failed to change back to the previous directory."
+	exit 1
+}
+
+
 # Step 7: Create symlinks (Idempotent) ----------------------------------------
 
 echo ""
@@ -511,26 +570,6 @@ color_echo $BLUE "Creating symlinks..."
 
 # Symlinks go here:
 # create_symlink "$DOTFILES_DIR/configs/.original_file" "$HOME/.linked_file"
-create_symlink "$DOTFILES_DIR/configs/colorls" "$HOME/.config/colorls"
-create_symlink "$DOTFILES_DIR/configs/cs50lib" "$HOME/cs50lib"
-create_symlink "$DOTFILES_DIR/configs/formatting_files/.clang-format" "$HOME/.clang-format"
-create_symlink "$DOTFILES_DIR/configs/formatting_files/.prettierrc.json" "$HOME/.config/.prettierrc.json"
-create_symlink "$DOTFILES_DIR/configs/git/.gitconfig" "$HOME/.gitconfig"
-create_symlink "$DOTFILES_DIR/configs/git/.gitignore_global" "$HOME/.gitignore_global"
-create_symlink "$DOTFILES_DIR/configs/intelliJ_IDEA/.ideavimrc" "$HOME/.ideavimrc"
-create_symlink "$DOTFILES_DIR/configs/kitty" "$HOME/.config/kitty"
-create_symlink "$DOTFILES_DIR/.config/kitty/dynamic.conf" "$DOTFILES_DIR/configs/kitty/dynamic.conf"
-create_symlink "$DOTFILES_DIR/configs/lazygit/config.yml" "$HOME/Library/Application Support/lazygit/config.yml"
-create_symlink "$DOTFILES_DIR/configs/neofetch/config.conf" "$HOME/.config/neofetch/config.conf"
-create_symlink "$DOTFILES_DIR/configs/ssh/config" "$HOME/.ssh/config"
-create_symlink "$DOTFILES_DIR/configs/tmux/tmux.conf" "$HOME/.config/tmux/tmux.conf"
-create_symlink "$DOTFILES_DIR/configs/vscode/settings.json" "$HOME/Library/Application Support/Code/User/settings.json"
-create_symlink "$DOTFILES_DIR/configs/vscode/keybindings.json" "$HOME/Library/Application Support/Code/User/keybindings.json"
-create_symlink "$DOTFILES_DIR/configs/zsh/.zprofile" "$HOME/.zprofile"
-create_symlink "$DOTFILES_DIR/configs/zsh/.zshrc" "$HOME/.zshrc"
-create_symlink "$DOTFILES_DIR/configs/zsh/starship.toml" "$HOME/.config/starship.toml"
-create_symlink "$DOTFILES_DIR/configs/zsh/fzf-git.sh" "$HOME/fzf-git.sh"
-create_symlink "$DOTFILES_DIR/configs/zsh/bat-themes" "$HOME/.config/bat/themes"
 create_symlink "/opt/homebrew/bin/gdu-go" "/opt/homebrew/bin/gdu"
 
 # Set up bat themes by building the cache
@@ -986,7 +1025,7 @@ if [ -d "$HOME/.config/nvim" ]; then
 
 		# Cloning the new configuration repository
 		color_echo $BLUE "Cloning the new AstroNvim configuration..."
-		git_clone_fallback "git@github.com:av1155/NeoVim-Configuration.git" "https://github.com/av1155/NeoVim-Configuration.git" "$HOME/.config/nvim"
+		git_clone_fallback "git@github.com:av1155/Neovim-Config.git" "https://github.com/av1155/Neovim-Config.git" "$HOME/.config/nvim"
 		color_echo $GREEN "Clone completed."
 	fi
 else
@@ -994,7 +1033,7 @@ else
 
 	# Cloning the new configuration repository
 	color_echo $BLUE "Cloning the new AstroNvim configuration..."
-	git_clone_fallback "git@github.com:av1155/NeoVim-Configuration.git" "https://github.com/av1155/NeoVim-Configuration.git" "$HOME/.config/nvim"
+	git_clone_fallback "git@github.com:av1155/Neovim-Config.git" "https://github.com/av1155/Neovim-Config.git" "$HOME/.config/nvim"
 	color_echo $GREEN "Clone completed."
 fi
 
@@ -1064,6 +1103,6 @@ centered_color_echo $ORANGE "<-------------- Thank You! -------------->"
 
 echo "" # Print a blank line
 
-color_echo $PURPLE "🚀 Installation successful! Your development environment is now supercharged and ready for lift-off. Please restart your computer to finalize the setup. Happy coding! ����"
+color_echo $PURPLE "🚀 Installation successful! Your development environment is now supercharged and ready for lift-off. Please restart your computer to finalize the setup. Happy coding!    "
 
 # -----------------------------------------------------------------------------
