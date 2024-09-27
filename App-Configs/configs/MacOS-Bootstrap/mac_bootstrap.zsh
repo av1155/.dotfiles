@@ -575,6 +575,7 @@ create_symlink "/opt/homebrew/bin/gdu-go" "/opt/homebrew/bin/gdu"
 # Set up bat themes by building the cache
 color_echo $BLUE "\nBuilding bat cache for themes..."
 bat cache --build
+bat --list-themes | grep Catppuccin
 
 # Inform the user about setting up GitHub Copilot CLI
 color_echo $YELLOW "\nSetting up GitHub Copilot CLI..."
@@ -926,10 +927,6 @@ if [[ "$current_ruby_path" == "$expected_ruby_path" ]]; then
 else
 	color_echo $GREEN " * Non-Homebrew Ruby detected. Please ensure Ruby from Homebrew is correctly set up."
 fi
-
-echo -n " ${GREEN}*${NC} "
-# Install colorls
-install_app "colorls" "gem install colorls" "gem list colorls -i &>/dev/null"
 
 # Verify Lua 5.1 and LuaRocks are installed
 if command -v lua5.1 &>/dev/null && command -v luarocks &>/dev/null; then
