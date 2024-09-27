@@ -1,5 +1,24 @@
 # .dotfiles
 
+<!--toc:start-->
+
+-   [.dotfiles](#dotfiles)
+    -   [Installation](#installation)
+    -   [.dotfiles Structure](#dotfiles-structure)
+    -   [Key Features](#key-features)
+        -   [Universal Zsh Configuration (`.zshrc`)](#universal-zsh-configuration-zshrc)
+        -   [MacOS Bootstrap Setup](#macos-bootstrap-setup)
+        -   [Terminal Multiplexing (`tmux`)](#terminal-multiplexing-tmux)
+            -   [Issues if tmux configuration does not load:](#issues-if-tmux-configuration-does-not-load)
+        -   [Neovim Configuration](#neovim-configuration)
+        -   [FZF and Bat Integration](#fzf-and-bat-integration)
+        -   [Package Manager Support](#package-manager-support)
+        -   [Scripts](#scripts)
+        -   [Color Schemes](#color-schemes)
+        -   [Java Classpath](#java-classpath)
+    -   [License](#license)
+    <!--toc:end-->
+
 This repository contains my personal configuration files (dotfiles) for setting up my Arch Linux with Hyprland window manager and other utilities. It also includes configurations for macOS and other environments.
 
 ## Installation
@@ -8,34 +27,34 @@ To install and symlink the configuration files to your system:
 
 1. Clone this repository into your home directory:
 
-   ```bash
-   git clone git@github.com:av1155/.dotfiles.git ~/.dotfiles
-   ```
+    ```bash
+    git clone git@github.com:av1155/.dotfiles.git ~/.dotfiles
+    ```
 
 2. Install GNU Stow (if not installed) to manage the symlinks:
 
-   ```bash
-   sudo pacman -S stow     # For Arch Linux
-   brew install stow       # For macOS (using Homebrew)
-   sudo apt install stow   # For Debian Linux
-   ```
+    ```bash
+    sudo pacman -S stow     # For Arch Linux
+    brew install stow       # For macOS (using Homebrew)
+    sudo apt install stow   # For Debian Linux
+    ```
 
 3. Navigate to the `.dotfiles` directory and run Stow:
 
-   ```bash
-   cd ~/.dotfiles
-   stow --restow */
-   ```
+    ```bash
+    cd ~/.dotfiles
+    stow --restow */
+    ```
 
-   If conflicts arise because symlinks already exist, or original files, you need to manually remove those files (or turn them into .bak's) and then run `stow --restow */` from the `~/.dotfiles` directory again.
+    If conflicts arise because symlinks already exist, or original files, you need to manually remove those files (or turn them into .bak's) and then run `stow --restow */` from the `~/.dotfiles` directory again.
 
-   ```bash
-   mv ~/.gitconfig ~/.gitconfig.bak
-   # or
-   rm ~/.gitconfig
-   ```
+    ```bash
+    mv ~/.gitconfig ~/.gitconfig.bak
+    # or
+    rm ~/.gitconfig
+    ```
 
-   Run `man stow` to understand how it works before using it.
+    Run `man stow` to understand how it works before using it.
 
 ## .dotfiles Structure
 
@@ -46,7 +65,7 @@ To install and symlink the configuration files to your system:
 │   └── configs
 │       ├── iTerm2_Profile
 │       ├── KittyAppIconMac
-│       └── MacOS-Bootstrap
+│       └── MacOS-Bootstrap # Bootstrap script for setting up macOS development environment
 ├── Config
 │   └── .config
 │       ├── bat
@@ -104,10 +123,16 @@ To install and symlink the configuration files to your system:
 
 The `.zshrc` file is designed to work across different systems like macOS, Linux (Arch, Raspberry Pi, etc.), and Windows (WSL). It detects the current OS and adjusts paths and tool installations accordingly, ensuring consistent behavior regardless of the platform.
 
-- **Oh My Zsh**: Configuration for managing Zsh and its plugins.
-- **Powerlevel10k Theme**: Installs and configures Powerlevel10k for a beautiful terminal prompt.
-- **ZPlug**: Manages Zsh plugins.
-- **Fastfetch**: Quickly fetches system information and displays it in the terminal.
+-   **Oh My Zsh**: Configuration for managing Zsh and its plugins.
+-   **Powerlevel10k Theme**: Installs and configures Powerlevel10k for a beautiful terminal prompt.
+-   **ZPlug**: Manages Zsh plugins.
+-   **Fastfetch**: Quickly fetches system information and displays it in the terminal.
+
+### MacOS Bootstrap Setup
+
+This repository also includes a macOS bootstrap script located in the [App-Configs/configs/MacOS-Bootstrap](App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh) directory. This script automates the setup of a macOS development environment from zero, including the installation of essential development tools, Homebrew, AstroNvim, and more.
+
+To learn more about this bootstrap and how to use it, refer to the [MacOS-Bootstrap README](App-Configs/configs/MacOS-Bootstrap/README.md).
 
 ### Terminal Multiplexing (`tmux`)
 
@@ -142,30 +167,30 @@ Ctrl + A (your current prefix), then I
 
 ### Neovim Configuration
 
-- The `.zshrc` includes automatic setup for Neovim's Python provider, ensuring that Neovim is always ready to work with Python and other environments.
-- Supports a dynamic Python executable path for `pynvim`.
+-   The `.zshrc` includes automatic setup for Neovim's Python provider, ensuring that Neovim is always ready to work with Python and other environments.
+-   Supports a dynamic Python executable path for `pynvim`.
 
 ### FZF and Bat Integration
 
-- Enhanced file navigation with FZF (Fuzzy Finder) and `bat` (a better `cat`).
-- Custom aliases for efficient directory and file navigation.
+-   Enhanced file navigation with FZF (Fuzzy Finder) and `bat` (a better `cat`).
+-   Custom aliases for efficient directory and file navigation.
 
 ### Package Manager Support
 
 The setup automatically configures the appropriate package manager for your system:
 
-- **Paru/Yay** on Arch Linux (for AUR support)
-- **Homebrew** on macOS (via `brew`)
+-   **Paru/Yay** on Arch Linux (for AUR support)
+-   **Homebrew** on macOS (via `brew`)
 
 ### Scripts
 
-- **fzf-git.sh**: Adds git integration to FZF for quickly browsing and managing git repositories.
-- **Custom Shell Scripts**: Includes scripts for managing Java projects, SQL URLs, updating packages, etc.
+-   **[fzf-git.sh](https://github.com/junegunn/fzf-git.sh)**: Adds git integration to FZF for quickly browsing and managing git repositories.
+-   **Custom Shell Scripts**: Includes scripts for managing Java projects, SQL URLs, updating packages, etc.
 
 ### Color Schemes
 
-- **Bat themes**: Automatically installs the Catppuccin theme for the `bat` command.
-- **Kitty**: Dynamic configuration for font size and opacity depending on the OS.
+-   **Bat themes**: Automatically installs the Catppuccin theme for the `bat` command.
+-   **Kitty**: Dynamic configuration for font size and opacity depending on the OS.
 
 ### Java Classpath
 

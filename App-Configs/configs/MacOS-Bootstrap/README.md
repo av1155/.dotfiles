@@ -1,22 +1,28 @@
 # Dotfiles + BootStrap Repository
 
+<!--toc:start-->
+
+-   [Dotfiles + BootStrap Repository](#dotfiles-bootstrap-repository)
+    -   [Table of Contents](#table-of-contents)
+    -   [Introduction](#introduction)
+    -   [Features](#features)
+    -   [Installation](#installation)
+        -   [Quick Installation](#quick-installation)
+        -   [Usage](#usage)
+            -   [Option 1: Clone and Run](#option-1-clone-and-run)
+            -   [Option 2: Download and Run](#option-2-download-and-run)
+    -   [Customization](#customization)
+    -   [Troubleshooting](#troubleshooting)
+    -   [Contributing](#contributing)
+    -   [License](#license)
+    <!--toc:end-->
+
 Welcome to my dotfiles repository! Here, you'll find configuration files
 (dotfiles) for customizing my development environment and a robust script,
 `mac_bootstrap.zsh`, designed to automate the entire setup of a new macOS
 device. This script covers everything from installing Xcode Command Line Tools
 to setting up your favorite apps, ensuring a streamlined and personalized
 development experience.
-
-## Table of Contents
-
--   [Introduction](#introduction)
--   [Features](#features)
--   [Installation](#installation)
--   [Usage](#usage)
--   [Customization](#customization)
--   [Troubleshooting](#troubleshooting)
--   [Contributing](#contributing)
--   [License](#license)
 
 ## Introduction
 
@@ -68,8 +74,8 @@ To set up your macOS development environment using this repository, ensure you h
 
 Open your terminal and run the following command:
 
-```shell
-curl -sSL https://gitfront.io/r/av1155/19cAs3DhXmSD/.dotfiles/raw/mac_bootstrap.zsh -o mac_bootstrap_tmp.zsh && chmod +x mac_bootstrap_tmp.zsh && ./mac_bootstrap_tmp.zsh && rm ./mac_bootstrap_tmp.zsh
+```bash
+curl -sSL https://github.com/av1155/.dotfiles/raw/main/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh -o mac_bootstrap_tmp.zsh && chmod +x mac_bootstrap_tmp.zsh && ./mac_bootstrap_tmp.zsh && rm ./mac_bootstrap_tmp.zsh
 ```
 
 This command will perform the following actions:
@@ -100,11 +106,11 @@ Follow any on-screen instructions to complete the setup.
 
 3. Make the script executable:
 
-    `chmod +x mac_bootstrap.zsh`
+    `chmod u+x ~/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh`
 
 4. Execute the script:
 
-    `./mac_bootstrap.zsh`
+    `~/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh`
 
 5. Follow any on-screen instructions to complete setup.
 
@@ -112,22 +118,13 @@ Follow any on-screen instructions to complete the setup.
 
 1. Download the `mac_bootstrap.zsh` script from this repository.
 
-2. Move the downloaded script to your home directory (~), you can use the mv
-   command for this:
+2. Make the script executable:
 
-    ```shell
-    mv ~/Downloads/mac_bootstrap.zsh ~/mac_bootstrap.zsh
-    ```
+    `chmod +x ~/Downloads/mac_bootstrap.zsh`
 
-3. Make the script executable:
+3. Execute the script and follow any on-screen instructions to complete setup.:
 
-    `chmod +x mac_bootstrap.zsh`
-
-4. Execute the script:
-
-    `./mac_bootstrap.zsh`
-
-5. Follow any on-screen instructions to complete setup.
+    `~/Downloads/mac_bootstrap.zsh`
 
 ## Customization
 
