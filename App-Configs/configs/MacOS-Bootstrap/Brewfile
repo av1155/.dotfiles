@@ -96,6 +96,8 @@ brew "php"
 brew "pipenv"
 # Paste PNG into files
 brew "pngpaste"
+# Fast, disk space efficient package manager
+brew "pnpm"
 # Object-relational database system
 brew "postgresql@14", restart_service: true
 # Theme for zsh
@@ -124,6 +126,8 @@ brew "thefuck"
 brew "tlrc"
 # Terminal multiplexer
 brew "tmux"
+# Command-line interface for Vercel
+brew "vercel-cli"
 # Vi 'workalike' with many additional features
 brew "vim"
 # Simple terminal image viewer written in Rust
