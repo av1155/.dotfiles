@@ -600,7 +600,7 @@ fi
 export PRETTIERD_DEFAULT_CONFIG="$HOME/.dotfiles/Formatting-Files/.prettierrc.json"
 
 # Detect the architecture
-if [[ "$(uname -msn)" =~ "Darwin MacBookM1Pro16.* arm64" ]]; then
+if [[ "$(uname -msn)" =~ "Darwin MacBook-M1-Pro-16.* arm64" ]]; then
     # macOS (macbook pro m1 16")
     FONT_SIZE="17"
     BACKGROUND_OPACITY="0.7"
