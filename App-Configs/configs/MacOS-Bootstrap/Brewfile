@@ -200,7 +200,7 @@ cask "maccy"
 cask "mathpix-snipping-tool"
 # Provides updates to various Microsoft products
 cask "microsoft-auto-update"
-# Web browser
+# Multi-platform web browser
 cask "microsoft-edge"
 # Office suite
 cask "microsoft-office"
