@@ -1,3 +1,7 @@
+# DOTFILES #
+#############
+!Java-Jars/javaClasspath/*.jar
+
 # Operating System generated files #
 #####################################
 .DS_Store
