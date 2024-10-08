@@ -311,6 +311,7 @@ alias lg='lazygit'
 alias lzd='lazydocker'
 alias zen-browser='io.github.zen_browser.zen'
 alias h="history"
+alias pn="pnpm"
 # alias fd='fdfind'
 
 if command -v nvim &>/dev/null; then
