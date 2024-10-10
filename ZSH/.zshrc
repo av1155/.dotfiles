@@ -601,14 +601,14 @@ fi
 export PRETTIERD_DEFAULT_CONFIG="$HOME/.dotfiles/Formatting-Files/.prettierrc.json"
 
 # Detect the architecture
-if [[ "$(uname -msn)" =~ "Darwin MacBook-M1-Pro-16.* arm64" ]]; then
-    # macOS (macbook pro m1 16")
+if [[ "$OS" == "Darwin" && "$ARCHITECTURE" == "arm64" ]]; then
+    # macOS
     FONT_SIZE="17"
     BACKGROUND_OPACITY="0.7"
     MACOS_OPTION_AS_ALT="left"
 
-elif [[ "$(uname -msn)" == "Linux archlinux x86_64" ]]; then
-    # Arch Linux (hyprland)
+elif [[ "$OS" == "Linux" && "$ARCHITECTURE" == "x86_64" ]]; then
+    # Arch Linux
     FONT_SIZE="9.5"
     BACKGROUND_OPACITY="0.8"
 else
