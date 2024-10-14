@@ -129,5 +129,6 @@
     "workbench.startupEditor": "none",
     "terminal.integrated.env.windows": {},
     "terminal.integrated.defaultProfile.windows": "Arch (WSL)",
-    "git.openRepositoryInParentFolders": "always"
+    "git.openRepositoryInParentFolders": "always",
+    "liveServer.settings.donotShowInfoMsg": true
 }
