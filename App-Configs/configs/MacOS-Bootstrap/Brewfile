@@ -251,7 +251,7 @@ cask "zoom"
 mas "1Blocker", id: 1365531024
 mas "1Password for Safari", id: 1569813296
 mas "Bitwarden", id: 1352778147
-mas "CleanMyMac X", id: 1339170533
+mas "CleanMyMac", id: 1339170533
 mas "Dropover", id: 1355679052
 mas "Encrypto", id: 935235287
 mas "Final Cut Pro", id: 424389933
