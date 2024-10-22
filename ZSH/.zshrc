@@ -348,7 +348,12 @@ alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first' # 
 alias  l='eza -A -lh --git --icons=auto --sort=name --group-directories-first' # long list
 alias la='eza -lha --git --icons=auto --sort=name --group-directories-first' # long list all
 alias ld='eza -A -lhD --git --icons=auto --sort=name' # long list dirs
-alias lt='eza -A --git --icons=auto --tree --level=3 --ignore-glob ".git|node_modules|*.log|*.tmp|dist|build|.DS_Store|*.swp|*.swo|.idea|__pycache__|coverage|env|venv|*.ttf|Icon?"'
+# alias lt='eza -A --git --icons=auto --tree --level=3 --ignore-glob ".git|node_modules|*.log|*.tmp|dist|build|.DS_Store|*.swp|*.swo|.idea|__pycache__|coverage|env|venv|*.ttf|Icon?"'
+
+function lt() {
+    local depth="${1:-3}" # Use $1 if depth is passed, otherwise default to 3
+    eza -A --git --icons=auto --tree --level="$depth" --ignore-glob ".git|node_modules|*.log|*.tmp|dist|build|.DS_Store|*.swp|*.swo|.idea|__pycache__|coverage|env|venv|*.ttf|Icon?"
+}
 
 # # Colorls
 # alias ls="colorls -A --gs --sd"                   # Lists most files, directories first, with git status.
