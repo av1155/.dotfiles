@@ -312,6 +312,7 @@ alias lzd='lazydocker'
 alias zen-browser='io.github.zen_browser.zen'
 alias h="history"
 alias pn="pnpm"
+alias gscopy='(echo -e "Provide a commit message and a title for the following, enclosed within a code block:\n" && gs && gd) | pbcopy'
 # alias fd='fdfind'
 
 if command -v nvim &>/dev/null; then
