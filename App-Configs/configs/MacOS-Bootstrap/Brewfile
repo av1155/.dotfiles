@@ -60,6 +60,8 @@ brew "glow"
 brew "go"
 # Open-source build automation tool based on the Groovy and Kotlin DSL
 brew "gradle"
+# Kubernetes package manager
+brew "helm"
 # Tools and libraries to manipulate images in many formats
 brew "imagemagick"
 # Lightweight and flexible command-line JSON processor
