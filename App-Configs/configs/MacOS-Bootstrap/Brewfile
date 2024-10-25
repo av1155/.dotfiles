@@ -92,6 +92,8 @@ brew "neovim"
 brew "numpy"
 # Create, run, and share large language models (LLMs)
 brew "ollama", restart_service: true
+# Web-based PostgreSQL database browser
+brew "pgweb"
 # General-purpose scripting language
 brew "php"
 # Python dependency management tool
