@@ -130,5 +130,8 @@
     "terminal.integrated.env.windows": {},
     "terminal.integrated.defaultProfile.windows": "Arch (WSL)",
     "git.openRepositoryInParentFolders": "always",
-    "liveServer.settings.donotShowInfoMsg": true
+    "liveServer.settings.donotShowInfoMsg": true,
+    "vs-kubernetes": {
+        "vscode-kubernetes.helm-path-mac": "/Users/andreaventi/.vs-kubernetes/tools/helm/darwin-arm64/helm"
+    }
 }
