@@ -180,6 +180,8 @@ cask "arc"
 cask "betterdisplay"
 # Tool to list all active shortcuts of the current application
 cask "cheatsheet"
+# Browser for SQLite databases
+cask "db-browser-for-sqlite"
 # Voice and text chat software
 cask "discord"
 # Developer platform
