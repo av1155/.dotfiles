@@ -133,5 +133,11 @@
     "liveServer.settings.donotShowInfoMsg": true,
     "vs-kubernetes": {
         "vscode-kubernetes.helm-path-mac": "/Users/andreaventi/.vs-kubernetes/tools/helm/darwin-arm64/helm"
+    },
+    "github.copilot.enable": {
+        "*": false,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
     }
 }
