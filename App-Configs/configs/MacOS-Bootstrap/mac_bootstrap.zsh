@@ -13,6 +13,21 @@ YELLOW='\033[0;33m'
 PURPLE='\033[0;35m'
 ORANGE='\033[0;33m'
 NC='\033[0m' # No color (reset)
+
+# Ensure Xcode Command Line Tools are installed
+if ! xcode-select -p &>/dev/null; then
+    color_echo $YELLOW "Xcode Command Line Tools not found. Installing..."
+    xcode-select --install
+    # Wait for the user to complete installation
+    read -p "Press Enter after the Xcode Command Line Tools installation is complete."
+fi
+
+# Ensure the script is run in Zsh
+if [ -z "$ZSH_VERSION" ]; then
+    color_echo $RED "This script requires Zsh. Please run it in a Zsh shell."
+    exit 1
+fi
+
 # BEGINNING OF FUNCTIONS ------------------------------------------------------
 
 # Function to display colored messages
