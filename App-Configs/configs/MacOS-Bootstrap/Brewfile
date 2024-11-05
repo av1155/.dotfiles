@@ -20,6 +20,8 @@ brew "bat"
 brew "bitwarden-cli"
 # Yet another cross-platform graphical process/system monitor
 brew "bottom"
+# Hacker News in your terminal
+brew "circumflex"
 # Cross-platform make
 brew "cmake"
 # Console Matrix
