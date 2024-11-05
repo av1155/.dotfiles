@@ -381,10 +381,10 @@ install_app "Powerlevel10k" "git clone --depth=1 https://github.com/romkatv/powe
 ARCH="$(uname -m)"
 if [ "$ARCH" = "x86_64" ]; then
 	# Intel architecture (x86_64)
-	JDK_URL="https://download.oracle.com/java/22/latest/jdk-22_macos-x64_bin.tar.gz"
+	JDK_URL="https://download.oracle.com/java/23/latest/jdk-23_macos-x64_bin.tar.gz"
 elif [ "$ARCH" = "arm64" ]; then
 	# ARM architecture (Apple Silicon)
-	JDK_URL="https://download.oracle.com/java/22/latest/jdk-22_macos-aarch64_bin.tar.gz"
+	JDK_URL="https://download.oracle.com/java/23/latest/jdk-23_macos-aarch64_bin.tar.gz"
 else
 	color_echo $RED "Unsupported architecture: $ARCH"
 	exit 1
