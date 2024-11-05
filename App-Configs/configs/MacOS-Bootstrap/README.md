@@ -3,7 +3,6 @@
 <!--toc:start-->
 
 -   [Dotfiles + BootStrap Repository](#dotfiles-bootstrap-repository)
-    -   [Table of Contents](#table-of-contents)
     -   [Introduction](#introduction)
     -   [Features](#features)
     -   [Installation](#installation)

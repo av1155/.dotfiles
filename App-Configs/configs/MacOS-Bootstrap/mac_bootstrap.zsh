@@ -379,15 +379,24 @@ install_app "Powerlevel10k" "git clone --depth=1 https://github.com/romkatv/powe
 # Install Java
 # Determine the architecture of the macOS system
 ARCH="$(uname -m)"
-if [ "$ARCH" = "x86_64" ]; then
-	# Intel architecture (x86_64)
-	JDK_URL="https://download.oracle.com/java/23/latest/jdk-23_macos-x64_bin.tar.gz"
-elif [ "$ARCH" = "arm64" ]; then
-	# ARM architecture (Apple Silicon)
-	JDK_URL="https://download.oracle.com/java/23/latest/jdk-23_macos-aarch64_bin.tar.gz"
+JDK_PAGE_URL="https://www.oracle.com/java/technologies/downloads/#jdk"
+
+# Fetch the page and extract the correct link based on architecture
+if [ "$ARCH" = "arm64" ]; then
+    # ARM architecture (Apple Silicon)
+    JDK_URL=$(curl -sL $JDK_PAGE_URL | grep -oE 'https://download.oracle.com/java/[0-9]+/latest/jdk-[0-9]+_macos-aarch64_bin.tar.gz' | head -n 1)
+elif [ "$ARCH" = "x86_64" ]; then
+    # Intel architecture (x86_64)
+    JDK_URL=$(curl -sL $JDK_PAGE_URL | grep -oE 'https://download.oracle.com/java/[0-9]+/latest/jdk-[0-9]+_macos-x64_bin.tar.gz' | head -n 1)
 else
-	color_echo $RED "Unsupported architecture: $ARCH"
-	exit 1
+    color_echo $RED "Unsupported architecture: $ARCH"
+    exit 1
+fi
+
+# If JDK_URL is not found, exit with error
+if [ -z "$JDK_URL" ]; then
+    color_echo $RED "Failed to find the latest JDK download link."
+    exit 1
 fi
 
 # Define the download and extraction location
@@ -398,22 +407,22 @@ EXTRACT_LOCATION="$DOWNLOAD_LOCATION/jdk_extract"
 mkdir -p "$EXTRACT_LOCATION"
 
 # Download the tar.gz file to the extraction directory
-color_echo $YELLOW "Downloading and extracting JDK..."
-curl -L $JDK_URL | tar -xz -C "$EXTRACT_LOCATION"
+color_echo $YELLOW "Downloading and extracting JDK from $JDK_URL..."
+curl -L "$JDK_URL" | tar -xz -C "$EXTRACT_LOCATION"
 
 # Determine the name of the top-level directory in the extracted location
 JDK_DIR_NAME=$(ls "$EXTRACT_LOCATION" | grep 'jdk')
 
 # Check if this directory already exists in the target directory
 if [ ! -d "$HOME/Library/Java/JavaVirtualMachines/$JDK_DIR_NAME" ]; then
-	color_echo $GREEN "Installing Java..."
-	# Move the JDK directory to the Java Virtual Machines directory
-	mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$HOME/Library/Java/JavaVirtualMachines/"
-	color_echo $GREEN "Java installed successfully."
+    color_echo $GREEN "Installing Java..."
+    # Move the JDK directory to the Java Virtual Machines directory
+    mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$HOME/Library/Java/JavaVirtualMachines/"
+    color_echo $GREEN "Java installed successfully."
 else
-	color_echo $BLUE "Java is already installed. No action taken, residual files have been removed."
-	# Remove the extracted JDK if already installed
-	rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
+    color_echo $BLUE "Java is already installed. No action taken, residual files have been removed."
+    # Remove the extracted JDK if already installed
+    rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
 fi
 
 # Remove the extraction directory if empty
