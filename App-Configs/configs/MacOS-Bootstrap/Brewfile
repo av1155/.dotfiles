@@ -92,8 +92,6 @@ brew "nasm"
 brew "neovim"
 # Package for scientific computing with Python
 brew "numpy"
-# Create, run, and share large language models (LLMs)
-brew "ollama", restart_service: true
 # Web-based PostgreSQL database browser
 brew "pgweb"
 # General-purpose scripting language
@@ -222,6 +220,8 @@ cask "middleclick"
 cask "miniforge"
 # App to write, plan, collaborate, and get organised
 cask "notion"
+# Get up and running with large language models locally
+cask "ollama"
 # Verify system files structure, run miscellaneous maintenance and more
 cask "onyx"
 # Quick Look generator for Markdown files
@@ -256,18 +256,6 @@ cask "warp"
 cask "whatsapp"
 # Video communication and virtual meeting platform
 cask "zoom"
-mas "1Blocker", id: 1365531024
-mas "1Password for Safari", id: 1569813296
-mas "Bitwarden", id: 1352778147
-mas "CleanMyMac", id: 1339170533
-mas "Dropover", id: 1355679052
-mas "Encrypto", id: 935235287
-mas "Final Cut Pro", id: 424389933
-mas "Goodnotes", id: 1444383602
-mas "Noir", id: 1592917505
-mas "Sequel Ace", id: 1518036000
-mas "Steam Link", id: 1246969117
-mas "Xcode", id: 497799835
 vscode "adpyke.codesnap"
 vscode "alefragnani.project-manager"
 vscode "batisteo.vscode-django"
