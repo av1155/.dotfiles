@@ -34,11 +34,7 @@ fi
 color_echo() {
 	local color="$1"
 	local message="$2"
-	if [ "$3" = "-n" ]; then
-		echo -ne "${color}${message}${NC}"
-	else
-		echo -e "${color}${message}${NC}"
-	fi
+	echo -e "${color}${message}${NC}"
 }
 
 # Function to calculate padding for centering text
@@ -284,6 +280,14 @@ install_neovim() {
 }
 
 
+# Custom function for colored text without a newline
+auto_color_echo() {
+    local color_code="$1"
+    local message="$2"
+    # Use printf to avoid adding a newline
+    printf "%b%s%b" "$color_code" "$message" "$NC"
+}
+
 # Function for an automatic yes/no prompt with a timeout and color
 auto_prompt() {
     local prompt_message="$1"
@@ -294,12 +298,12 @@ auto_prompt() {
 
     # Set prompt based on default choice
     if [[ "$default_choice" =~ ^[Yy]$ ]]; then
-        color_echo "$color" "$prompt_message -> [Y/n] (default in $timeout_duration seconds): "
+        auto_color_echo "$color" "$prompt_message -> [Y/n] (default in $timeout_duration seconds): "
     else
-        color_echo "$color" "$prompt_message -> [y/N] (default in $timeout_duration seconds): "
+        auto_color_echo "$color" "$prompt_message -> [y/N] (default in $timeout_duration seconds): "
     fi
 
-    read -t "$timeout_duration" response || response="$default_choice"
+    read -t "$timeout_duration" -r response || response="$default_choice"
     [[ "$response" =~ ^[Yy]$ ]] && return 0 || return 1
 }
 
