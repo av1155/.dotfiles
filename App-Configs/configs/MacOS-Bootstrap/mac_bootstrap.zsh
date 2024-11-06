@@ -34,7 +34,11 @@ fi
 color_echo() {
 	local color="$1"
 	local message="$2"
-	echo -e "${color}${message}${NC}"
+	if [ "$3" == "-n" ]; then
+		echo -ne "${color}${message}${NC}"
+	else
+		echo -e "${color}${message}${NC}"
+	fi
 }
 
 # Function to calculate padding for centering text
@@ -479,6 +483,7 @@ if [ ! -d "$DOTFILES_DIR" ]; then
 	else
 		color_echo $GREEN "Skipping clone of repository."
 		echo ""
+	fi
 else
 	color_echo $GREEN "The '.dotfiles' directory already exists in '$DOTFILES_DIR'. Skipping clone of repository."
 	echo ""
