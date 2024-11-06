@@ -646,24 +646,33 @@ echo ""
 
 # Check if NVM (Node Version Manager) is installed ----------------------------
 if [ ! -d "$HOME/.nvm" ]; then
-	# Install NVM if it's not installed
-	color_echo $BLUE "Installing Node Version Manager (nvm)..."
-	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash || {
-		color_echo $RED "Failed to install nvm."
-		exit 1
-	}
-
-	# Run the following to use it in the same shell session:
-	export NVM_DIR="$HOME/.nvm"
-	[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
-
+    # Fetch the latest NVM version from the README on GitHub
+    LATEST_NVM_VERSION=$(curl -sL 'https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/README.md' \
+                         | grep -oE 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install.sh' \
+                         | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' \
+                         | head -n 1)
+    
+    # Default to v0.40.1 if no version is found
+    if [ -z "$LATEST_NVM_VERSION" ]; then
+        color_echo $RED "Failed to fetch the latest NVM version, defaulting to v0.40.1."
+        LATEST_NVM_VERSION="v0.40.1"
+    fi
+    
+    # Install NVM
+    color_echo $BLUE "Installing Node Version Manager (nvm) version $LATEST_NVM_VERSION..."
+    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM_VERSION}/install.sh" | bash || {
+        color_echo $RED "Failed to install nvm."
+        exit 1
+    }
+    
+    # Run the following to use it in the same shell session:
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
 else
-	color_echo $GREEN "NVM already installed, visit 'https://github.com/nvm-sh/nvm#installing-and-updating' to update to the latest version."
-
-	# Run the following to use it in the same shell session:
-	export NVM_DIR="$HOME/.nvm"
-	[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
-
+    color_echo $GREEN "NVM already installed. Visit 'https://github.com/nvm-sh/nvm#installing-and-updating' to update to the latest version."
+    # Run the following to use it in the same shell session:
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
 fi
 
 echo ""
@@ -1121,7 +1130,124 @@ else
 	color_echo $YELLOW "Neovim is not installed. Please install Neovim to proceed."
 fi
 
-# Step 12: Create TODO List of Apps to Download -------------------------------
+
+# Step 12: Docker, Ollama, and Open WebUI -------------------------------
+
+echo ""
+centered_color_echo $ORANGE "<-------------- Docker, Ollama, and Open WebUI -------------->"
+echo ""
+
+# Prompt to set up Open WebUI
+color_echo $YELLOW "Would you like to set up Open WebUI with the following command?"
+echo -e "\n${BLUE}docker run -d -p 8080:8080 -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://host.docker.internal:11434 --name open-webui --restart always ghcr.io/open-webui/open-webui:main${NC}"
+echo -n "-> [y/N]: "
+read -r setup_open_webui_choice
+
+if [[ "$setup_open_webui_choice" =~ ^[Yy]$ ]]; then
+    # Step 1: Check for Docker installation
+    if ! command -v docker &>/dev/null; then
+        color_echo $RED "Docker is not installed."
+
+        # Prompt to install Docker
+        color_echo $YELLOW "Would you like to download and install Docker?"
+        echo -n "-> [y/N]: "
+        read -r install_docker_choice
+
+        if [[ "$install_docker_choice" =~ ^[Yy]$ ]]; then
+            docker_dmg_path="$HOME/Downloads/Docker.dmg"
+            color_echo $BLUE "Downloading Docker..."
+            curl -L -o "$docker_dmg_path" "https://desktop.docker.com/mac/main/arm64/Docker.dmg" || {
+                color_echo $RED "Failed to download Docker."
+                exit 1
+            }
+            color_echo $GREEN "Docker downloaded to $docker_dmg_path"
+
+            # Mount and open the Docker DMG
+            hdiutil attach "$docker_dmg_path" -quiet || {
+                color_echo $RED "Failed to mount Docker DMG."
+                exit 1
+            }
+            open /Volumes/Docker/Docker.app
+            color_echo $YELLOW "Please complete the Docker installation. Press Enter when done."
+            read -r
+
+            # Unmount Docker DMG
+            hdiutil detach "/Volumes/Docker" -quiet
+            color_echo $GREEN "Docker DMG unmounted."
+
+            # Confirm Docker installation
+            if ! command -v docker &>/dev/null; then
+                color_echo $RED "Docker installation did not complete successfully. Please install manually."
+                exit 1
+            fi
+        else
+            color_echo $BLUE "Skipping Docker installation."
+            exit 1
+        fi
+    else
+        color_echo $GREEN "Docker is already installed. Version: $(docker -v)"
+    fi
+
+    # Step 2: Check for Ollama installation
+    if ! command -v ollama &>/dev/null; then
+        color_echo $RED "Ollama is not installed. Please install Ollama to proceed."
+        exit 1
+    else
+        color_echo $GREEN "Ollama is installed. Version: $(ollama -v)"
+    fi
+
+    # Step 3: Check if Open WebUI container and image already exist
+    if docker ps -a --filter "name=open-webui" --format "{{.Names}}" | grep -q "open-webui"; then
+        color_echo $YELLOW "An existing Open WebUI container was found."
+
+        # Prompt to handle the existing container
+        echo -n "Would you like to restart the existing container, recreate it, or skip? (r/restart, c/recreate, s/skip): "
+        read -r container_action
+        case "$container_action" in
+            r | restart)
+                color_echo $BLUE "Restarting existing Open WebUI container..."
+                docker start open-webui
+                ;;
+            c | recreate)
+                color_echo $BLUE "Recreating Open WebUI container..."
+                docker rm -f open-webui
+                docker run -d -p 8080:8080 -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://host.docker.internal:11434 --name open-webui --restart always ghcr.io/open-webui/open-webui:main
+                ;;
+            *)
+                color_echo $BLUE "Skipping Open WebUI setup."
+                ;;
+        esac
+    else
+        # No existing container; check if the image is available
+        if docker images -q ghcr.io/open-webui/open-webui:main &>/dev/null; then
+            color_echo $YELLOW "The Open WebUI image is already available locally."
+
+            # Prompt to use existing image or pull a fresh one
+            echo -n "Would you like to use the existing image or pull the latest? (e/existing, l/latest): "
+            read -r image_choice
+            if [[ "$image_choice" =~ ^[Ll]$ ]]; then
+                color_echo $BLUE "Pulling the latest Open WebUI image..."
+                docker pull ghcr.io/open-webui/open-webui:main
+            fi
+        else
+            color_echo $BLUE "Pulling the Open WebUI image..."
+            docker pull ghcr.io/open-webui/open-webui:main
+        fi
+
+        # Run the container
+        color_echo $BLUE "Setting up Open WebUI container..."
+        docker run -d -p 8080:8080 -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://host.docker.internal:11434 --name open-webui --restart always ghcr.io/open-webui/open-webui:main || {
+            color_echo $RED "Failed to set up Open WebUI."
+            exit 1
+        }
+        color_echo $GREEN "Open WebUI setup complete."
+    fi
+else
+    color_echo $BLUE "Skipping Open WebUI setup."
+fi
+
+
+# Step 13: Create TODO List of Apps to Download -------------------------------
 
 echo ""
 
@@ -1170,11 +1296,11 @@ color_echo $BLUE "A TODO list of apps to download has been created/updated on yo
 
 # -----------------------------------------------------------------------------
 
-echo "" # Print a blank line
+echo ""
 
 centered_color_echo $ORANGE "<-------------- Thank You! -------------->"
 
-echo "" # Print a blank line
+echo ""
 
 color_echo $PURPLE "🚀 Installation successful! Your development environment is now supercharged and ready for lift-off. Please restart your computer to finalize the setup. Happy coding!    "
 
