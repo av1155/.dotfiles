@@ -825,8 +825,10 @@ echo -n "-> [y/N]: "
 read -r pnpm_confirmation
 if [ "$pnpm_confirmation" = "y" ] || [ "$pnpm_confirmation" = "Y" ]; then
     color_echo $BLUE "Enabling Corepack and setting up pnpm..."
-    corepack enable pnpm
-    corepack use pnpm@latest
+    corepack enable  # Enables Corepack globally
+
+    # Install and activate the latest version of pnpm
+    corepack prepare pnpm@latest --activate
     color_echo $GREEN "pnpm setup complete."
 else
     color_echo $BLUE "Skipping pnpm setup."
