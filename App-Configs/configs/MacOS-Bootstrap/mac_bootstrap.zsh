@@ -34,7 +34,7 @@ fi
 color_echo() {
 	local color="$1"
 	local message="$2"
-	if [ "$3" == "-n" ]; then
+	if [ "$3" = "-n" ]; then
 		echo -ne "${color}${message}${NC}"
 	else
 		echo -e "${color}${message}${NC}"
