@@ -279,7 +279,7 @@ install_neovim() {
 
 }
 
-# Function for an automatic yes/no prompt with a timeout and color
+# Function for an automatic yes/no prompt with a timeout
 auto_prompt() {
     local prompt_message="$1"
     local timeout_duration="${2:-10}"  # Default to 10 seconds if not specified
@@ -294,12 +294,18 @@ auto_prompt() {
         color_echo "$color" "$prompt_message -> [y/N] (default in $timeout_duration seconds): "
     fi
 
-    # Read input with timeout; if it times out, use default_choice explicitly
-    if ! read -t "$timeout_duration" response; then
-        response="$default_choice"
+    # Prompt user and handle timeout or empty input with default choice
+    read -t "$timeout_duration" -r response
+
+    # If response is empty (Enter pressed or timeout), use default choice
+    response="${response:-$default_choice}"
+
+    # Return based on the interpreted response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        return 0  # Yes
+    else
+        return 1  # No
     fi
-    
-    [[ "$response" =~ ^[Yy]$ ]] && return 0 || return 1
 }
 
 # END OF FUNCTIONS ------------------------------------------------------------
@@ -1059,7 +1065,7 @@ echo ""
 # Check if the Neovim configuration directory exists
 if [ -d "$HOME/.config/nvim" ]; then
 	color_echo $YELLOW "An existing Neovim configuration has been detected."
-	if auto_prompt "Do you want to replace the current Neovim configuration?" 10 "n" $YELLOW; then
+	if auto_prompt "Do you want to KEEP the current Neovim configuration?" 10 "y" $YELLOW; then
 		color_echo $GREEN "Keeping the existing configuration. No changes made."
 
 	else
