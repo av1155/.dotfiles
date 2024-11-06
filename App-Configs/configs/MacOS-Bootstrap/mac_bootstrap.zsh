@@ -217,10 +217,7 @@ install_app() {
 	if ! eval "$check_command"; then
 		color_echo $GREEN "$app_name already installed."
 	else
-		color_echo $YELLOW "Do you want to install $app_name?"
-		echo -n "-> [y/N]: "
-		read -r choice
-		if [ "$choice" = "y" ] || [ "$choice" = "Y" ]; then
+		if auto_prompt "Do you want to install $app_name?" 10 "y" $YELLOW; then
 			color_echo $BLUE "Installing $app_name..."
 			eval "$install_command" || {
 				color_echo $RED "Failed to install $app_name."
@@ -282,19 +279,34 @@ install_neovim() {
 
 }
 
+
+# Function for an automatic yes/no prompt with a timeout and color
+auto_prompt() {
+    local prompt_message="$1"
+    local timeout_duration="${2:-10}"  # Default to 10 seconds if not specified
+    local default_choice="${3:-n}"     # Default choice if not specified
+    local color="${4:-$YELLOW}"        # Default color for prompt message
+    local response
+
+    # Set prompt based on default choice
+    if [[ "$default_choice" =~ ^[Yy]$ ]]; then
+        color_echo "$color" "$prompt_message -> [Y/n] (default in $timeout_duration seconds): "
+    else
+        color_echo "$color" "$prompt_message -> [y/N] (default in $timeout_duration seconds): "
+    fi
+
+    read -t "$timeout_duration" response || response="$default_choice"
+    [[ "$response" =~ ^[Yy]$ ]] && return 0 || return 1
+}
+
 # END OF FUNCTIONS ------------------------------------------------------------
 
 # Confirmation prompt for starting the script
-color_echo $YELLOW "Do you want to proceed with the BootStrap Setup Script?"
-echo -n "-> [Y/n]: "
-read -r confirmation
-if [ "$confirmation" != "n" ] && [ "$confirmation" != "N" ]; then
+if auto_prompt "Do you want to proceed with the BootStrap Setup Script?" 10 "y" $YELLOW; then
 	color_echo $GREEN "Starting BootStrap Setup Script..."
-
-else # Exit if the user does not confirm
+else 
 	color_echo $RED "BootStrap Setup Script aborted."
 	exit 1
-
 fi
 
 # Step 1: Install Homebrew ----------------------------------------------------
@@ -307,30 +319,35 @@ echo ""
 
 # Check if Homebrew is installed
 if ! command -v brew &>/dev/null; then
-	color_echo $BLUE "Installing Homebrew..."
-	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
-		color_echo $RED "Failed to install Homebrew."
-		exit 1
-	}
+	if auto_prompt "Do you want to install Homebrew?" 10 "y" $YELLOW; then
+		color_echo $BLUE "Installing Homebrew..."
+		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
+			color_echo $RED "Failed to install Homebrew."
+			exit 1
+		}
 
-	# Determine the architecture (Intel or Apple Silicon)
-	arch_name="$(uname -m)"
-	if [ "$arch_name" = "x86_64" ]; then
-		# Intel Macs
-		HOMEBREW_BIN="/usr/local/bin/brew"
-	elif [ "$arch_name" = "arm64" ]; then
-		# Apple Silicon Macs
-		HOMEBREW_BIN="/opt/homebrew/bin/brew"
+		# Determine the architecture (Intel or Apple Silicon)
+		arch_name="$(uname -m)"
+		if [ "$arch_name" = "x86_64" ]; then
+			# Intel Macs
+			HOMEBREW_BIN="/usr/local/bin/brew"
+		elif [ "$arch_name" = "arm64" ]; then
+			# Apple Silicon Macs
+			HOMEBREW_BIN="/opt/homebrew/bin/brew"
+		else
+			color_echo $RED "Unknown architecture: $arch_name"
+			exit 1
+		fi
+
+		# Set up Homebrew in the shell only after installation
+		echo "eval \"$($HOMEBREW_BIN shellenv)\"" >>$HOME/.zprofile
+		eval "$($HOMEBREW_BIN shellenv)"
+
 	else
-		color_echo $RED "Unknown architecture: $arch_name"
+		color_echo $RED "Homebrew installation skipped."
 		exit 1
 	fi
 
-	# Set up Homebrew in the shell only after installation
-	echo "eval \"$($HOMEBREW_BIN shellenv)\"" >>$HOME/.zprofile
-	eval "$($HOMEBREW_BIN shellenv)"
-
-	# Homebrew will prompt for Xcode Command Line Tools installation if necessary
 else
 	color_echo $GREEN "Homebrew already installed, updating..."
 	brew update && brew upgrade || {
@@ -371,25 +388,6 @@ color_echo $YELLOW "Once Oh My Zsh has been installed, rerun the script to finis
 
 # Install Oh My Zsh
 install_app "Oh My Zsh" "sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\"" "[ ! -d '$HOME/.oh-my-zsh' ]"
-
-# Check if Oh My Zsh is installed before attempting to install zsh-syntax-highlighting
-if [ -d "$HOME/.oh-my-zsh" ]; then
-	# Install zsh-syntax-highlighting plugin
-	if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting" ]; then
-		color_echo $BLUE "Installing zsh-syntax-highlighting plugin..."
-		git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting" || {
-			color_echo $RED "Failed to clone zsh-syntax-highlighting."
-			exit 1
-		}
-	else
-		color_echo $GREEN "zsh-syntax-highlighting plugin already installed."
-	fi
-else
-	color_echo $RED "Oh My Zsh is not installed. Please install Oh My Zsh first."
-fi
-
-# Install Powerlevel10k Theme
-install_app "Powerlevel10k" "git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k" "[ ! -d '$HOME/powerlevel10k' ]"
 
 # Install Java
 # Determine the architecture of the macOS system
@@ -458,10 +456,7 @@ if [ -d "$SCRIPTS_REPO_DIRECTORY" ]; then
 else
 	# Ask the user if they want to clone the "scripts" repository
 	color_echo $YELLOW "The 'scripts' directory does not exist in '$SCRIPTS_REPO_DIRECTORY'."
-	color_echo $YELLOW "Do you want to clone the scripts repository?"
-	echo -n "-> [y/N]: "
-	read -r scripts_clone_choice
-	if [ "$scripts_clone_choice" = "y" ] || [ "$scripts_clone_choice" = "Y" ]; then
+	if auto_prompt "Do you want to clone the scripts repository?" 10 "y" $YELLOW; then
 		git_clone_fallback "git@github.com:av1155/scripts.git" "https://github.com/av1155/scripts.git" "$SCRIPTS_REPO_DIRECTORY"
 	else
 		color_echo $GREEN "Skipping scripts repository cloning."
@@ -478,8 +473,12 @@ echo ""
 
 DOTFILES_DIR="$HOME/.dotfiles"
 if [ ! -d "$DOTFILES_DIR" ]; then
-	color_echo $BLUE "Cloning .dotfiles repository..."
-	git_clone_fallback "git@github.com:av1155/.dotfiles.git" "https://github.com/av1155/.dotfiles.git" "$DOTFILES_DIR"
+	if auto_prompt "Do you want to clone the .dotfiles repository?" 10 "y" $YELLOW; then
+		color_echo $BLUE "Cloning .dotfiles repository..."
+		git_clone_fallback "git@github.com:av1155/.dotfiles.git" "https://github.com/av1155/.dotfiles.git" "$DOTFILES_DIR"
+	else
+		color_echo $GREEN "Skipping clone of repository."
+		echo ""
 else
 	color_echo $GREEN "The '.dotfiles' directory already exists in '$DOTFILES_DIR'. Skipping clone of repository."
 	echo ""
@@ -487,18 +486,15 @@ fi
 
 # Install software from Brewfile -----------------------------------------------
 
-color_echo $YELLOW "Do you want to proceed with installing software from Brewfile?"
-echo -n "-> [y/N]: "
-read -r brewfile_confirmation
-if [ "$brewfile_confirmation" != "y" ] && [ "$brewfile_confirmation" != "Y" ]; then
-	color_echo $RED "Brewfile installation aborted."
-else
+if auto_prompt "Do you want to proceed with installing software from Brewfile?" 10 "y" $YELLOW; then
 	color_echo $BLUE "Installing software from Brewfile..."
 	brew bundle --file "$DOTFILES_DIR/App-Configs/configs/MacOS-Bootstrap/Brewfile" || {
 		color_echo $RED "Failed to install software from Brewfile."
 		exit 1
 	}
 	color_echo $GREEN "Brewfile installation complete."
+else
+	color_echo $RED "Brewfile installation aborted."
 fi
 
 echo ""
@@ -516,10 +512,7 @@ echo ""
 
 CONDA_BACKUP_DIR="$HOME/CondaBackup"
 if [ ! -d "$CONDA_BACKUP_DIR" ]; then
-	color_echo $YELLOW "The 'CondaBackup' directory does not exist. Do you want to clone the CondaBackup repository?"
-	echo -n "-> [y/N]: "
-	read -r clone_choice
-	if [ "$clone_choice" = "y" ] || [ "$clone_choice" = "Y" ]; then
+	if auto_prompt "The 'CondaBackup' directory does not exist. Do you want to clone the CondaBackup repository?" 10 "y" $YELLOW; then
 		color_echo $BLUE "Cloning CondaBackup repository..."
 		git clone "https://github.com/av1155/CondaBackup.git" "$CONDA_BACKUP_DIR" ||
 			{
@@ -541,10 +534,7 @@ centered_color_echo $ORANGE "<-------------- Restoring Conda Environments ------
 
 echo ""
 
-color_echo $YELLOW "Do you want to restore Conda environments from the backup?"
-echo -n "-> [y/N]: "
-read -r restore_choice
-if [ "$restore_choice" = "y" ] || [ "$restore_choice" = "Y" ]; then
+if auto_prompt "Do you want to restore Conda environments from the backup?" 10 "y" $YELLOW; then
 	BACKUP_DIR="${HOME}/CondaBackup"
 
 	if [ -d "$BACKUP_DIR" ]; then
@@ -646,33 +636,35 @@ echo ""
 
 # Check if NVM (Node Version Manager) is installed ----------------------------
 if [ ! -d "$HOME/.nvm" ]; then
-    # Fetch the latest NVM version from the README on GitHub
-    LATEST_NVM_VERSION=$(curl -sL 'https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/README.md' \
-                         | grep -oE 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install.sh' \
-                         | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' \
-                         | head -n 1)
-    
-    # Default to v0.40.1 if no version is found
-    if [ -z "$LATEST_NVM_VERSION" ]; then
-        color_echo $RED "Failed to fetch the latest NVM version, defaulting to v0.40.1."
-        LATEST_NVM_VERSION="v0.40.1"
-    fi
-    
-    # Install NVM
-    color_echo $BLUE "Installing Node Version Manager (nvm) version $LATEST_NVM_VERSION..."
-    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM_VERSION}/install.sh" | bash || {
-        color_echo $RED "Failed to install nvm."
-        exit 1
-    }
-    
-    # Run the following to use it in the same shell session:
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
-else
-    color_echo $GREEN "NVM already installed. Visit 'https://github.com/nvm-sh/nvm#installing-and-updating' to update to the latest version."
-    # Run the following to use it in the same shell session:
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+	if auto_prompt "Do you want to install NVM?" 10 "y" $YELLOW; then
+    	# Fetch the latest NVM version from the README on GitHub
+    	LATEST_NVM_VERSION=$(curl -sL 'https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/README.md' \
+                         	| grep -oE 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install.sh' \
+                         	| grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' \
+                         	| head -n 1)
+    	
+    	# Default to v0.40.1 if no version is found
+    	if [ -z "$LATEST_NVM_VERSION" ]; then
+        	color_echo $RED "Failed to fetch the latest NVM version, defaulting to v0.40.1."
+        	LATEST_NVM_VERSION="v0.40.1"
+    	fi
+    	
+    	# Install NVM
+    	color_echo $BLUE "Installing Node Version Manager (nvm) version $LATEST_NVM_VERSION..."
+    	curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM_VERSION}/install.sh" | bash || {
+        	color_echo $RED "Failed to install nvm."
+        	exit 1
+    	}
+    	
+    	# Run the following to use it in the same shell session:
+    	export NVM_DIR="$HOME/.nvm"
+    	[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+	else
+    	color_echo $GREEN "NVM already installed. Visit 'https://github.com/nvm-sh/nvm#installing-and-updating' to update to the latest version."
+    	# Run the following to use it in the same shell session:
+    	export NVM_DIR="$HOME/.nvm"
+    	[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+	fi
 fi
 
 echo ""
@@ -728,10 +720,7 @@ else
 	fi
 
 	# Prompt for updating global npm packages
-	color_echo $YELLOW "Do you want to update global npm packages?"
-	echo -n "-> [y/N]: "
-	read -r update_choice
-	if [ "$update_choice" = "y" ]; then
+	if auto_prompt "Do you want to update global npm packages?" 10 "y" $YELLOW; then
 		color_echo $GREEN "Updating global npm packages..."
 		npm update -g || {
 			color_echo $RED "Failed to update global npm packages."
@@ -807,11 +796,7 @@ fi
 
 # Prompt to Install CocoaPods and Run Flutter Doctor -----------------------------------
 
-color_echo $YELLOW "Do you want to install CocoaPods and verify Flutter setup?"
-echo -n "-> [y/N]: "
-read -r cocoapods_confirmation
-if [ "$cocoapods_confirmation" = "y" ] || [ "$cocoapods_confirmation" = "Y" ]; then
-    # Install CocoaPods
+if auto_prompt "Do you want to install CocoaPods and verify Flutter setup?" 10 "y" $YELLOW; then
     color_echo $BLUE "Installing CocoaPods..."
     gem install cocoapods || {
         color_echo $RED "Failed to install CocoaPods."
@@ -829,14 +814,9 @@ fi
 
 # Enable Corepack and Use Latest Version of pnpm --------------------------------------
 
-color_echo $YELLOW "Do you want to enable Corepack and set up pnpm?"
-echo -n "-> [y/N]: "
-read -r pnpm_confirmation
-if [ "$pnpm_confirmation" = "y" ] || [ "$pnpm_confirmation" = "Y" ]; then
+if auto_prompt "Do you want to enable Corepack and set up pnpm?" 10 "y" $YELLOW; then
     color_echo $BLUE "Enabling Corepack and setting up pnpm..."
-    corepack enable  # Enables Corepack globally
-
-    # Install and activate the latest version of pnpm
+    corepack enable
     corepack prepare pnpm@latest --activate
     color_echo $GREEN "pnpm setup complete."
 else
@@ -864,10 +844,7 @@ if [ -f "$FONT_FILE" ]; then
 	color_echo $GREEN "$FONT_NAME Nerd Font is already installed."
 else
 	# Confirmation prompt for font installation
-	color_echo $YELLOW "Do you want to proceed installing $FONT_NAME Nerd Font?"
-	echo -n "-> [y/N]: "
-	read -r font_confirmation
-	if [ "$font_confirmation" != "y" ] && [ "$font_confirmation" != "Y" ]; then
+	if auto_prompt "Do you want to proceed installing $FONT_NAME Nerd Font?" 10 "n" $YELLOW; then
 		color_echo $RED "Font installation aborted."
 	else
 		color_echo $BLUE "Installing $FONT_NAME Nerd Font..."
@@ -1078,11 +1055,7 @@ echo ""
 # Check if the Neovim configuration directory exists
 if [ -d "$HOME/.config/nvim" ]; then
 	color_echo $YELLOW "An existing Neovim configuration has been detected."
-	color_echo $YELLOW "Do you want to replace the current Neovim configuration?${NC}"
-	echo -n "-> [y/N]: "
-	read -r keep_conf
-
-	if [ "$keep_conf" != "y" ] || [ "$keep_conf" != "Y" ]; then
+	if auto_prompt "Do you want to replace the current Neovim configuration?" 10 "n" $YELLOW; then
 		color_echo $GREEN "Keeping the existing configuration. No changes made."
 
 	else
@@ -1096,9 +1069,7 @@ if [ -d "$HOME/.config/nvim" ]; then
 
 		# Ask the user if they want to delete the backed-up .local/share/nvim and .local/state/nvim directories
 		color_echo $YELLOW "The backup of .local/share/nvim and .local/state/nvim may take up significant space."
-		echo -n "Would you like to delete the backed-up .local/share/nvim.bak and .local/state/nvim.bak directories to save space? \n-> [y/N]: "
-		read -r delete_choice
-		if [ "$delete_choice" = "y" ] || [ "$delete_choice" = "Y" ]; then
+		if auto_prompt "Would you like to delete the backed-up .local/share/nvim.bak and .local/state/nvim.bak directories to save space?" 10 "y" $YELLOW; then
 			rm -rf ~/.local/share/nvim.bak ~/.local/state/nvim.bak
 			color_echo $GREEN "The backed-up .local/share/nvim.bak and .local/state/nvim.bak directories have been deleted."
 		else
@@ -1138,22 +1109,13 @@ centered_color_echo $ORANGE "<-------------- Docker, Ollama, and Open WebUI ----
 echo ""
 
 # Prompt to set up Open WebUI
-color_echo $YELLOW "Would you like to set up Open WebUI with the following command?"
-echo -e "\n${BLUE}docker run -d -p 8080:8080 -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://host.docker.internal:11434 --name open-webui --restart always ghcr.io/open-webui/open-webui:main${NC}"
-echo -n "-> [y/N]: "
-read -r setup_open_webui_choice
-
-if [[ "$setup_open_webui_choice" =~ ^[Yy]$ ]]; then
+if auto_prompt "Would you like to set up Open WebUI with the following command?\n${BLUE}docker run -d -p 8080:8080 -v open-webui:/app/backend/data -e OLLAMA_BASE_URL=http://host.docker.internal:11434 --name open-webui --restart always ghcr.io/open-webui/open-webui:main${NC}" 10 "y" $YELLOW; then
     # Step 1: Check for Docker installation
     if ! command -v docker &>/dev/null; then
         color_echo $RED "Docker is not installed."
 
         # Prompt to install Docker
-        color_echo $YELLOW "Would you like to download and install Docker?"
-        echo -n "-> [y/N]: "
-        read -r install_docker_choice
-
-        if [[ "$install_docker_choice" =~ ^[Yy]$ ]]; then
+		if auto_prompt "Would you like to download and install Docker?" 10 "y" $YELLOW; then
             docker_dmg_path="$HOME/Downloads/Docker.dmg"
             color_echo $BLUE "Downloading Docker..."
             curl -L -o "$docker_dmg_path" "https://desktop.docker.com/mac/main/arm64/Docker.dmg" || {
@@ -1200,11 +1162,7 @@ if [[ "$setup_open_webui_choice" =~ ^[Yy]$ ]]; then
 	models=("llama3.1:8b" "qwen2.5-coder:7b")
 
 	for model in "${models[@]}"; do
-    	color_echo $YELLOW "Would you like to pull the model ${BLUE}$model${YELLOW} using Ollama?"
-    	echo -n "-> [y/N]: "
-    	read -r pull_choice
-
-    	if [[ "$pull_choice" =~ ^[Yy]$ ]]; then
+		if auto_prompt "Would you like to pull the model ${BLUE}$model${YELLOW} using Ollama?" 10 "y" $YELLOW; then
         	color_echo $BLUE "Pulling model $model..."
         	ollama pull "$model" || {
             	color_echo $RED "Failed to pull model $model. Please check your Ollama installation or try again later."
