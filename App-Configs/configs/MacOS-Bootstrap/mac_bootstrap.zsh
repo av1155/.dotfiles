@@ -646,35 +646,38 @@ echo ""
 
 # Check if NVM (Node Version Manager) is installed ----------------------------
 if [ ! -d "$HOME/.nvm" ]; then
-	if auto_prompt "Do you want to install NVM?" 10 "y" $YELLOW; then
-    	# Fetch the latest NVM version from the README on GitHub
-    	LATEST_NVM_VERSION=$(curl -sL 'https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/README.md' \
-                         	| grep -oE 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install.sh' \
-                         	| grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' \
-                         	| head -n 1)
-    	
-    	# Default to v0.40.1 if no version is found
-    	if [ -z "$LATEST_NVM_VERSION" ]; then
-        	color_echo $RED "Failed to fetch the latest NVM version, defaulting to v0.40.1."
-        	LATEST_NVM_VERSION="v0.40.1"
-    	fi
-    	
-    	# Install NVM
-    	color_echo $BLUE "Installing Node Version Manager (nvm) version $LATEST_NVM_VERSION..."
-    	curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM_VERSION}/install.sh" | bash || {
-        	color_echo $RED "Failed to install nvm."
-        	exit 1
-    	}
-    	
-    	# Run the following to use it in the same shell session:
-    	export NVM_DIR="$HOME/.nvm"
-    	[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
-	else
-    	color_echo $GREEN "NVM already installed. Visit 'https://github.com/nvm-sh/nvm#installing-and-updating' to update to the latest version."
-    	# Run the following to use it in the same shell session:
-    	export NVM_DIR="$HOME/.nvm"
-    	[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
-	fi
+    if auto_prompt "Do you want to install NVM?" 10 "y" $YELLOW; then
+        # Fetch the latest NVM version from the README on GitHub
+        LATEST_NVM_VERSION=$(curl -sL 'https://raw.githubusercontent.com/nvm-sh/nvm/refs/heads/master/README.md' \
+                            | grep -oE 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install.sh' \
+                            | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' \
+                            | head -n 1)
+        
+        # Default to v0.40.1 if no version is found
+        if [ -z "$LATEST_NVM_VERSION" ]; then
+            color_echo $RED "Failed to fetch the latest NVM version, defaulting to v0.40.1."
+            LATEST_NVM_VERSION="v0.40.1"
+        fi
+        
+        # Install NVM
+        color_echo $BLUE "Installing Node Version Manager (nvm) version $LATEST_NVM_VERSION..."
+        curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM_VERSION}/install.sh" | bash || {
+            color_echo $RED "Failed to install nvm."
+            exit 1
+        }
+    else
+        color_echo $GREEN "Skipping NVM installation."
+        exit 0
+    fi
+fi
+
+# Load NVM for the current session if it's installed
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    . "$NVM_DIR/nvm.sh" # This loads nvm
+else
+    color_echo $RED "NVM installation was unsuccessful or not found in $NVM_DIR."
+    exit 1
 fi
 
 echo ""
