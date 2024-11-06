@@ -74,17 +74,16 @@ To set up your macOS development environment using this repository, ensure you h
 Open your terminal and run the following command:
 
 ```bash
-curl -sSL https://github.com/av1155/.dotfiles/raw/main/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh -o mac_bootstrap_tmp.zsh && chmod +x mac_bootstrap_tmp.zsh && ./mac_bootstrap_tmp.zsh && rm ./mac_bootstrap_tmp.zsh
+curl -sSL https://github.com/av1155/.dotfiles/raw/main/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh -o mac_bootstrap.zsh && zsh mac_bootstrap.zsh && rm mac_bootstrap.zsh
 ```
 
 This command will perform the following actions:
 
-1.  Download the `mac_bootstrap.zsh` script and save it as `mac_bootstrap_tmp.zsh`.
-2.  Make the script executable.
-3.  Execute the script.
-4.  Remove the script after execution.
+1.  Download the `mac_bootstrap.zsh` script.
+2.  Execute the script.
+3.  Remove the script after execution.
 
--   After Oh My Zsh is installed, it has to be re-run because OMZ refreshes the shell.
+-   After Oh My Zsh is installed, you need to re-run the script because OMZ refreshes the shell.
 
 Follow any on-screen instructions to complete the setup.
 
