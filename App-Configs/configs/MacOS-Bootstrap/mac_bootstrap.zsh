@@ -1188,13 +1188,31 @@ if [[ "$setup_open_webui_choice" =~ ^[Yy]$ ]]; then
         color_echo $GREEN "Docker is already installed. Version: $(docker -v)"
     fi
 
-    # Step 2: Check for Ollama installation
-    if ! command -v ollama &>/dev/null; then
-        color_echo $RED "Ollama is not installed. Please install Ollama to proceed."
-        exit 1
-    else
-        color_echo $GREEN "Ollama is installed. Version: $(ollama -v)"
-    fi
+	# Step 2: Check for Ollama installation
+	if ! command -v ollama &>/dev/null; then
+    	color_echo $RED "Ollama is not installed. Please install Ollama to proceed."
+    	exit 1
+	else
+    	color_echo $GREEN "Ollama is installed. Version: $(ollama -v)"
+	fi
+
+	# Prompt to pull specific models using Ollama
+	models=("llama3.1:8b" "qwen2.5-coder:7b")
+
+	for model in "${models[@]}"; do
+    	color_echo $YELLOW "Would you like to pull the model ${BLUE}$model${YELLOW} using Ollama?"
+    	echo -n "-> [y/N]: "
+    	read -r pull_choice
+
+    	if [[ "$pull_choice" =~ ^[Yy]$ ]]; then
+        	color_echo $BLUE "Pulling model $model..."
+        	ollama pull "$model" || {
+            	color_echo $RED "Failed to pull model $model. Please check your Ollama installation or try again later."
+        	}
+    	else
+        	color_echo $BLUE "Skipping model pull for $model."
+    	fi
+	done
 
     # Step 3: Check if Open WebUI container and image already exist
     if docker ps -a --filter "name=open-webui" --format "{{.Names}}" | grep -q "open-webui"; then
