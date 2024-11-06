@@ -796,6 +796,42 @@ else
 	color_echo $GREEN " * TypeScript already installed."
 fi
 
+# Prompt to Install CocoaPods and Run Flutter Doctor -----------------------------------
+
+color_echo $YELLOW "Do you want to install CocoaPods and verify Flutter setup?"
+echo -n "-> [y/N]: "
+read -r cocoapods_confirmation
+if [ "$cocoapods_confirmation" = "y" ] || [ "$cocoapods_confirmation" = "Y" ]; then
+    # Install CocoaPods
+    color_echo $BLUE "Installing CocoaPods..."
+    gem install cocoapods || {
+        color_echo $RED "Failed to install CocoaPods."
+        exit 1
+    }
+    color_echo $GREEN "CocoaPods installation complete."
+
+    # Run Flutter Doctor
+    color_echo $BLUE "Running Flutter Doctor to verify setup..."
+    flutter doctor -v
+    color_echo $GREEN "Flutter setup verification complete."
+else
+    color_echo $BLUE "Skipping CocoaPods installation and Flutter setup verification."
+fi
+
+# Enable Corepack and Use Latest Version of pnpm --------------------------------------
+
+color_echo $YELLOW "Do you want to enable Corepack and set up pnpm?"
+echo -n "-> [y/N]: "
+read -r pnpm_confirmation
+if [ "$pnpm_confirmation" = "y" ] || [ "$pnpm_confirmation" = "Y" ]; then
+    color_echo $BLUE "Enabling Corepack and setting up pnpm..."
+    corepack enable pnpm
+    corepack use pnpm@latest
+    color_echo $GREEN "pnpm setup complete."
+else
+    color_echo $BLUE "Skipping pnpm setup."
+fi
+
 # Step 9: Install Nerd Font --------------------------------------------------
 
 echo ""
