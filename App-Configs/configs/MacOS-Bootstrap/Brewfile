@@ -100,8 +100,6 @@ brew "php"
 brew "pipenv"
 # Paste PNG into files
 brew "pngpaste"
-# Fast, disk space efficient package manager
-brew "pnpm"
 # Object-relational database system
 brew "postgresql@14", restart_service: true
 # Theme for zsh
@@ -186,6 +184,8 @@ cask "db-browser-for-sqlite"
 cask "discord"
 # Developer platform
 cask "dotnet-sdk"
+# UI toolkit for building applications for mobile, web and desktop
+cask "flutter"
 # Clipboard manager for developers
 cask "flycut"
 # Web browser
@@ -256,12 +256,27 @@ cask "warp"
 cask "whatsapp"
 # Video communication and virtual meeting platform
 cask "zoom"
+mas "1Blocker", id: 1365531024
+mas "1Password for Safari", id: 1569813296
+mas "Bitwarden", id: 1352778147
+mas "CleanMyMac", id: 1339170533
+mas "Dropover", id: 1355679052
+mas "Encrypto", id: 935235287
+mas "Final Cut Pro", id: 424389933
+mas "Goodnotes", id: 1444383602
+mas "Noir", id: 1592917505
+mas "Sequel Ace", id: 1518036000
+mas "Steam Link", id: 1246969117
+mas "Xcode", id: 497799835
 vscode "adpyke.codesnap"
 vscode "alefragnani.project-manager"
 vscode "batisteo.vscode-django"
+vscode "be5invis.vscode-custom-css"
 vscode "bradlc.vscode-tailwindcss"
 vscode "catppuccin.catppuccin-vsc"
 vscode "chakrounanas.turbo-console-log"
+vscode "dart-code.dart-code"
+vscode "dart-code.flutter"
 vscode "davidanson.vscode-markdownlint"
 vscode "dbaeumer.vscode-eslint"
 vscode "denoland.vscode-deno"
