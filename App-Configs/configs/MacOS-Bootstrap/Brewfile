@@ -190,6 +190,8 @@ cask "dotnet-sdk"
 cask "flutter"
 # Clipboard manager for developers
 cask "flycut"
+# Tool to measure the computer system's performance
+cask "geekbench"
 # Web browser
 cask "google-chrome"
 # Tool to optimise images to a smaller size
