@@ -198,6 +198,8 @@ cask "flycut"
 cask "geekbench"
 # Web browser
 cask "google-chrome"
+# Game launcher
+cask "heroic"
 # Tool to optimise images to a smaller size
 cask "imageoptim"
 # Terminal emulator as alternative to Apple's Terminal app
@@ -210,6 +212,8 @@ cask "keycastr"
 cask "kitty"
 # Utility that shows the latest app updates
 cask "latest"
+# Discover, download, and run local LLMs
+cask "lm-studio"
 # Clipboard manager
 cask "maccy"
 # Scanner app for math and science
@@ -248,6 +252,8 @@ cask "sony-ps-remote-play"
 cask "spotify"
 # System monitor for the menu bar
 cask "stats"
+# Video game digital distribution service
+cask "steam"
 # SSH client
 cask "termius"
 # Unpacks archive files
@@ -262,6 +268,8 @@ cask "visual-studio-code"
 cask "warp"
 # Native desktop client for WhatsApp
 cask "whatsapp"
+# Wine wrapper built with SwiftUI
+cask "whisky"
 # Video communication and virtual meeting platform
 cask "zoom"
 mas "1Blocker", id: 1365531024
