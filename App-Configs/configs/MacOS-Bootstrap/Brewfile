@@ -182,8 +182,6 @@ cask "arc"
 cask "betterdisplay"
 # Tool to list all active shortcuts of the current application
 cask "cheatsheet"
-# Tool to run Windows software
-cask "crossover"
 # Browser for SQLite databases
 cask "db-browser-for-sqlite"
 # Voice and text chat software
@@ -198,8 +196,6 @@ cask "flycut"
 cask "geekbench"
 # Web browser
 cask "google-chrome"
-# Game launcher
-cask "heroic"
 # Tool to optimise images to a smaller size
 cask "imageoptim"
 # Terminal emulator as alternative to Apple's Terminal app
@@ -244,6 +240,8 @@ cask "r"
 cask "raycast"
 # Move and resize windows using keyboard shortcuts or snap areas
 cask "rectangle"
+# MySQL/MariaDB database management
+cask "sequel-ace"
 # Screenshot measurement and annotation tool
 cask "shottr"
 # Application to control your PlayStation 4 or PlayStation 5
@@ -281,7 +279,6 @@ mas "Encrypto", id: 935235287
 mas "Final Cut Pro", id: 424389933
 mas "Goodnotes", id: 1444383602
 mas "Noir", id: 1592917505
-mas "Sequel Ace", id: 1518036000
 mas "Steam Link", id: 1246969117
 mas "Xcode", id: 497799835
 vscode "adpyke.codesnap"
