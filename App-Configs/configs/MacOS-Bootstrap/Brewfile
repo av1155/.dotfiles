@@ -226,6 +226,8 @@ cask "microsoft-teams"
 cask "middleclick"
 # Minimal installer for conda specific to conda-forge
 cask "miniforge"
+# Game launcher with the ability to run Windows games
+cask "mythic"
 # App to write, plan, collaborate, and get organised
 cask "notion"
 # Get up and running with large language models locally
