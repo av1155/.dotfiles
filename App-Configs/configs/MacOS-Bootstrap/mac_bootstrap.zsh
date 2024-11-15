@@ -581,9 +581,19 @@ if auto_prompt "Do you want to restore Conda environments from the backup?" 10 "
             env_name=$(basename "$yml_file" .yml)
             if [ "$env_name" != "base" ]; then
                 color_echo $GREEN "\nRestoring environment $env_name..."
-                conda env create --name "$env_name" --file "$yml_file" || {
-                    color_echo $RED "Failed to restore environment $env_name."
-                }
+                if conda env create --name "$env_name" --file "$yml_file" 2>/dev/null; then
+                    color_echo $GREEN "Environment $env_name restored successfully."
+                else
+                    color_echo $RED "Failed to restore environment $env_name: prefix already exists."
+                    if auto_prompt "The environment $env_name already exists. Do you want to update it?" 10 "n" $YELLOW; then
+                        color_echo $YELLOW "Updating environment $env_name..."
+                        conda env update --name "$env_name" --file "$yml_file" --prune || {
+                            color_echo $RED "Failed to update environment $env_name. Skipping."
+                        }
+                    else
+                        color_echo $BLUE "Skipping update of environment $env_name."
+                    fi
+                fi
             fi
         done
 
@@ -891,8 +901,6 @@ if [ -f "$FONT_FILE" ]; then
 else
 	# Confirmation prompt for font installation
 	if auto_prompt "Do you want to proceed installing $FONT_NAME Nerd Font?" 10 "n" $YELLOW; then
-		color_echo $RED "Font installation aborted."
-	else
 		color_echo $BLUE "Installing $FONT_NAME Nerd Font..."
 		if [ ! -d "$FONT_DIR" ]; then
 			color_echo $BLUE "Creating font directory..."
@@ -908,6 +916,8 @@ else
 		}
 		rm "$FONT_DIR/$FONT_NAME.zip"
 		color_echo $GREEN "$FONT_NAME Nerd Font installation complete."
+	else
+		color_echo $RED "Font installation aborted."
 	fi
 fi
 
@@ -1053,42 +1063,6 @@ else
 fi
 
 # END OF RUBY ASTRONVIM SETUP <<<
-
-# Install Composer for PHP development ---------------------------------------
-
-echo ""
-
-centered_color_echo $ORANGE "<-------------- Composer Installation for PHP Development -------------->"
-
-echo ""
-
-# Verify if Composer is already installed
-if command -v composer >/dev/null 2>&1; then
-	color_echo $GREEN " * Composer is already installed."
-else
-	# Download and verify Composer
-	color_echo $YELLOW " * Downloading and verifying Composer..."
-	php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-	php -r "if (hash_file('sha384', 'composer-setup.php') === 'e21205b207c3ff031906575712edab6f13eb0b361f2085f1f1237b7126d785e826a450292b6cfd1d64d92e6563bbde02') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-	php composer-setup.php
-	php -r "unlink('composer-setup.php');"
-
-	# Move Composer to a global directory
-	color_echo $YELLOW " * Moving Composer to global directory..."
-	sudo mv composer.phar /usr/local/bin/composer || {
-		color_echo $RED "Failed to move Composer."
-		exit 1
-	}
-
-	# Verify Composer installation
-	color_echo $YELLOW " * Verifying Composer installation..."
-	composer --version || {
-		color_echo $RED "Composer installation failed."
-		exit 1
-	}
-
-	color_echo $GREEN " * Composer installed successfully."
-fi
 
 # NeoVim-Configuration ---------------------------------------------------------
 
