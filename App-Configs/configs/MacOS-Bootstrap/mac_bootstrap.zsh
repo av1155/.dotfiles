@@ -551,23 +551,50 @@ centered_color_echo $ORANGE "<-------------- Restoring Conda Environments ------
 echo ""
 
 if auto_prompt "Do you want to restore Conda environments from the backup?" 10 "y" $YELLOW; then
-	BACKUP_DIR="${HOME}/CondaBackup"
+    BACKUP_DIR="${HOME}/CondaBackup"
 
-	if [ -d "$BACKUP_DIR" ]; then
-		color_echo $BLUE "Restoring Conda environments from $BACKUP_DIR..."
-		for yml_file in "$BACKUP_DIR"/*.yml; do
-			env_name=$(basename "$yml_file" .yml)
-			color_echo $GREEN "\nRestoring environment $env_name..."
-			conda env create --name "$env_name" --file "$yml_file"
-		done
-		color_echo $GREEN "All Conda environments have been restored."
-		color_echo $ORANGE "====================================================================================\n"
-	else
-		color_echo $RED "Backup directory $BACKUP_DIR not found. Skipping..."
-	fi
+    if [ -d "$BACKUP_DIR" ]; then
+        color_echo $BLUE "Restoring Conda environments from $BACKUP_DIR..."
+
+        # Check and restore the base environment if a backup exists
+        BASE_ENV_YML="$BACKUP_DIR/base.yml"
+        if [ -f "$BASE_ENV_YML" ]; then
+            color_echo $GREEN "\nRestoring the base environment..."
+            if ! conda env update --file "$BASE_ENV_YML" --prune 2>/dev/null; then
+                color_echo $RED "Failed to restore the base environment: prefix already exists."
+                if auto_prompt "The base environment already exists. Do you want to force the restoration?" 10 "n" $YELLOW; then
+                    color_echo $YELLOW "Forcing restoration of the base environment..."
+                    conda env update --file "$BASE_ENV_YML" --prune --force || {
+                        color_echo $RED "Failed to force restore the base environment. Exiting."
+                        exit 1
+                    }
+                else
+                    color_echo $BLUE "Skipping forced restoration of the base environment."
+                fi
+            fi
+        else
+            color_echo $YELLOW "No base.yml file found. Skipping base environment restoration."
+        fi
+
+        # Restore other environments
+        for yml_file in "$BACKUP_DIR"/*.yml; do
+            env_name=$(basename "$yml_file" .yml)
+            if [ "$env_name" != "base" ]; then
+                color_echo $GREEN "\nRestoring environment $env_name..."
+                conda env create --name "$env_name" --file "$yml_file" || {
+                    color_echo $RED "Failed to restore environment $env_name."
+                }
+            fi
+        done
+
+        color_echo $GREEN "All Conda environments have been restored."
+        color_echo $ORANGE "====================================================================================\n"
+    else
+        color_echo $RED "Backup directory $BACKUP_DIR not found. Skipping..."
+    fi
 
 else
-	color_echo $BLUE "Skipping Conda environment restoration."
+    color_echo $BLUE "Skipping Conda environment restoration."
 fi
 
 
