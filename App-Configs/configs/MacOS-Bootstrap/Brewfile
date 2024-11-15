@@ -266,8 +266,7 @@ cask "whatsapp"
 cask "whisky"
 # Video communication and virtual meeting platform
 cask "zoom"
-mas "1Blocker", id: 1365531024
-mas "1Password for Safari", id: 1569813296
+mas "AdGuard for Safari", id: 1440147259
 mas "Bitwarden", id: 1352778147
 mas "CleanMyMac", id: 1339170533
 mas "Dropover", id: 1355679052
@@ -277,7 +276,6 @@ mas "GarageBand", id: 682658836
 mas "Goodnotes", id: 1444383602
 mas "iMovie", id: 408981434
 mas "Keynote", id: 409183694
-mas "Noir", id: 1592917505
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
 mas "Steam Link", id: 1246969117

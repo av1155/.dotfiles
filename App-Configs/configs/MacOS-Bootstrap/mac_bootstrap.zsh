@@ -1123,7 +1123,7 @@ if auto_prompt "Would you like to set up Open WebUI with the following command?\
             color_echo $GREEN "Docker.app has been successfully moved to Applications."
 
             # Open Docker.app
-            open /Applications/Docker.app
+            open -a Docker
             color_echo $YELLOW "Please complete the Docker installation. Press Enter when done."
             read -r
 
