@@ -40,10 +40,10 @@ brew "fastfetch"
 brew "fd"
 # Play, record, convert, and stream audio and video
 brew "ffmpeg"
-# GNU compiler collection
-brew "gcc"
 # Command-line fuzzy finder written in Go
 brew "fzf"
+# GNU compiler collection
+brew "gcc"
 # Disk usage analyzer with console interface written in Go
 brew "gdu"
 # GitHub command-line tool
@@ -62,8 +62,6 @@ brew "glow"
 brew "go"
 # Open-source build automation tool based on the Groovy and Kotlin DSL
 brew "gradle"
-# Package compiler and linker metadata toolkit
-brew "pkgconf"
 # Kubernetes package manager
 brew "helm"
 # Tools and libraries to manipulate images in many formats
@@ -74,8 +72,6 @@ brew "jq"
 brew "julia"
 # Parsing Expression Grammars For Lua
 brew "lpeg"
-# Powerful, lightweight programming language (v5.1.5)
-brew "lua@5.1"
 # Package manager for the Lua programming language
 brew "luarocks"
 # Text-based web browser
@@ -100,6 +96,8 @@ brew "pgweb"
 brew "php"
 # Python dependency management tool
 brew "pipenv"
+# Package compiler and linker metadata toolkit
+brew "pkgconf"
 # Paste PNG into files
 brew "pngpaste"
 # Object-relational database system
@@ -152,16 +150,10 @@ brew "av1155/scripts/javaprojectmanager"
 brew "heroku/brew/heroku"
 # A simple terminal UI for git commands, written in Go
 brew "jesseduffield/lazygit/lazygit"
-# Drop in replacement for ueberzug written in C++
-brew "jstkdng/programs/ueberzugpp"
 # Tetris in your terminal
 brew "samtay/tui/tetris"
 # Supabase CLI
 brew "supabase/tap/supabase"
-# Password manager that keeps all passwords secure behind one password
-cask "1password"
-# Command-line interface for 1Password
-cask "1password-cli"
 # View, create, manipulate, print and manage files in Portable Document Format
 cask "adobe-acrobat-pro"
 # Collection of apps and services for photography, design, video, web, and UX
@@ -234,6 +226,8 @@ cask "notion"
 cask "ollama"
 # Verify system files structure, run miscellaneous maintenance and more
 cask "onyx"
+# Client program for the OpenVPN Access Server
+cask "openvpn-connect"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
 # Environment for statistical computing and graphics
@@ -279,8 +273,13 @@ mas "CleanMyMac", id: 1339170533
 mas "Dropover", id: 1355679052
 mas "Encrypto", id: 935235287
 mas "Final Cut Pro", id: 424389933
+mas "GarageBand", id: 682658836
 mas "Goodnotes", id: 1444383602
+mas "iMovie", id: 408981434
+mas "Keynote", id: 409183694
 mas "Noir", id: 1592917505
+mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
 mas "Steam Link", id: 1246969117
 mas "Xcode", id: 497799835
 vscode "adpyke.codesnap"
@@ -321,6 +320,7 @@ vscode "ms-python.vscode-pylance"
 vscode "ms-toolsai.jupyter"
 vscode "ms-toolsai.jupyter-keymap"
 vscode "ms-toolsai.jupyter-renderers"
+vscode "ms-toolsai.vscode-jupyter-cell-tags"
 vscode "ms-toolsai.vscode-jupyter-slideshow"
 vscode "ms-vscode-remote.remote-containers"
 vscode "ms-vscode-remote.remote-wsl"
