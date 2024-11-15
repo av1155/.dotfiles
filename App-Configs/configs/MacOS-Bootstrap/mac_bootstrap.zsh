@@ -399,56 +399,57 @@ color_echo $YELLOW "Once Oh My Zsh has been installed, rerun the script to finis
 install_app "Oh My Zsh" "sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\"" "[ ! -d '$HOME/.oh-my-zsh' ]"
 
 # Install Java
-# Determine the architecture of the macOS system
 ARCH="$(uname -m)"
 JDK_PAGE_URL="https://www.oracle.com/java/technologies/downloads/#jdk"
 
 # Fetch the page and extract the correct link based on architecture
 if [ "$ARCH" = "arm64" ]; then
-    # ARM architecture (Apple Silicon)
     JDK_URL=$(curl -sL $JDK_PAGE_URL | grep -oE 'https://download.oracle.com/java/[0-9]+/latest/jdk-[0-9]+_macos-aarch64_bin.tar.gz' | head -n 1)
 elif [ "$ARCH" = "x86_64" ]; then
-    # Intel architecture (x86_64)
     JDK_URL=$(curl -sL $JDK_PAGE_URL | grep -oE 'https://download.oracle.com/java/[0-9]+/latest/jdk-[0-9]+_macos-x64_bin.tar.gz' | head -n 1)
 else
     color_echo $RED "Unsupported architecture: $ARCH"
     exit 1
 fi
 
-# If JDK_URL is not found, exit with error
 if [ -z "$JDK_URL" ]; then
     color_echo $RED "Failed to find the latest JDK download link."
     exit 1
 fi
 
-# Define the download and extraction location
 DOWNLOAD_LOCATION="$HOME/Downloads"
 EXTRACT_LOCATION="$DOWNLOAD_LOCATION/jdk_extract"
+JAVA_VM_DIR="$HOME/Library/Java/JavaVirtualMachines"
 
-# Create a directory to extract the tarball
-mkdir -p "$EXTRACT_LOCATION"
+# Create necessary directories
+mkdir -p "$EXTRACT_LOCATION" "$JAVA_VM_DIR"
 
-# Download the tar.gz file to the extraction directory
+# Download and extract JDK
 color_echo $YELLOW "Downloading and extracting JDK from $JDK_URL..."
 curl -L "$JDK_URL" | tar -xz -C "$EXTRACT_LOCATION"
 
-# Determine the name of the top-level directory in the extracted location
+# Get extracted directory name
 JDK_DIR_NAME=$(ls "$EXTRACT_LOCATION" | grep 'jdk')
 
-# Check if this directory already exists in the target directory
-if [ ! -d "$HOME/Library/Java/JavaVirtualMachines/$JDK_DIR_NAME" ]; then
-    color_echo $GREEN "Installing Java..."
-    # Move the JDK directory to the Java Virtual Machines directory
-    mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$HOME/Library/Java/JavaVirtualMachines/"
-    color_echo $GREEN "Java installed successfully."
+if [ -n "$JDK_DIR_NAME" ]; then
+    if [ ! -d "$JAVA_VM_DIR/$JDK_DIR_NAME" ]; then
+        mv "$EXTRACT_LOCATION/$JDK_DIR_NAME" "$JAVA_VM_DIR/" || {
+            color_echo $RED "Failed to move JDK to $JAVA_VM_DIR."
+            rm -rf "$EXTRACT_LOCATION"
+            exit 1
+        }
+        color_echo $GREEN "Java installed successfully."
+    else
+        color_echo $BLUE "Java is already installed. Cleaning up extracted files."
+    fi
 else
-    color_echo $BLUE "Java is already installed. No action taken, residual files have been removed."
-    # Remove the extracted JDK if already installed
-    rm -rf "$EXTRACT_LOCATION/$JDK_DIR_NAME"
+    color_echo $RED "JDK extraction failed. Cleaning up."
+    rm -rf "$EXTRACT_LOCATION"
+    exit 1
 fi
 
-# Remove the extraction directory if empty
-rmdir "$EXTRACT_LOCATION"
+# Cleanup
+rm -rf "$EXTRACT_LOCATION"
 
 # Step 4: Clone scripts repository -------------------------------------------
 
@@ -497,14 +498,19 @@ fi
 # Install software from Brewfile -----------------------------------------------
 
 if auto_prompt "Do you want to proceed with installing software from Brewfile?" 10 "y" $YELLOW; then
-	color_echo $BLUE "Installing software from Brewfile..."
-	brew bundle --file "$DOTFILES_DIR/App-Configs/configs/MacOS-Bootstrap/Brewfile" || {
-		color_echo $RED "Failed to install software from Brewfile."
-		exit 1
-	}
-	color_echo $GREEN "Brewfile installation complete."
+    color_echo $BLUE "Installing software from Brewfile..."
+    brew bundle --file "$DOTFILES_DIR/App-Configs/configs/MacOS-Bootstrap/Brewfile" || {
+        color_echo $RED "Failed to install software from Brewfile."
+        if auto_prompt "The Brewfile installation failed. Do you want to continue with the rest of the script?" 10 "n" $YELLOW; then
+            color_echo $YELLOW "Continuing with the rest of the script..."
+        else
+            color_echo $RED "Aborting the script as requested."
+            exit 1
+        fi
+    }
+    color_echo $GREEN "Brewfile installation complete."
 else
-	color_echo $RED "Brewfile installation aborted."
+    color_echo $RED "Brewfile installation aborted."
 fi
 
 echo ""
@@ -523,12 +529,12 @@ echo ""
 CONDA_BACKUP_DIR="$HOME/CondaBackup"
 if [ ! -d "$CONDA_BACKUP_DIR" ]; then
 	if auto_prompt "The 'CondaBackup' directory does not exist. Do you want to clone the CondaBackup repository?" 10 "y" $YELLOW; then
-		color_echo $BLUE "Cloning CondaBackup repository..."
-		git clone "https://github.com/av1155/CondaBackup.git" "$CONDA_BACKUP_DIR" ||
-			{
-				color_echo $RED "Failed to clone CondaBackup repository."
-				exit 1
-			}
+    	color_echo $BLUE "Cloning CondaBackup repository..."
+    	git_clone_fallback "git@github.com:av1155/CondaBackup.git" "https://github.com/av1155/CondaBackup.git" "$CONDA_BACKUP_DIR" ||
+        	{
+            	color_echo $RED "Failed to clone CondaBackup repository."
+            	exit 1
+        	}
 	else
 		color_echo $BLUE "Skipping cloning of CondaBackup repository."
 	fi
