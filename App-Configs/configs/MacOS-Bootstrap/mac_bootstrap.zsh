@@ -1098,7 +1098,7 @@ if auto_prompt "Would you like to set up Open WebUI with the following command?\
         color_echo $RED "Docker is not installed."
 
         # Prompt to install Docker
-		if auto_prompt "Would you like to download and install Docker?" 10 "y" $YELLOW; then
+        if auto_prompt "Would you like to download and install Docker?" 10 "y" $YELLOW; then
             docker_dmg_path="$HOME/Downloads/Docker.dmg"
             color_echo $BLUE "Downloading Docker..."
             curl -L -o "$docker_dmg_path" "https://desktop.docker.com/mac/main/arm64/Docker.dmg" || {
@@ -1112,7 +1112,18 @@ if auto_prompt "Would you like to set up Open WebUI with the following command?\
                 color_echo $RED "Failed to mount Docker DMG."
                 exit 1
             }
-            open /Volumes/Docker/Docker.app
+            
+            # Move Docker.app to Applications
+            color_echo $BLUE "Installing Docker by moving Docker.app to Applications..."
+            cp -R /Volumes/Docker/Docker.app /Applications/ || {
+                color_echo $RED "Failed to copy Docker.app to Applications."
+                hdiutil detach "/Volumes/Docker" -quiet
+                exit 1
+            }
+            color_echo $GREEN "Docker.app has been successfully moved to Applications."
+
+            # Open Docker.app
+            open /Applications/Docker.app
             color_echo $YELLOW "Please complete the Docker installation. Press Enter when done."
             read -r
 
@@ -1133,27 +1144,27 @@ if auto_prompt "Would you like to set up Open WebUI with the following command?\
         color_echo $GREEN "Docker is already installed. Version: $(docker -v)"
     fi
 
-	# Step 2: Check for Ollama installation
-	if ! command -v ollama &>/dev/null; then
-    	color_echo $RED "Ollama is not installed. Please install Ollama to proceed."
-    	exit 1
-	else
-    	color_echo $GREEN "Ollama is installed. Version: $(ollama -v)"
-	fi
+    # Step 2: Check for Ollama installation
+    if ! command -v ollama &>/dev/null; then
+        color_echo $RED "Ollama is not installed. Please install Ollama to proceed."
+        exit 1
+    else
+        color_echo $GREEN "Ollama is installed. Version: $(ollama -v)"
+    fi
 
-	# Prompt to pull specific models using Ollama
-	models=("llama3.1:8b" "qwen2.5-coder:7b")
+    # Prompt to pull specific models using Ollama
+    models=("llama3.1:8b" "qwen2.5-coder:7b")
 
-	for model in "${models[@]}"; do
-		if auto_prompt "Would you like to pull the model ${BLUE}$model${YELLOW} using Ollama?" 10 "y" $YELLOW; then
-        	color_echo $BLUE "Pulling model $model..."
-        	ollama pull "$model" || {
-            	color_echo $RED "Failed to pull model $model. Please check your Ollama installation or try again later."
-        	}
-    	else
-        	color_echo $BLUE "Skipping model pull for $model."
-    	fi
-	done
+    for model in "${models[@]}"; do
+        if auto_prompt "Would you like to pull the model ${BLUE}$model${YELLOW} using Ollama?" 10 "y" $YELLOW; then
+            color_echo $BLUE "Pulling model $model..."
+            ollama pull "$model" || {
+                color_echo $RED "Failed to pull model $model. Please check your Ollama installation or try again later."
+            }
+        else
+            color_echo $BLUE "Skipping model pull for $model."
+        fi
+    done
 
     # Step 3: Check if Open WebUI container and image already exist
     if docker ps -a --filter "name=open-webui" --format "{{.Names}}" | grep -q "open-webui"; then

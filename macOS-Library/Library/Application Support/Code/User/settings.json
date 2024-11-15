@@ -132,7 +132,8 @@
     "git.openRepositoryInParentFolders": "always",
     "liveServer.settings.donotShowInfoMsg": true,
     "vs-kubernetes": {
-        "vscode-kubernetes.helm-path-mac": "/Users/andreaventi/.vs-kubernetes/tools/helm/darwin-arm64/helm"
+        "vscode-kubernetes.helm-path-mac": "/Users/andreaventi/.vs-kubernetes/tools/helm/darwin-arm64/helm",
+        "vscode-kubernetes.minikube-path-mac": "/Users/andreaventi/.vs-kubernetes/tools/minikube/darwin-arm64/minikube"
     },
     "github.copilot.enable": {
         "*": false,
