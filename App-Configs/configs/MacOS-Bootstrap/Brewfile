@@ -168,10 +168,14 @@ cask "anki"
 cask "appcleaner"
 # Chromium based browser
 cask "arc"
+# Tool to flash OS images to SD cards & USB drives
+cask "balenaetcher"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
 # Tool to list all active shortcuts of the current application
 cask "cheatsheet"
+# UI for creating Windows installer ISO from UUPDump
+cask "crystalfetch"
 # Browser for SQLite databases
 cask "db-browser-for-sqlite"
 # Voice and text chat software
@@ -224,6 +228,8 @@ cask "openvpn-connect"
 cask "qlmarkdown"
 # Environment for statistical computing and graphics
 cask "r"
+# Imaging utility to install operating systems to a microSD card
+cask "raspberry-pi-imager"
 # Control your tools with a few keystrokes
 cask "raycast"
 # Move and resize windows using keyboard shortcuts or snap areas
