@@ -168,6 +168,8 @@ cask "anki"
 cask "appcleaner"
 # Chromium based browser
 cask "arc"
+# OpenAI's official ChatGPT desktop app
+cask "chatgpt"
 # Tool to list all active shortcuts of the current application
 cask "cheatsheet"
 # Browser for SQLite databases
@@ -317,6 +319,7 @@ vscode "ms-vscode.cpptools"
 vscode "ms-vscode.cpptools-extension-pack"
 vscode "ms-vscode.cpptools-themes"
 vscode "njpwerner.autodocstring"
+vscode "openai.openai-chatgpt-adhoc"
 vscode "pflannery.vscode-versionlens"
 vscode "pkief.material-icon-theme"
 vscode "redhat.java"
