@@ -218,6 +218,8 @@ cask "microsoft-teams"
 cask "middleclick"
 # Minimal installer for conda specific to conda-forge
 cask "miniforge"
+# Tool to control external monitor brightness & volume
+cask "monitorcontrol"
 # Game launcher with the ability to run Windows games
 cask "mythic"
 # App to write, plan, collaborate, and get organised
@@ -248,6 +250,8 @@ cask "spotify"
 cask "stats"
 # Video game digital distribution service
 cask "steam"
+# Sync and backup service to Synology NAS drives
+cask "synology-drive"
 # SSH client
 cask "termius"
 # Unpacks archive files
