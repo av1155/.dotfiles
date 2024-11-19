@@ -1,0 +1,7 @@
+{
+    "model_defaults": {
+        "qwen2.5-coder:32b-instruct-q4_K_M": {
+            "context_size": 32768
+        }
+    }
+}
