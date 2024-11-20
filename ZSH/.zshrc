@@ -155,12 +155,8 @@ if [ -d "$ZPLUG_HOME" ]; then
     # Configuration (PLUGINS):
     zplug "mafredri/zsh-async", from:github
     zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
-    zplug "plugins/git", from:oh-my-zsh, defer:2
-    zplug "plugins/sudo", from:oh-my-zsh, defer:2
+    # zplug "plugins/git", from:oh-my-zsh, defer:2
     zplug "plugins/conda", from:oh-my-zsh, defer:2
-    zplug "plugins/heroku", from:oh-my-zsh, defer:2
-    zplug "plugins/fzf", from:oh-my-zsh, defer:2
-    zplug "plugins/zoxide", from:oh-my-zsh, defer:2
     zplug "chrissicool/zsh-256color", defer:2
     zplug "zsh-users/zsh-autosuggestions", defer:2
     zplug "zsh-users/zsh-syntax-highlighting", defer:2
@@ -341,7 +337,7 @@ eval "$(thefuck --alias fk)"
 eval "$(zoxide init zsh)"
 alias cd="z"
 
-# ---- GitHuB CLI Copilot ----
+# ---- GitHub CLI Copilot ----
 eval "$(gh copilot alias -- zsh)"
 
 # Listing
@@ -672,7 +668,6 @@ else
 fi
 
 
-
 # <-------------------- GENERAL CONFIGURATIONS -------------------->
 
 # fix paru: sudo ln -s /usr/lib/libalpm.so.15 /usr/lib/libalpm.so.14
@@ -693,8 +688,6 @@ case ":$PATH:" in
 esac
 # pnpm end
 
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:$HOME/.cache/lm-studio/bin"
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/andreaventi/.cache/lm-studio/bin"
