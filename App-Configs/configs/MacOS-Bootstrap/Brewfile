@@ -174,6 +174,8 @@ cask "balenaetcher"
 cask "chatgpt"
 # Tool to list all active shortcuts of the current application
 cask "cheatsheet"
+# Hardware benchmarking utility
+cask "cinebench"
 # UI for creating Windows installer ISO from UUPDump
 cask "crystalfetch"
 # Browser for SQLite databases
