@@ -658,7 +658,6 @@ else
     echo "Anthropic API key not found at $HOME/.config/anthropic/api_key"
 fi
 
-
 # OpenAI API Key
 if [ -f "$HOME/.config/openai/api_key" ]; then
     OPENAI_API_KEY=$(cat ~/.config/openai/api_key)
@@ -666,6 +665,10 @@ if [ -f "$HOME/.config/openai/api_key" ]; then
 else
     echo "OpenAI API key not found at $HOME/.config/openai/api_key"
 fi
+
+# Ollama API Base
+OLLAMA_API_BASE="http://127.0.0.1:11434"
+export OLLAMA_API_BASE
 
 
 # <-------------------- GENERAL CONFIGURATIONS -------------------->
