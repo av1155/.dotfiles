@@ -391,6 +391,7 @@ alias gprune="git branch --merged main | grep -v '^[ *]*main\$' | xargs git bran
 
 # Repository Status and Inspection
 alias gs="git status"                      # Show the working tree status
+alias gd="git diff"                        # Show the changes
 alias gl="git lg"                          # Show commit logs in a graph format
 alias glo="git log --oneline"              # Show commit logs in a single line each
 alias glt="git describe --tags --abbrev=0" # Describe the latest tag
