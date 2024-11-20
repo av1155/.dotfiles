@@ -1,10 +1,10 @@
 [user]
     email = 117413846+av1155@users.noreply.github.com
 	name = av1155
-    # signingkey = [Your GPG Key ID]
+    # signingkey = [GPG Key ID]
 
 [core]
-    editor = sh -c 'command -v nvim >/dev/null 2>&1 && echo \"nvim\" || command -v code --wait >/dev/null 2>&1 && echo \"code --wait\" || echo \"vi\"'
+    editor = code --wait
     autocrlf = input
     excludesfile = ~/.gitignore_global
 
