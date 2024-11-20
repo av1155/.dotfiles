@@ -161,9 +161,16 @@ tmux source-file ~/.config/tmux/tmux.conf
 
 4. Install Plugins Using tpm
 
-```bash
-Ctrl + A (your current prefix), then I
-```
+    - Either use the shortcut:
+
+        ```bash
+        Ctrl + A (your current prefix), then I
+        ```
+
+    - Or run the following command to install all plugins listed in your tmux.conf:
+        ```bash
+        ~/.tmux/plugins/tpm/bin/install_plugins
+        ```
 
 ### Neovim Configuration
 
