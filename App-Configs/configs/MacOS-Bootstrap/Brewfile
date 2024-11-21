@@ -94,6 +94,8 @@ brew "numpy"
 brew "pgweb"
 # General-purpose scripting language
 brew "php"
+# Parallel gzip
+brew "pigz"
 # Python dependency management tool
 brew "pipenv"
 # Package compiler and linker metadata toolkit
