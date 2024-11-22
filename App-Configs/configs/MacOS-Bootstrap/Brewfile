@@ -10,8 +10,6 @@ tap "supabase/tap"
 brew "lz4"
 # Zstandard is a real-time compression algorithm
 brew "zstd"
-# Cryptography and SSL/TLS Toolkit
-brew "openssl@3"
 # Highly capable, feature-rich programming language
 brew "perl"
 # Aquarium animation in ASCII art
@@ -20,6 +18,8 @@ brew "asciiquarium"
 brew "ata"
 # Automatic configure script builder
 brew "autoconf"
+# Cryptography and SSL/TLS Toolkit
+brew "openssl@3"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
 # Secure and free password manager for all of your devices
@@ -48,8 +48,6 @@ brew "fd"
 brew "sdl2"
 # Play, record, convert, and stream audio and video
 brew "ffmpeg"
-# Generic library support script
-brew "libtool"
 # Command-line fuzzy finder written in Go
 brew "fzf"
 # GNU compiler collection
@@ -74,6 +72,8 @@ brew "go"
 brew "gradle"
 # Kubernetes package manager
 brew "helm"
+# Generic library support script
+brew "libtool"
 # Tools and libraries to manipulate images in many formats
 brew "imagemagick"
 # Lightweight and flexible command-line JSON processor
@@ -104,8 +104,6 @@ brew "neovim"
 brew "numpy"
 # Web-based PostgreSQL database browser
 brew "pgweb"
-# General-purpose scripting language
-brew "php"
 # Parallel gzip
 brew "pigz"
 # Python dependency management tool
@@ -114,8 +112,6 @@ brew "pipenv"
 brew "pkgconf"
 # Paste PNG into files
 brew "pngpaste"
-# Object-relational database system
-brew "postgresql@14", restart_service: true
 # Theme for zsh
 brew "powerlevel10k"
 # Bundle a Python application and all its dependencies
@@ -188,8 +184,6 @@ cask "arc"
 cask "balenaetcher"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
-# Tool to list all active shortcuts of the current application
-cask "cheatsheet"
 # Hardware benchmarking utility
 cask "cinebench"
 # UI for creating Windows installer ISO from UUPDump
@@ -286,20 +280,6 @@ cask "whatsapp"
 cask "whisky"
 # Video communication and virtual meeting platform
 cask "zoom"
-mas "AdGuard for Safari", id: 1440147259
-mas "Bitwarden", id: 1352778147
-mas "CleanMyMac", id: 1339170533
-mas "Dropover", id: 1355679052
-mas "Encrypto", id: 935235287
-mas "Final Cut Pro", id: 424389933
-mas "GarageBand", id: 682658836
-mas "Goodnotes", id: 1444383602
-mas "iMovie", id: 408981434
-mas "Keynote", id: 409183694
-mas "Numbers", id: 409203825
-mas "Pages", id: 409201541
-mas "Steam Link", id: 1246969117
-mas "Xcode", id: 497799835
 vscode "adpyke.codesnap"
 vscode "alefragnani.project-manager"
 vscode "batisteo.vscode-django"
