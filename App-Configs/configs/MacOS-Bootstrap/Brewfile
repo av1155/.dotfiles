@@ -6,6 +6,10 @@ tap "jesseduffield/lazygit"
 tap "jstkdng/programs"
 tap "samtay/tui"
 tap "supabase/tap"
+# Extremely Fast Compression algorithm
+brew "lz4"
+# Zstandard is a real-time compression algorithm
+brew "zstd"
 # Cryptography and SSL/TLS Toolkit
 brew "openssl@3"
 # Highly capable, feature-rich programming language
@@ -14,6 +18,8 @@ brew "perl"
 brew "asciiquarium"
 # ChatGPT in the terminal
 brew "ata"
+# Automatic configure script builder
+brew "autoconf"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
 # Secure and free password manager for all of your devices
@@ -38,8 +44,12 @@ brew "eza"
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
+# Low-level access to audio, keyboard, mouse, joystick, and graphics
+brew "sdl2"
 # Play, record, convert, and stream audio and video
 brew "ffmpeg"
+# Generic library support script
+brew "libtool"
 # Command-line fuzzy finder written in Go
 brew "fzf"
 # GNU compiler collection
@@ -70,6 +80,8 @@ brew "imagemagick"
 brew "jq"
 # Fast, Dynamic Programming Language
 brew "julia"
+# Library for USB device access
+brew "libusb"
 # Parsing Expression Grammars For Lua
 brew "lpeg"
 # Package manager for the Lua programming language
@@ -204,6 +216,8 @@ cask "imageoptim"
 cask "jetbrains-toolbox"
 # Open-source keystroke visualiser
 cask "keycastr"
+# Find shortcuts for any installed application
+cask "keyclu"
 # GPU-based terminal emulator
 cask "kitty"
 # Discover, download, and run local LLMs
