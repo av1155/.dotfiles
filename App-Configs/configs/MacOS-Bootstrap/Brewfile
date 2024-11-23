@@ -10,6 +10,8 @@ tap "supabase/tap"
 brew "lz4"
 # Zstandard is a real-time compression algorithm
 brew "zstd"
+# Image format providing lossless and lossy compression for web images
+brew "webp"
 # Highly capable, feature-rich programming language
 brew "perl"
 # Aquarium animation in ASCII art
@@ -122,6 +124,8 @@ brew "python@3.11"
 brew "qemu"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Tools for Multiple Arcade Machine Emulator
+brew "rom-tools"
 # Powerful, clean, object-oriented scripting language
 brew "ruby"
 # Safe, concurrent, practical language
@@ -268,6 +272,8 @@ cask "termius"
 cask "the-unarchiver"
 # To-do & task list manager
 cask "ticktick"
+# AI image upscaler
+cask "upscayl"
 # Virtual machines UI using QEMU
 cask "utm"
 # Open-source code editor
@@ -280,6 +286,20 @@ cask "whatsapp"
 cask "whisky"
 # Video communication and virtual meeting platform
 cask "zoom"
+mas "AdGuard for Safari", id: 1440147259
+mas "Bitwarden", id: 1352778147
+mas "CleanMyMac", id: 1339170533
+mas "Dropover", id: 1355679052
+mas "Encrypto", id: 935235287
+mas "Final Cut Pro", id: 424389933
+mas "GarageBand", id: 682658836
+mas "Goodnotes", id: 1444383602
+mas "iMovie", id: 408981434
+mas "Keynote", id: 409183694
+mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
+mas "Steam Link", id: 1246969117
+mas "Xcode", id: 497799835
 vscode "adpyke.codesnap"
 vscode "alefragnani.project-manager"
 vscode "batisteo.vscode-django"
