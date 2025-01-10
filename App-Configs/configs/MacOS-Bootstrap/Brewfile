@@ -141,7 +141,7 @@ brew "starship"
 # Organize software neatly under a single directory tree (e.g. /usr/local)
 brew "stow"
 # Open source continuous file synchronization application
-brew "syncthing", restart_service: true
+brew "syncthing", restart_service: :changed
 # User interface to the TELNET protocol
 brew "telnet"
 # Programmatically correct mistyped console commands
