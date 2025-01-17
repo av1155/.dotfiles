@@ -280,6 +280,8 @@ cask "upscayl"
 cask "utm"
 # Open-source code editor
 cask "visual-studio-code"
+# Multimedia player
+cask "vlc"
 # Remote desktop application focusing on security
 cask "vnc-viewer"
 # Native desktop client for WhatsApp
