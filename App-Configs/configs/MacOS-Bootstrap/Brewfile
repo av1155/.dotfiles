@@ -202,6 +202,8 @@ cask "discord"
 cask "dotnet-sdk"
 # Collaborative team software
 cask "figma"
+# Web browser
+cask "firefox"
 # UI toolkit for building applications for mobile, web and desktop
 cask "flutter"
 # Clipboard manager for developers
