@@ -58,6 +58,8 @@ brew "fzf"
 brew "gcc"
 # Disk usage analyzer with console interface written in Go
 brew "gdu"
+# WebDriver <-> Marionette proxy
+brew "geckodriver"
 # GitHub command-line tool
 brew "gh"
 # Distributed revision control system
@@ -188,6 +190,8 @@ cask "appcleaner"
 cask "arc"
 # Tool to flash OS images to SD cards & USB drives
 cask "balenaetcher"
+# Desktop app for GPT-4 / GPT-3.5 (OpenAI API)
+cask "chatbox"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
 # Hardware benchmarking utility
