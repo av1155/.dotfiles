@@ -5,6 +5,9 @@
         },
         "deepseek-r1:32b": {
             "context_size": 32768
+        },
+        "deepseek-r1:70b": {
+            "context_size": 32768
         }
     }
 }
