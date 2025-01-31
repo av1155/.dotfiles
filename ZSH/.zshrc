@@ -308,7 +308,20 @@ alias lzd='lazydocker'
 alias zen-browser='io.github.zen_browser.zen'
 alias h="history"
 alias pn="pnpm"
-alias gscopy='(echo -e "Provide a commit message and a title for the following, enclosed within a code block:\n" && gs && gd) | pbcopy'
+alias gscopy='(echo "Please provide a concise commit message with the following format (enclosed in triple backticks) based on the upcoming git status and diff:
+
+Example:
+\`\`\`
+Refactor user login logic
+
+- Extracted the authentication flow into a separate function
+- Added error handling for missing credentials
+\`\`\`
+
+Do not use excessive and redundant bullet points.
+
+Now, here are the changes:
+" && git status && git diff) | pbcopy'
 # alias fd='fdfind'
 
 if command -v nvim &>/dev/null; then
