@@ -264,6 +264,8 @@ cask "rectangle"
 cask "sequel-ace"
 # Screenshot measurement and annotation tool
 cask "shottr"
+# Team communication and collaboration software
+cask "slack"
 # Application to control your PlayStation 4 or PlayStation 5
 cask "sony-ps-remote-play"
 # Music streaming service
