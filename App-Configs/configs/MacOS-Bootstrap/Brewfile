@@ -226,6 +226,8 @@ cask "keycastr"
 cask "kitty"
 # Discover, download, and run local LLMs
 cask "lm-studio"
+# Full TeX Live distribution with GUI applications
+cask "mactex"
 # Scanner app for math and science
 cask "mathpix-snipping-tool"
 # Provides updates to various Microsoft products
