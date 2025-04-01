@@ -34,6 +34,10 @@ brew "circumflex"
 brew "cmake"
 # Console Matrix
 brew "cmatrix"
+# Powerful, clean, object-oriented scripting language
+brew "ruby"
+# Dependency manager for Cocoa projects
+brew "cocoapods"
 # Pure Scala Artifact Fetching
 brew "coursier"
 # Get, unpack, build, and install modules from CPAN
@@ -130,8 +134,6 @@ brew "qemu"
 brew "ripgrep"
 # Tools for Multiple Arcade Machine Emulator
 brew "rom-tools"
-# Powerful, clean, object-oriented scripting language
-brew "ruby"
 # Safe, concurrent, practical language
 brew "rust"
 # Rust toolchain installer
