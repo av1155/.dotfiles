@@ -708,3 +708,6 @@ esac
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/andreaventi/.cache/lm-studio/bin"
+
+# Flutterfire
+export PATH="$PATH:$HOME/.pub-cache/bin"
