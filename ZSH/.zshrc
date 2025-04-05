@@ -322,6 +322,7 @@ Do not use excessive and redundant bullet points.
 
 Now, here are the changes:
 " && git status && git diff) | pbcopy'
+alias gcopylog='git log --pretty=format:"%ad | %an%n%s%n%b%n" --date=short | pbcopy'
 # alias fd='fdfind'
 
 if command -v nvim &>/dev/null; then
