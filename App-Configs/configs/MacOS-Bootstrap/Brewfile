@@ -72,8 +72,6 @@ brew "git"
 brew "git-delta"
 # Quickly rewrite git repository history
 brew "git-filter-repo"
-# Git extension for versioning large files
-brew "git-lfs"
 # Render markdown on the CLI
 brew "glow"
 # Open source programming language to build simple/reliable/efficient software
