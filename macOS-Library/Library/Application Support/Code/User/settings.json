@@ -57,6 +57,10 @@
     "[typescriptreact]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
+    "[latex]": {
+        "editor.defaultFormatter": "James-Yu.latex-workshop",
+        "editor.formatOnSave": true
+    },
     "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font",
     "terminal.integrated.fontSize": 14,
     "terminal.integrated.env.osx": {},
@@ -159,5 +163,12 @@
     ],
     "print.folder.maxLines": 1200,
     "print.folder.maxFiles": 30,
-    "print.folder.includeFileList": false
+    "print.folder.includeFileList": false,
+    
+    "latex-workshop.formatting.latexindent.path": "latexindent",
+    "latex-workshop.formatting.latexindent.args": [
+    "-l", "-m", "-w"
+    ],
+    "latex-workshop.formatting.latex": "latexindent",
+
 }
