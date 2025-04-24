@@ -88,6 +88,8 @@ brew "imagemagick"
 brew "jq"
 # Fast, Dynamic Programming Language
 brew "julia"
+# Lazier way to manage everything docker
+brew "lazydocker"
 # Library for USB device access
 brew "libusb"
 # Parsing Expression Grammars For Lua
