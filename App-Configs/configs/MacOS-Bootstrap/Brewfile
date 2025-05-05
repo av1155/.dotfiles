@@ -244,6 +244,8 @@ cask "microsoft-office"
 cask "microsoft-teams"
 # Minimal installer for conda specific to conda-forge
 cask "miniforge"
+# Tool to control external monitor brightness & volume
+cask "monitorcontrol"
 # Game launcher with the ability to run Windows games
 cask "mythic"
 # App to write, plan, collaborate, and get organised
