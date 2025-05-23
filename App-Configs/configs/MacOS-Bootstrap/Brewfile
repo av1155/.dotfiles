@@ -256,6 +256,8 @@ cask "ollama"
 cask "onyx"
 # Client program for the OpenVPN Access Server
 cask "openvpn-connect"
+# Home media player
+cask "plex"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
 # Environment for statistical computing and graphics
