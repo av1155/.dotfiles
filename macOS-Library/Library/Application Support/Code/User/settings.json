@@ -170,5 +170,6 @@
     "-l", "-m", "-w"
     ],
     "latex-workshop.formatting.latex": "latexindent",
+    "editor.largeFileOptimizations": false,
 
 }

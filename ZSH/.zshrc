@@ -150,7 +150,7 @@ fi
 
 # Source Zplug and configure plugins
 if [ -d "$ZPLUG_HOME" ]; then
-    source $ZPLUG_HOME/init.zsh
+    source "$ZPLUG_HOME"/init.zsh
 
     # Configuration (PLUGINS):
     zplug "mafredri/zsh-async", from:github
@@ -182,7 +182,7 @@ fi
 # source "$POWERLEVEL10K_DIR/powerlevel10k.zsh-theme"
 
 # plugins=( git sudo zsh-256color zsh-autosuggestions zsh-syntax-highlighting )
-source $ZSH/oh-my-zsh.sh
+source "$ZSH"/oh-my-zsh.sh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -233,10 +233,16 @@ if [ -f "$CONDA_EXEC_PATH" ]; then
         fi
     fi
 
-    if [ "$AUTO_ACTIVATE_CONDA" = "true" ]; then
-        "$CONDA_EXEC_PATH" config --set auto_activate_base true
+    if "$CONDA_EXEC_PATH" config --show | grep -q "auto_activate_base"; then
+        config_key="auto_activate_base"
     else
-        "$CONDA_EXEC_PATH" config --set auto_activate_base false
+        config_key="auto_activate"
+    fi
+
+    if [ "$AUTO_ACTIVATE_CONDA" = "true" ]; then
+        "$CONDA_EXEC_PATH" config --set "$config_key" true
+    else
+        "$CONDA_EXEC_PATH" config --set "$config_key" false
     fi
 else
     echo "Conda executable not found at $CONDA_EXEC_PATH"
@@ -534,7 +540,7 @@ function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
 	yazi "$@" --cwd-file="$tmp"
 	if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		builtin cd -- "$cwd"
+		builtin cd -- "$cwd" || exit
 	fi
 	rm -f -- "$tmp"
 }
@@ -697,18 +703,16 @@ export OLLAMA_API_BASE
 # cd paru
 # makepkg -si
 
-
-# pnpm
-export PNPM_HOME="$HOME/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
-
-
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/andreaventi/.cache/lm-studio/bin"
 
 # Flutterfire
 export PATH="$PATH:$HOME/.pub-cache/bin"
+
+# pnpm
+export PNPM_HOME="/Users/andreaventi/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
