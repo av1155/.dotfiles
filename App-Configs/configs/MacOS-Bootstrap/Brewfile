@@ -74,6 +74,8 @@ brew "git-delta"
 brew "git-filter-repo"
 # Render markdown on the CLI
 brew "glow"
+# Library for USB device access
+brew "libusb"
 # Open source programming language to build simple/reliable/efficient software
 brew "go"
 # Open-source build automation tool based on the Groovy and Kotlin DSL
@@ -92,8 +94,6 @@ brew "julia"
 brew "lazydocker"
 # Postgres C API library
 brew "libpq"
-# Library for USB device access
-brew "libusb"
 # Parsing Expression Grammars For Lua
 brew "lpeg"
 # Package manager for the Lua programming language
@@ -120,6 +120,8 @@ brew "numpy"
 brew "pgweb"
 # Parallel gzip
 brew "pigz"
+# Pinentry for GPG on Mac
+brew "pinentry-mac"
 # Python dependency management tool
 brew "pipenv"
 # Package compiler and linker metadata toolkit
@@ -224,6 +226,8 @@ cask "flycut"
 cask "geekbench"
 # Web browser
 cask "google-chrome"
+# OpenPGP/GnuPG crypto, sign and key management tool
+cask "gpgfrontend"
 # Tool to optimise images to a smaller size
 cask "imageoptim"
 # JetBrains tools manager
