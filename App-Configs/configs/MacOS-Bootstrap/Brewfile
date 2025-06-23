@@ -78,8 +78,6 @@ brew "glow"
 brew "libusb"
 # Open source programming language to build simple/reliable/efficient software
 brew "go"
-# Package compiler and linker metadata toolkit
-brew "pkgconf"
 # Open-source build automation tool based on the Groovy and Kotlin DSL
 brew "gradle"
 # Kubernetes package manager
@@ -126,6 +124,8 @@ brew "pigz"
 brew "pinentry-mac"
 # Python dependency management tool
 brew "pipenv"
+# Package compiler and linker metadata toolkit
+brew "pkgconf"
 # Paste PNG into files
 brew "pngpaste"
 # Theme for zsh
@@ -257,7 +257,7 @@ cask "mythic"
 # App to write, plan, collaborate, and get organised
 cask "notion"
 # Get up and running with large language models locally
-cask "ollama"
+cask "ollama-app"
 # Verify system files structure, run miscellaneous maintenance and more
 cask "onyx"
 # Client program for the OpenVPN Access Server
@@ -267,7 +267,7 @@ cask "plex"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
 # Environment for statistical computing and graphics
-cask "r"
+cask "r-app"
 # Imaging utility to install operating systems to a microSD card
 cask "raspberry-pi-imager"
 # Control your tools with a few keystrokes
