@@ -92,6 +92,8 @@ brew "jq"
 brew "julia"
 # Lazier way to manage everything docker
 brew "lazydocker"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Postgres C API library
 brew "libpq"
 # Parsing Expression Grammars For Lua
@@ -176,8 +178,6 @@ brew "zoxide"
 brew "av1155/scripts/javaprojectmanager"
 # Everything you need to get started with Heroku
 brew "heroku/brew/heroku"
-# A simple terminal UI for git commands, written in Go
-brew "jesseduffield/lazygit/lazygit"
 # Tetris in your terminal
 brew "samtay/tui/tetris"
 # Supabase CLI
