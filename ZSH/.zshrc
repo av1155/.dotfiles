@@ -314,22 +314,111 @@ alias lzd='lazydocker'
 alias zen-browser='io.github.zen_browser.zen'
 alias h="history"
 alias pn="pnpm"
-alias gscopy='(echo "Please provide a concise commit message with the following format (enclosed in triple backticks) based on the upcoming git status and diff:
-
-Example:
-\`\`\`
-Refactor user login logic
-
-- Extracted the authentication flow into a separate function
-- Added error handling for missing credentials
-\`\`\`
-
-Do not use excessive and redundant bullet points.
-
-Now, here are the changes:
-" && git status && git diff) | pbcopy'
 alias gcopylog='git log --pretty=format:"%ad | %an%n%s%n%b%n" --date=short | pbcopy'
 # alias fd='fdfind'
+
+# ----------------------------
+
+gscopy() {
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Not a git repo."; return 1; }
+
+  local branch files ins dels
+  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+  files=$(git diff --name-only | wc -l | tr -d ' ')
+  read -r ins dels <<EOF_STATS
+$(git diff --numstat | awk '{adds+=$1; dels+=$2} END {if (adds=="") adds=0; if (dels=="") dels=0; print adds, dels}')
+EOF_STATS
+
+  if (( files == 0 )); then
+    cat <<'EOF' | pbcopy
+No changes in working tree.
+
+Tip:
+- Edit files or stage changes (e.g., `git add -p`) and re-run `gscopy`.
+- Use `git status` to see what changed.
+EOF
+    echo "No changes: copied a reminder to your clipboard."
+    return
+  fi
+
+  local worth_branch="no"
+  if (( files >= 4 || (ins + dels) >= 80 )); then worth_branch="yes"; fi
+
+  # Guess a scope from most-changed top-level path
+  local scope_guess
+  scope_guess=$(
+    git diff --name-only \
+      | awk -F/ 'NF{print $1}' \
+      | sort | uniq -c | sort -nr | awk 'NR==1{print $2}'
+  )
+  [[ -z "$scope_guess" ]] && scope_guess="core"
+
+  # Sanitize: lowercase, replace non-alnum with '-', trim leading/trailing '-'
+  scope_guess=$(printf '%s' "$scope_guess" \
+    | tr '[:upper:]' '[:lower:]' \
+    | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')
+
+  local branch_suggestions=""
+  if [[ "$worth_branch" == "yes" ]]; then
+    branch_suggestions=$(
+      printf '%s\n' \
+        "feature/${scope_guess}-implementation" \
+        "feature/${scope_guess}-refactor" \
+        "bugfix/${scope_guess}-edge-cases"
+    )
+  fi
+
+  {
+    cat <<EOF
+Please provide a concise commit message that adheres to the Conventional Commits standard.
+Return ONLY:
+
+1. The commit message enclosed in triple backticks.
+2. A branch name on a separate line prefixed with \`branch:\`.
+
+Branch naming rules:
+- Use the suggested branch names in the context only as hints.
+- Based on the context (scope, type of change, diff stats, current branch, etc.), choose or adapt the best possible branch name.
+- Ensure the branch name follows professional standards: lowercase, hyphen-separated, scoped appropriately, and concise.
+
+Formatting rules:
+- **Title**: "<type>(<scope>): <subject>" — imperative mood, ≤ 50 chars.
+- **Blank line** after the title.
+- **Body**: wrap at ~72 columns; explain the *what* and *why*.
+- Use bullets only when listing multiple distinct points.
+- Common types: feat, fix, refactor, chore, docs, test, style, perf, ci, build, revert.
+
+Template:
+\`\`\`
+<type>(${scope_guess}): <subject>
+
+<Motivation/What & Why in 1–3 short lines.>
+
+- Optional concise bullet
+- Optional concise bullet
+\`\`\`
+
+Context:
+- Current branch: ${branch}
+- Working-tree diff stats: ${files} files, +${ins} / -${dels}
+- Worth new branch for PR: ${worth_branch}
+EOF
+
+    if [[ "$worth_branch" == "yes" ]]; then
+      printf -- "- Suggested branch names:\n%s\n" "$branch_suggestions"
+    fi
+
+    echo
+    echo "Now, here are the changes:"
+    git status --porcelain=v1
+    echo
+    git diff --no-color
+  } | pbcopy
+
+  echo "Commit prompt (all changes) copied to clipboard."
+}
+
+# ----------------------------
 
 if command -v nvim &>/dev/null; then
     export EDITOR='nvim'
