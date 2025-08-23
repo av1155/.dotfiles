@@ -139,12 +139,6 @@
         "vscode-kubernetes.helm-path-mac": "/Users/andreaventi/.vs-kubernetes/tools/helm/darwin-arm64/helm",
         "vscode-kubernetes.minikube-path-mac": "/Users/andreaventi/.vs-kubernetes/tools/minikube/darwin-arm64/minikube"
     },
-    "github.copilot.enable": {
-        "*": false,
-        "plaintext": false,
-        "markdown": false,
-        "scminput": false
-    },
     "[dart]": {
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
@@ -171,5 +165,6 @@
     ],
     "latex-workshop.formatting.latex": "latexindent",
     "editor.largeFileOptimizations": false,
+    "github.copilot.nextEditSuggestions.enabled": true,
 
 }
