@@ -236,6 +236,8 @@ cask "jetbrains-toolbox"
 cask "keycastr"
 # GPU-based terminal emulator
 cask "kitty"
+# Kubernetes IDE
+cask "lens"
 # Discover, download, and run local LLMs
 cask "lm-studio"
 # Full TeX Live distribution with GUI applications
