@@ -324,9 +324,27 @@ gscopy() {
 
   local branch files ins dels
   branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
-  files=$(git diff --name-only | wc -l | tr -d ' ')
+
+  # Count any change: staged, unstaged, untracked
+  files=$(
+    {
+      git status --porcelain=v1
+      git ls-files --others --exclude-standard
+    } | awk 'NF' | wc -l | tr -d ' '
+  )
+
+  # Sum insertions/deletions across staged + unstaged + untracked
   read -r ins dels <<EOF_STATS
-$(git diff --numstat | awk '{adds+=$1; dels+=$2} END {if (adds=="") adds=0; if (dels=="") dels=0; print adds, dels}')
+$(
+  {
+    git diff --cached --numstat
+    git diff --numstat
+    # Untracked files as additions from /dev/null
+    while IFS= read -r -d '' f; do
+      git diff --no-index --numstat /dev/null "$f"
+    done < <(git ls-files --others --exclude-standard -z)
+  } | awk '{a+=$1; d+=$2} END {if (a=="") a=0; if (d=="") d=0; print a, d}'
+)
 EOF_STATS
 
   if (( files == 0 )); then
@@ -344,12 +362,13 @@ EOF
   local worth_branch="no"
   if (( files >= 4 || (ins + dels) >= 80 )); then worth_branch="yes"; fi
 
-  # Guess a scope from most-changed top-level path
+  # Guess a scope from most-changed top-level path (staged+unstaged)
   local scope_guess
   scope_guess=$(
-    git diff --name-only \
-      | awk -F/ 'NF{print $1}' \
-      | sort | uniq -c | sort -nr | awk 'NR==1{print $2}'
+    {
+      git diff --name-only --cached
+      git diff --name-only
+    } | awk -F/ 'NF{print $1}' | sort | uniq -c | sort -nr | awk 'NR==1{print $2}'
   )
   [[ -z "$scope_guess" ]] && scope_guess="core"
 
@@ -412,7 +431,16 @@ EOF
     echo "Now, here are the changes:"
     git status --porcelain=v1
     echo
+
+    # Diffs: staged, unstaged
+    git diff --cached --no-color
     git diff --no-color
+
+    # Untracked files: show full content as additions
+    while IFS= read -r -d '' f; do
+        echo
+        git diff --no-color --no-index /dev/null "$f"
+    done < <(git ls-files --others --exclude-standard -z)
   } | pbcopy
 
   echo "Commit prompt (all changes) copied to clipboard."
