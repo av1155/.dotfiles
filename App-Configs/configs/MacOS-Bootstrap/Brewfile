@@ -106,6 +106,8 @@ brew "lynx"
 brew "mas"
 # Java-based project management
 brew "maven"
+# Simple tool to make locally trusted development certificates
+brew "mkcert"
 # Remote terminal application
 brew "mosh"
 # SMTP client that can be used as an SMTP plugin for Mutt
@@ -116,6 +118,8 @@ brew "nasm"
 brew "neovim"
 # Port scanning utility for large networks
 brew "nmap"
+# Libraries for security-enabled client and server applications
+brew "nss"
 # Package for scientific computing with Python
 brew "numpy"
 # Web-based PostgreSQL database browser
