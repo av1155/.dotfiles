@@ -9,7 +9,7 @@
         "deepseek-r1:70b": {
             "context_size": 32768
         },
-        "gpt-oss-20b": {
+        "gpt-oss:20b": {
             "context_size": 131072
         }
     }
