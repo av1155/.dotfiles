@@ -122,6 +122,8 @@ brew "nmap"
 brew "nss"
 # Package for scientific computing with Python
 brew "numpy"
+# Swiss-army knife of markup format conversion
+brew "pandoc"
 # Web-based PostgreSQL database browser
 brew "pgweb"
 # Parallel gzip
@@ -172,6 +174,8 @@ brew "vercel-cli"
 brew "vim"
 # Simple terminal image viewer written in Rust
 brew "viu"
+# Pager/text based browser
+brew "w3m"
 # Internet file retriever
 brew "wget"
 # Blazing fast terminal file manager written in Rust, based on async I/O
