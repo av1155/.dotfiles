@@ -839,7 +839,7 @@ if [ -d ~/scripts/scripts ]; then
     alias sqlurl="~/scripts/scripts/sqlurl.sh"
     alias getc="~/scripts/scripts/get_code_context.sh"
     alias nvims="~/scripts/scripts/nvim_surround_usage.sh"
-    alias h2t="~/scripts/scripts/html-to-text.zsh"
+    alias h2t="~/scripts/scripts/html-to-text/html-to-text.zsh"
     alias upall-mac="~/scripts/scripts/package_updater.zsh"
     alias upall-rpi="~/scripts/scripts/package_updater_rpi.zsh"
 fi
