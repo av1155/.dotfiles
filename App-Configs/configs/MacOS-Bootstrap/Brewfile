@@ -122,6 +122,8 @@ brew "nmap"
 brew "nss"
 # Package for scientific computing with Python
 brew "numpy"
+# Create, run, and share large language models (LLMs)
+brew "ollama", restart_service: :changed
 # Swiss-army knife of markup format conversion
 brew "pandoc"
 # Web-based PostgreSQL database browser
@@ -180,6 +182,8 @@ brew "w3m"
 brew "wget"
 # Blazing fast terminal file manager written in Rust, based on async I/O
 brew "yazi"
+# Process YAML, JSON, XML, CSV and properties documents from the CLI
+brew "yq"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
 # Easily compile and run Java files, manage cleanup, and view syntax-highlighted errors through a user-friendly fuzzy-finding menu.
@@ -266,8 +270,6 @@ cask "miniforge"
 cask "mythic"
 # App to write, plan, collaborate, and get organised
 cask "notion"
-# Get up and running with large language models locally
-cask "ollama-app"
 # Verify system files structure, run miscellaneous maintenance and more
 cask "onyx"
 # Client program for the OpenVPN Access Server
