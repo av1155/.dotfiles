@@ -431,7 +431,25 @@ gssub() {
 # ----------------------------
 
 gscopy() {
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Not a git repo."; return 1; }
+  # flags
+  local print_only=0 OPTIND opt
+  while getopts ":ph" opt; do
+    case "$opt" in
+      p) print_only=1 ;;  # print to stdout (for piping) instead of pbcopy
+      h)
+        echo "Usage: gscopy [-p]" >&2
+        echo "  -p  print prompt to stdout (no clipboard/status message)" >&2
+        return 0
+        ;;
+      \?)
+        echo "gscopy: invalid option -- -$OPTARG" >&2
+        return 2
+        ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Not a git repo." >&2; return 1; }
 
   local branch files ins dels
   branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
@@ -459,14 +477,18 @@ $(
 EOF_STATS
 
   if (( files == 0 )); then
-    cat <<'EOF' | pbcopy
+    {
+      cat <<'EOF'
 No changes in working tree.
 
 Tip:
 - Edit files or stage changes (e.g., `git add -p`) and re-run `gscopy`.
 - Use `git status` to see what changed.
 EOF
-    echo "No changes: copied a reminder to your clipboard."
+    } | {
+      if (( print_only )); then cat; else pbcopy; fi
+    }
+    (( print_only )) || echo "No changes: copied a reminder to your clipboard." >&2
     return
   fi
 
@@ -552,9 +574,11 @@ EOF
         echo
         git diff --no-color --no-index /dev/null "$f"
     done < <(git ls-files --others --exclude-standard -z)
-  } | pbcopy
+  } | {
+    if (( print_only )); then cat; else pbcopy; fi
+  }
 
-  echo "Commit prompt (all changes) copied to clipboard."
+  (( print_only )) || echo "Commit prompt (all changes) copied to clipboard." >&2
 }
 
 # ----------------------------
