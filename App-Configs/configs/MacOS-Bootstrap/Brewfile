@@ -272,8 +272,6 @@ cask "mythic"
 cask "notion"
 # Verify system files structure, run miscellaneous maintenance and more
 cask "onyx"
-# Client program for the OpenVPN Access Server
-cask "openvpn-connect"
 # Home media player
 cask "plex"
 # Quick Look generator for Markdown files
