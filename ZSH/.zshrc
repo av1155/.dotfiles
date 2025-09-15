@@ -956,16 +956,23 @@ export OLLAMA_API_BASE
 # makepkg -si
 
 # Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/andreaventi/.cache/lm-studio/bin"
+export PATH="$PATH:$HOME/.cache/lm-studio/bin"
 
 # Flutterfire
 export PATH="$PATH:$HOME/.pub-cache/bin"
 
 # pnpm
-export PNPM_HOME="/Users/andreaventi/.local/share/pnpm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+
+# Enable WSLg GPU acceleration only inside WSL
+if grep -qi microsoft /proc/version 2>/dev/null; then
+  export GALLIUM_DRIVER=d3d12
+  export LIBVA_DRIVER_NAME=d3d12
+fi
+

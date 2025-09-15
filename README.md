@@ -2,22 +2,23 @@
 
 <!--toc:start-->
 
--   [.dotfiles](#dotfiles)
-    -   [Installation](#installation)
-    -   [.dotfiles Structure](#dotfiles-structure)
-    -   [Key Features](#key-features)
-        -   [Universal Zsh Configuration (`.zshrc`)](#universal-zsh-configuration-zshrc)
-        -   [MacOS Bootstrap Setup](#macos-bootstrap-setup)
-        -   [Terminal Multiplexing (`tmux`)](#terminal-multiplexing-tmux)
-            -   [Issues if tmux configuration does not load:](#issues-if-tmux-configuration-does-not-load)
-        -   [Neovim Configuration](#neovim-configuration)
-        -   [FZF and Bat Integration](#fzf-and-bat-integration)
-        -   [Package Manager Support](#package-manager-support)
-        -   [Scripts](#scripts)
-        -   [Color Schemes](#color-schemes)
-        -   [Java Classpath](#java-classpath)
-    -   [License](#license)
-    <!--toc:end-->
+- [.dotfiles](#dotfiles)
+    - [Installation](#installation)
+    - [.dotfiles Structure](#dotfiles-structure)
+    - [Key Features](#key-features)
+        - [Universal Zsh Configuration (`.zshrc`)](#universal-zsh-configuration-zshrc)
+        - [MacOS Bootstrap Setup](#macos-bootstrap-setup)
+        - [Terminal Multiplexing (`tmux`)](#terminal-multiplexing-tmux)
+            - [Issues if tmux configuration does not load:](#issues-if-tmux-configuration-does-not-load)
+        - [Neovim Configuration](#neovim-configuration)
+        - [FZF and Bat Integration](#fzf-and-bat-integration)
+        - [Package Manager Support](#package-manager-support)
+        - [Scripts](#scripts)
+        - [Color Schemes](#color-schemes)
+        - [Java Classpath](#java-classpath)
+    - [License](#license)
+
+<!--toc:end-->
 
 This repository contains my personal configuration files (dotfiles) for setting up my Arch Linux with Hyprland window manager and other utilities. It also includes configurations for macOS and other environments.
 
@@ -45,6 +46,39 @@ To install and symlink the configuration files to your system:
     cd ~/.dotfiles
     stow --restow */
     ```
+
+    ***
+
+    ### ⚠️ Pre-create base directories before stowing
+
+    When using GNU Stow to symlink configs:
+
+    ```bash
+    cd ~/.dotfiles
+    stow --restow */
+    ```
+
+    make sure the **target base directories already exist** (otherwise Stow will replace them with a symlink).  
+    For example:
+
+    ```bash
+    # Pre-create common base dirs
+    mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts
+
+    # Then safely run stow
+    cd ~/.dotfiles
+    stow --restow */
+    ```
+
+    If you don’t pre-create them, you may end up with incorrect symlinks like:
+
+    ```
+    ~/.config -> ~/.dotfiles/Config/.config
+    ```
+
+    instead of having `~/.config` as a directory with symlinked subfolders inside.
+
+    ***
 
     If conflicts arise because symlinks already exist, or original files, you need to manually remove those files (or turn them into .bak's) and then run `stow --restow */` from the `~/.dotfiles` directory again.
 
@@ -123,10 +157,10 @@ To install and symlink the configuration files to your system:
 
 The `.zshrc` file is designed to work across different systems like macOS, Linux (Arch, Raspberry Pi, etc.), and Windows (WSL). It detects the current OS and adjusts paths and tool installations accordingly, ensuring consistent behavior regardless of the platform.
 
--   **Oh My Zsh**: Configuration for managing Zsh and its plugins.
--   **Powerlevel10k Theme**: Installs and configures Powerlevel10k for a beautiful terminal prompt.
--   **ZPlug**: Manages Zsh plugins.
--   **Fastfetch**: Quickly fetches system information and displays it in the terminal.
+- **Oh My Zsh**: Configuration for managing Zsh and its plugins.
+- **Powerlevel10k Theme**: Installs and configures Powerlevel10k for a beautiful terminal prompt.
+- **ZPlug**: Manages Zsh plugins.
+- **Fastfetch**: Quickly fetches system information and displays it in the terminal.
 
 ### MacOS Bootstrap Setup
 
@@ -160,7 +194,6 @@ tmux source-file ~/.config/tmux/tmux.conf
 ```
 
 4. Install Plugins Using tpm
-
     - Either use the shortcut:
 
         ```bash
@@ -174,30 +207,30 @@ tmux source-file ~/.config/tmux/tmux.conf
 
 ### Neovim Configuration
 
--   The `.zshrc` includes automatic setup for Neovim's Python provider, ensuring that Neovim is always ready to work with Python and other environments.
--   Supports a dynamic Python executable path for `pynvim`.
+- The `.zshrc` includes automatic setup for Neovim's Python provider, ensuring that Neovim is always ready to work with Python and other environments.
+- Supports a dynamic Python executable path for `pynvim`.
 
 ### FZF and Bat Integration
 
--   Enhanced file navigation with FZF (Fuzzy Finder) and `bat` (a better `cat`).
--   Custom aliases for efficient directory and file navigation.
+- Enhanced file navigation with FZF (Fuzzy Finder) and `bat` (a better `cat`).
+- Custom aliases for efficient directory and file navigation.
 
 ### Package Manager Support
 
 The setup automatically configures the appropriate package manager for your system:
 
--   **Paru/Yay** on Arch Linux (for AUR support)
--   **Homebrew** on macOS (via `brew`)
+- **Paru/Yay** on Arch Linux (for AUR support)
+- **Homebrew** on macOS (via `brew`)
 
 ### Scripts
 
--   **[fzf-git.sh](https://github.com/junegunn/fzf-git.sh)**: Adds git integration to FZF for quickly browsing and managing git repositories.
--   **Custom Shell Scripts**: Includes scripts for managing Java projects, SQL URLs, updating packages, etc.
+- **[fzf-git.sh](https://github.com/junegunn/fzf-git.sh)**: Adds git integration to FZF for quickly browsing and managing git repositories.
+- **Custom Shell Scripts**: Includes scripts for managing Java projects, SQL URLs, updating packages, etc.
 
 ### Color Schemes
 
--   **Bat themes**: Automatically installs the Catppuccin theme for the `bat` command.
--   **Kitty**: Dynamic configuration for font size and opacity depending on the OS.
+- **Bat themes**: Automatically installs the Catppuccin theme for the `bat` command.
+- **Kitty**: Dynamic configuration for font size and opacity depending on the OS.
 
 ### Java Classpath
 
