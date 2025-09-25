@@ -4505,7 +4505,7 @@
         },
         "refresh": 1,
         "regex": "",
-        "sort": 1,
+        "sort": 2,
         "type": "query"
       }
     ]
