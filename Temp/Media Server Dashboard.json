@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 12,
+  "id": 14,
   "links": [],
   "panels": [
     {
@@ -4505,7 +4505,7 @@
         },
         "refresh": 1,
         "regex": "",
-        "sort": 1,
+        "sort": 2,
         "type": "query"
       }
     ]
@@ -4518,5 +4518,5 @@
   "timezone": "browser",
   "title": "Media Server Dashboard",
   "uid": "47d71901-9729-44c3-8dd3-d9ac1b413e8e",
-  "version": 4
+  "version": 3
 }
