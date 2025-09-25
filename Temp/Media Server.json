@@ -58,7 +58,7 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 3,
+        "w": 5,
         "x": 0,
         "y": 0
       },
@@ -134,7 +134,7 @@
       "gridPos": {
         "h": 3,
         "w": 3,
-        "x": 3,
+        "x": 5,
         "y": 0
       },
       "id": 906,
@@ -179,80 +179,6 @@
           "color": {
             "mode": "shades"
           },
-          "decimals": 0,
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#00000000",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "string"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 6,
-        "y": 0
-      },
-      "id": 908,
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "name",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.2.0",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "count by (modelName) (DCGM_FI_DEV_GPU_UTIL)",
-          "instant": true,
-          "legendFormat": "{{modelName}}",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "GPU Model",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "shades"
-          },
           "decimals": 1,
           "mappings": [
             {
@@ -280,8 +206,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 3,
-        "x": 9,
+        "w": 4,
+        "x": 8,
         "y": 0
       },
       "id": 14,
@@ -518,7 +444,7 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 3,
+        "w": 5,
         "x": 0,
         "y": 3
       },
@@ -595,7 +521,7 @@
       "gridPos": {
         "h": 3,
         "w": 3,
-        "x": 3,
+        "x": 5,
         "y": 3
       },
       "id": 13,
@@ -632,80 +558,6 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "shades"
-          },
-          "decimals": 0,
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#00000000",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "string"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 6,
-        "y": 3
-      },
-      "id": 909,
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "name",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.2.0",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "topk(1, count by (DCGM_FI_DRIVER_VERSION) (DCGM_FI_DEV_GPU_UTIL))",
-          "instant": true,
-          "legendFormat": "{{DCGM_FI_DRIVER_VERSION}}",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "GPU Driver",
-      "type": "stat"
-    },
-    {
-      "datasource": {
         "uid": "$datasource"
       },
       "fieldConfig": {
@@ -722,8 +574,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 3,
-        "x": 9,
+        "w": 4,
+        "x": 8,
         "y": 3
       },
       "id": 44,
@@ -801,6 +653,9 @@
           "values": false
         },
         "showPercentChange": false,
+        "text": {
+          "titleSize": 16
+        },
         "textMode": "auto",
         "wideLayout": true
       },
@@ -1124,7 +979,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 6,
         "w": 12,
         "x": 12,
         "y": 6
@@ -1296,9 +1151,9 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 11
+        "w": 24,
+        "x": 0,
+        "y": 12
       },
       "id": 904,
       "options": {
@@ -1383,214 +1238,7 @@
       "datasource": {
         "uid": "$datasource"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 0,
-        "y": 12
-      },
-      "id": 33,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "editorMode": "code",
-          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{instance=~\"$gpu_instance\", gpu=~\"$gpu\"})",
-          "interval": "",
-          "legendFormat": "GPU {{gpu}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "GPU Utilization",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "uid": "$datasource"
-      },
-      "description": "GPU Decoder Utilization",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 3,
-        "y": 12
-      },
-      "id": 27,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "expr": "avg by (instance, gpu) (DCGM_FI_DEV_DEC_UTIL{instance=~\"$gpu_instance\", gpu=~\"$gpu\"} )",
-          "interval": "",
-          "legendFormat": "NVDEC {{gpu}}",
-          "refId": "B"
-        }
-      ],
-      "title": "NVDEC Utilization",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "uid": "$datasource"
-      },
-      "description": "GPU Encoder Utilization",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 6,
-        "y": 12
-      },
-      "id": 25,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "expr": "avg by (instance, gpu) ( DCGM_FI_DEV_ENC_UTIL{job=\"dcgm\", instance=~\"$gpu_instance\", gpu=~\"$gpu\"} )",
-          "legendFormat": "NVENC {{gpu}}",
-          "refId": "A"
-        }
-      ],
-      "title": "NVENC Utilization",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "uid": "$datasource"
-      },
-      "description": "GPU Power Usage in Watts",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1629,8 +1277,8 @@
       "gridPos": {
         "h": 6,
         "w": 3,
-        "x": 9,
-        "y": 12
+        "x": 0,
+        "y": 18
       },
       "id": 30,
       "options": {
@@ -1657,14 +1305,14 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "avg (DCGM_FI_DEV_POWER_USAGE{instance=~\"$gpu_instance\", gpu=~\"$gpu\"})",
+          "expr": "igpu_power_package{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
           "interval": "",
           "legendFormat": "GPU {{gpu}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "GPU Power",
+      "title": "Package Power",
       "type": "stat"
     },
     {
@@ -1674,7 +1322,218 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 3,
+        "y": 18
+      },
+      "id": 33,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "igpu_engines_render_3d_0_busy{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
+          "interval": "",
+          "legendFormat": "GPU {{gpu}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Render/3D Busy",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "description": "GPU Decoder Utilization",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 6,
+        "y": 18
+      },
+      "id": 27,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "igpu_engines_video_0_busy{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
+          "interval": "",
+          "legendFormat": "NVDEC {{gpu}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Video Busy",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 9,
+        "y": 18
+      },
+      "id": 25,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "igpu_engines_video_enhance_0_busy{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
+          "legendFormat": "NVENC {{gpu}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "VideoEnhance Busy",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
           },
           "custom": {
             "axisBorderShow": false,
@@ -1694,6 +1553,9 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -1710,6 +1572,7 @@
               "mode": "off"
             }
           },
+          "fieldMinMax": false,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -1732,7 +1595,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 17
+        "y": 18
       },
       "id": 46,
       "options": {
@@ -1754,11 +1617,13 @@
           "datasource": {
             "uid": "$datasource"
           },
+          "editorMode": "code",
           "expr": "sum(max_over_time(play_seconds_total{job=~\"$job\", instance=~\"$plex_instance\", server=~\"$server\"}[24h])) by (library_type)",
           "format": "time_series",
-          "interval": "1d",
+          "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{library_type}}",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -1769,11 +1634,95 @@
       "datasource": {
         "uid": "$datasource"
       },
-      "description": "GPU Temperature",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "fixedColor": "light-purple",
+            "mode": "shades"
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "#EAB839",
+                "value": 75
+              },
+              {
+                "color": "#EF843C",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 95
+              },
+              {
+                "color": "purple",
+                "value": 96
+              }
+            ]
+          },
+          "unit": "rotmhz"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 0,
+        "y": 24
+      },
+      "id": 34,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "igpu_frequency_actual{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "GPU {{gpu}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Actual Frequency",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "uid": "$datasource"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "dark-purple",
+            "mode": "shades"
           },
           "mappings": [],
           "thresholds": {
@@ -1801,17 +1750,17 @@
               }
             ]
           },
-          "unit": "celsius"
+          "unit": "rotmhz"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 6,
         "w": 3,
-        "x": 0,
-        "y": 18
+        "x": 3,
+        "y": 24
       },
-      "id": 34,
+      "id": 915,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -1835,88 +1784,15 @@
           "datasource": {
             "uid": "$datasource"
           },
-          "expr": "avg by (instance, gpu) ( DCGM_FI_DEV_GPU_TEMP{instance=~\"$gpu_instance\", gpu=~\"$gpu\"} )",
+          "editorMode": "code",
+          "expr": "igpu_frequency_requested{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
           "instant": false,
           "interval": "",
           "legendFormat": "GPU {{gpu}}",
           "refId": "A"
         }
       ],
-      "title": "GPU Temp",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "description": "CPU Temperature",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 85
-              },
-              {
-                "color": "orange",
-                "value": 90
-              },
-              {
-                "color": "red",
-                "value": 95
-              }
-            ]
-          },
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 3,
-        "y": 18
-      },
-      "id": 35,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.2.0",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "(node_hwmon_temp_celsius{instance=\"$instance\"} * on (chip, sensor, instance) group_left(label) node_hwmon_sensor_label{instance=\"$instance\"} * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{instance=\"$instance\", chip_name=~\"k10temp|coretemp\"})",
-          "legendFormat": "{{chip_name}}-{{label}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "CPU Temp",
+      "title": "Requested Frequency",
       "type": "stat"
     },
     {
@@ -1958,9 +1834,9 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 3,
+        "w": 6,
         "x": 6,
-        "y": 18
+        "y": 24
       },
       "id": 36,
       "options": {
@@ -1983,86 +1859,14 @@
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "editorMode": "code",
           "expr": "(node_hwmon_temp_celsius{instance=\"$instance\", chip=~\"nvme_.*\"} * on (chip, sensor, instance) group_left(label) node_hwmon_sensor_label{instance=\"$instance\", label=\"Composite\"} * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{instance=\"$instance\"})",
           "legendFormat": "{{chip_name}}-{{label}}",
+          "range": true,
           "refId": "A"
         }
       ],
       "title": "NVMe Controller Temp",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "uid": "$datasource"
-      },
-      "description": "Drive Temperature (SATA & NVMe)",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 49.9995
-              },
-              {
-                "color": "orange",
-                "value": 55
-              },
-              {
-                "color": "red",
-                "value": 60
-              }
-            ]
-          },
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 9,
-        "y": 18
-      },
-      "id": 38,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "expr": "smartctl_device_temperature{temperature_type=\"current\", device=~\"$smart_device\"}\n* on (device) group_left(model_name,interface) smartctl_device",
-          "legendFormat": "{{interface}}-{{model_name}} ({{device}})",
-          "refId": "A"
-        }
-      ],
-      "title": "Drive Temperature (SATA & NVMe)",
       "type": "stat"
     },
     {
@@ -2108,7 +1912,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 24
       },
       "id": 48,
       "options": {
@@ -2193,25 +1997,23 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Incoming and outgoing network traffic per interface",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "continuous-BlYlRd"
           },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "out (-) / in (+)",
+            "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 40,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -2220,7 +2022,7 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
@@ -2236,7 +2038,7 @@
               "mode": "off"
             }
           },
-          "links": [],
+          "fieldMinMax": false,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -2244,38 +2046,30 @@
               {
                 "color": "green",
                 "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           },
-          "unit": "bps"
+          "unit": "rotmhz"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "/.*out.*/"
-            },
-            "properties": [
-              {
-                "id": "custom.transform",
-                "value": "negative-Y"
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
-        "h": 12,
-        "w": 12,
+        "h": 11,
+        "w": 9,
         "x": 0,
-        "y": 24
+        "y": 30
       },
-      "id": 20,
+      "id": 916,
       "options": {
+        "dataLinks": [],
         "legend": {
           "calcs": [
-            "min",
             "mean",
+            "lastNotNull",
             "max"
           ],
           "displayMode": "table",
@@ -2285,34 +2079,110 @@
         "tooltip": {
           "hideZeros": false,
           "mode": "multi",
-          "sort": "none"
+          "sort": "desc"
         }
       },
       "pluginVersion": "12.2.0",
       "targets": [
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "editorMode": "code",
-          "expr": "rate(node_network_receive_bytes_total{instance=\"$instance\", device!=\"lo\"}[$__rate_interval]) * 8",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "{{device}} - Rx in",
+          "expr": "igpu_frequency_actual{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
+          "interval": "",
+          "legendFormat": "Actual Frequency",
           "range": true,
-          "refId": "A",
-          "step": 240
+          "refId": "A"
         },
         {
+          "datasource": {
+            "uid": "$datasource"
+          },
           "editorMode": "code",
-          "expr": "rate(node_network_transmit_bytes_total{instance=\"$instance\", device!=\"lo\"}[$__rate_interval]) * 8",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "{{device}} - Tx out",
+          "expr": "igpu_frequency_requested{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
+          "interval": "",
+          "legendFormat": "Requested Frequency",
           "range": true,
-          "refId": "B",
-          "step": 240
+          "refId": "B"
         }
       ],
-      "title": "Network Traffic",
+      "title": "GPU Frequencies",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "CPU Temperature",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 85
+              },
+              {
+                "color": "orange",
+                "value": 90
+              },
+              {
+                "color": "red",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 3,
+        "x": 9,
+        "y": 30
+      },
+      "id": 35,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "(node_hwmon_temp_celsius{instance=\"$instance\"} * on (chip, sensor, instance) group_left(label) node_hwmon_sensor_label{instance=\"$instance\"} * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{instance=\"$instance\", chip_name=~\"k10temp|coretemp\"})",
+          "legendFormat": "{{chip_name}}-{{label}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Temp",
+      "type": "stat"
     },
     {
       "datasource": {
@@ -2357,7 +2227,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 29
+        "y": 30
       },
       "id": 50,
       "options": {
@@ -2388,7 +2258,7 @@
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
@@ -2485,7 +2355,7 @@
         "h": 6,
         "w": 3,
         "x": 12,
-        "y": 35
+        "y": 36
       },
       "id": 51,
       "options": {
@@ -2515,7 +2385,7 @@
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
@@ -2608,7 +2478,7 @@
         "h": 6,
         "w": 3,
         "x": 15,
-        "y": 35
+        "y": 36
       },
       "id": 47,
       "options": {
@@ -2639,7 +2509,7 @@
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
@@ -2718,7 +2588,7 @@
         "h": 6,
         "w": 3,
         "x": 18,
-        "y": 35
+        "y": 36
       },
       "id": 52,
       "options": {
@@ -2748,7 +2618,7 @@
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
@@ -2841,7 +2711,7 @@
         "h": 6,
         "w": 3,
         "x": 21,
-        "y": 35
+        "y": 36
       },
       "id": 49,
       "options": {
@@ -2872,7 +2742,7 @@
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
@@ -2929,7 +2799,7 @@
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Combined temperature readings all devices with a sensor.",
+      "description": "Incoming and outgoing network traffic per interface",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2939,12 +2809,12 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "out (-) / in (+)",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 40,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -2953,21 +2823,23 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 4,
+            "lineWidth": 1,
+            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
             "showPoints": "never",
-            "spanNulls": true,
+            "showValues": false,
+            "spanNulls": false,
             "stacking": {
               "group": "A",
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "line"
+              "mode": "off"
             }
           },
+          "links": [],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -2975,61 +2847,74 @@
               {
                 "color": "green",
                 "value": 0
-              },
-              {
-                "color": "red",
-                "value": 70
               }
             ]
           },
-          "unit": "celsius"
+          "unit": "bps"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/.*out.*/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 11,
+        "h": 12,
         "w": 12,
         "x": 0,
-        "y": 36
+        "y": 41
       },
-      "id": 1,
+      "id": 20,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "min",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
-          "exemplar": true,
-          "expr": "(node_hwmon_temp_celsius{instance=\"$instance\"} * on (chip, sensor, instance) group_left(label) node_hwmon_sensor_label{instance=\"$instance\"} * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{instance=\"$instance\"}) > 0",
-          "legendFormat": "{{chip_name}}-{{label}}",
-          "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "((node_hwmon_temp_celsius{instance=\"$instance\"} unless on (chip, sensor, instance) node_hwmon_sensor_label{instance=\"$instance\"}) * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{instance=\"$instance\"}) > 0",
-          "legendFormat": "{{chip_name}}-{{sensor}}",
-          "refId": "B"
+          "editorMode": "code",
+          "expr": "rate(node_network_receive_bytes_total{instance=\"$instance\", device!=\"lo\"}[$__rate_interval]) * 8",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{device}} - Rx in",
+          "range": true,
+          "refId": "A",
+          "step": 240
         },
         {
           "editorMode": "code",
-          "exemplar": true,
-          "expr": "avg(DCGM_FI_DEV_GPU_TEMP{instance=~\"$gpu_instance\"} > 0)",
-          "legendFormat": "nvidia-{{modelName}}-GPU{{gpu}}",
+          "expr": "rate(node_network_transmit_bytes_total{instance=\"$instance\", device!=\"lo\"}[$__rate_interval]) * 8",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{device}} - Tx out",
           "range": true,
-          "refId": "C"
+          "refId": "B",
+          "step": 240
         }
       ],
-      "title": "Temperature - All Sensors",
+      "title": "Network Traffic",
       "type": "timeseries"
     },
     {
@@ -3065,6 +2950,7 @@
               "type": "linear"
             },
             "showPoints": "never",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -3075,8 +2961,6 @@
             }
           },
           "mappings": [],
-          "max": 100,
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -3098,7 +2982,7 @@
         "h": 11,
         "w": 6,
         "x": 12,
-        "y": 41
+        "y": 42
       },
       "id": 6,
       "options": {
@@ -3116,19 +3000,19 @@
         "tooltip": {
           "hideZeros": false,
           "mode": "multi",
-          "sort": "none"
+          "sort": "desc"
         }
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "avg(DCGM_FI_DEV_ENC_UTIL{instance=~\"$gpu_instance\", gpu=~\"$gpu\"})",
+          "expr": "igpu_engines_render_3d_0_busy{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
           "interval": "",
-          "legendFormat": "NVENC {{gpu}}",
+          "legendFormat": "Render/3D",
           "range": true,
           "refId": "A"
         },
@@ -3137,14 +3021,38 @@
             "uid": "$datasource"
           },
           "editorMode": "code",
-          "expr": "avg(DCGM_FI_DEV_DEC_UTIL{instance=~\"$gpu_instance\", gpu=~\"$gpu\"})",
+          "expr": "igpu_engines_blitter_0_busy{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
           "interval": "",
-          "legendFormat": "NVDEC {{gpu}}",
+          "legendFormat": "Blitter",
           "range": true,
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "igpu_engines_video_0_busy{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Video",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "editorMode": "code",
+          "expr": "igpu_engines_video_enhance_0_busy{job=\"intel-gpu\", instance=\"$igpu_instance\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Video Enhance",
+          "range": true,
+          "refId": "D"
         }
       ],
-      "title": "NVENC / NVDEC Utilization",
+      "title": "Busy Engines",
       "type": "timeseries"
     },
     {
@@ -3182,6 +3090,7 @@
               "type": "linear"
             },
             "showPoints": "never",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -3247,7 +3156,7 @@
         "h": 11,
         "w": 6,
         "x": 18,
-        "y": 41
+        "y": 42
       },
       "id": 19,
       "options": {
@@ -3267,7 +3176,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.1.1",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "editorMode": "code",
@@ -3298,122 +3207,7 @@
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Resource pressure via PSI",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 1,
-          "links": [],
-          "mappings": [],
-          "max": 1,
-          "min": 0,
-          "thresholds": {
-            "mode": "percentage",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "dark-yellow",
-                "value": 70
-              },
-              {
-                "color": "dark-red",
-                "value": 90
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 47
-      },
-      "id": 17,
-      "options": {
-        "displayMode": "basic",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "maxVizHeight": 300,
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "text": {},
-        "valueMode": "color"
-      },
-      "pluginVersion": "12.2.0-17027759091",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "irate(node_pressure_cpu_waiting_seconds_total{instance=\"$instance\"}[$__rate_interval])",
-          "format": "time_series",
-          "instant": true,
-          "legendFormat": "CPU",
-          "range": false,
-          "refId": "A",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "irate(node_pressure_memory_waiting_seconds_total{instance=\"$instance\"}[$__rate_interval])",
-          "format": "time_series",
-          "instant": true,
-          "legendFormat": "Mem",
-          "range": false,
-          "refId": "B",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "irate(node_pressure_io_waiting_seconds_total{instance=\"$instance\"}[$__rate_interval])",
-          "format": "time_series",
-          "instant": true,
-          "legendFormat": "I/O",
-          "range": false,
-          "refId": "C",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "irate(node_pressure_irq_stalled_seconds_total{instance=\"$instance\"}[$__rate_interval])",
-          "format": "time_series",
-          "instant": true,
-          "legendFormat": "Irq",
-          "range": false,
-          "refId": "D",
-          "step": 240
-        }
-      ],
-      "title": "Pressure",
-      "type": "bargauge"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
+      "description": "Combined temperature readings all devices with a sensor.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -3438,18 +3232,19 @@
             "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 2,
-            "pointSize": 0,
+            "pointSize": 4,
             "scaleDistribution": {
               "type": "linear"
             },
             "showPoints": "never",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "line"
             }
           },
           "mappings": [],
@@ -3462,138 +3257,21 @@
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 70
               }
             ]
           },
           "unit": "celsius"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "GPU normal"
-            },
-            "properties": [
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    4,
-                    4
-                  ],
-                  "fill": "dash"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "GPU warn"
-            },
-            "properties": [
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    4,
-                    4
-                  ],
-                  "fill": "dash"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "GPU red"
-            },
-            "properties": [
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    4,
-                    4
-                  ],
-                  "fill": "dash"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "GPU max"
-            },
-            "properties": [
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    2,
-                    6
-                  ],
-                  "fill": "dot"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-red",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 12,
-        "y": 52
+        "h": 15,
+        "w": 12,
+        "x": 0,
+        "y": 53
       },
-      "id": 2,
+      "id": 1,
       "options": {
         "legend": {
           "calcs": [],
@@ -3607,573 +3285,30 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.2.0-17027759091",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
-          "editorMode": "code",
-          "expr": "avg (DCGM_FI_DEV_GPU_TEMP{instance=~\"$gpu_instance\"} )",
-          "legendFormat": "nvidia-{{modelName}}-GPU{{gpu}}",
-          "range": true,
+          "exemplar": true,
+          "expr": "(node_hwmon_temp_celsius{instance=\"$instance\"} * on (chip, sensor, instance) group_left(label) node_hwmon_sensor_label{instance=\"$instance\"} * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{instance=\"$instance\"}) > 0",
+          "legendFormat": "{{chip_name}}-{{label}}",
           "refId": "A"
         },
         {
-          "expr": "(0 * max(DCGM_FI_DEV_GPU_TEMP{instance=~\"$gpu_instance\"})) + $gpu_normal_max",
-          "legendFormat": "GPU normal",
-          "refId": "N"
+          "exemplar": true,
+          "expr": "((node_hwmon_temp_celsius{instance=\"$instance\"} unless on (chip, sensor, instance) node_hwmon_sensor_label{instance=\"$instance\"}) * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{instance=\"$instance\"}) > 0",
+          "legendFormat": "{{chip_name}}-{{sensor}}",
+          "refId": "B"
         },
         {
-          "expr": "(0 * max(DCGM_FI_DEV_GPU_TEMP{instance=~\"$gpu_instance\"})) + $gpu_warn",
-          "legendFormat": "GPU warn",
-          "refId": "W"
-        },
-        {
-          "expr": "(0 * max(DCGM_FI_DEV_GPU_TEMP{instance=~\"$gpu_instance\"})) + $gpu_red",
-          "legendFormat": "GPU red",
-          "refId": "R"
-        },
-        {
-          "expr": "(0 * max(DCGM_FI_DEV_GPU_TEMP{instance=~\"$gpu_instance\"})) + $gpu_max",
-          "legendFormat": "GPU max",
-          "refId": "M"
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "avg(DCGM_FI_DEV_GPU_TEMP{instance=~\"$gpu_instance\"} > 0)",
+          "legendFormat": "nvidia-{{modelName}}-GPU{{gpu}}",
+          "range": true,
+          "refId": "C"
         }
       ],
-      "title": "GPU Temperature",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "description": "Percentage of time the disk was actively processing I/O operations",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 40,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "links": [],
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 18,
-        "y": 52
-      },
-      "id": 26,
-      "options": {
-        "legend": {
-          "calcs": [
-            "min",
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.2.0-17027759091",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "rate(node_disk_io_time_seconds_total{instance=\"$instance\", device=~\"$diskdevices\"}[$__rate_interval])",
-          "format": "time_series",
-          "legendFormat": "{{device}}",
-          "range": true,
-          "refId": "A",
-          "step": 240
-        }
-      ],
-      "title": "Disk I/O Utilization",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "description": "CPU time spent busy vs idle, split by activity type",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 40,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "percent"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "links": [],
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Busy Iowait"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#890F02",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Idle"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#052B51",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Busy System"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#EAB839",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Busy User"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#0A437C",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Busy Other"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#6D1F62",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 0,
-        "y": 53
-      },
-      "id": 21,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true,
-          "width": 250
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "12.2.0-17027759091",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=\"system\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
-          "format": "time_series",
-          "hide": false,
-          "instant": false,
-          "intervalFactor": 1,
-          "legendFormat": "Busy System",
-          "range": true,
-          "refId": "A",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=\"user\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 1,
-          "legendFormat": "Busy User",
-          "range": true,
-          "refId": "B",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=\"iowait\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Busy Iowait",
-          "range": true,
-          "refId": "C",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=~\".*irq\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Busy IRQs",
-          "range": true,
-          "refId": "D",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode!=\"idle\",mode!=\"user\",mode!=\"system\",mode!=\"iowait\",mode!=\"irq\",mode!=\"softirq\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Busy Other",
-          "range": true,
-          "refId": "E",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=\"idle\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Idle",
-          "range": true,
-          "refId": "F",
-          "step": 240
-        }
-      ],
-      "title": "CPU Basic",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "description": "RAM and swap usage overview, including caches",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 40,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "links": [],
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Swap used"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#BF1B00",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Total"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#E0F9D7",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.fillOpacity",
-                "value": 0
-              },
-              {
-                "id": "custom.stacking",
-                "value": {
-                  "group": false,
-                  "mode": "normal"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Cache + Buffer"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#052B51",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Free"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#7EB26D",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 6,
-        "y": 53
-      },
-      "id": 22,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true,
-          "width": 350
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.2.0-17027759091",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "node_memory_MemTotal_bytes{instance=\"$instance\"}",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 1,
-          "legendFormat": "Total",
-          "range": true,
-          "refId": "A",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "node_memory_MemTotal_bytes{instance=\"$instance\"} - node_memory_MemFree_bytes{instance=\"$instance\"} - (node_memory_Cached_bytes{instance=\"$instance\"} + node_memory_Buffers_bytes{instance=\"$instance\"} + node_memory_SReclaimable_bytes{instance=\"$instance\"})",
-          "format": "time_series",
-          "hide": false,
-          "intervalFactor": 1,
-          "legendFormat": "Used",
-          "range": true,
-          "refId": "B",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "node_memory_Cached_bytes{instance=\"$instance\"} + node_memory_Buffers_bytes{instance=\"$instance\"} + node_memory_SReclaimable_bytes{instance=\"$instance\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Cache + Buffer",
-          "range": true,
-          "refId": "C",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "node_memory_MemFree_bytes{instance=\"$instance\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Free",
-          "range": true,
-          "refId": "D",
-          "step": 240
-        },
-        {
-          "editorMode": "code",
-          "expr": "(node_memory_SwapTotal_bytes{instance=\"$instance\"} - node_memory_SwapFree_bytes{instance=\"$instance\"})",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "Swap used",
-          "range": true,
-          "refId": "E",
-          "step": 240
-        }
-      ],
-      "title": "Memory Basic",
+      "title": "Temperature - All Sensors",
       "type": "timeseries"
     },
     {
@@ -4210,6 +3345,7 @@
               "type": "linear"
             },
             "showPoints": "never",
+            "showValues": false,
             "spanNulls": true,
             "stacking": {
               "group": "A",
@@ -4358,7 +3494,7 @@
         "h": 11,
         "w": 6,
         "x": 12,
-        "y": 63
+        "y": 53
       },
       "id": 4,
       "options": {
@@ -4374,7 +3510,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.2.0-17027759091",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "expr": "(node_hwmon_temp_celsius{instance=\"$instance\", chip=~\"nvme_.*\"} * on (chip, sensor, instance) group_left(label) node_hwmon_sensor_label{instance=\"$instance\", label=\"Composite\"} * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{instance=\"$instance\"})",
@@ -4407,9 +3543,10 @@
     },
     {
       "datasource": {
+        "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Temperature for all drives, SATA & NVME",
+      "description": "Percentage of time the disk was actively processing I/O operations",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4424,7 +3561,7 @@
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 40,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -4433,255 +3570,13 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 2,
+            "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
             "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "celsius"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Drive normal"
-            },
-            "properties": [
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    4,
-                    4
-                  ],
-                  "fill": "dash"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Drive warn"
-            },
-            "properties": [
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    4,
-                    4
-                  ],
-                  "fill": "dash"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Drive red"
-            },
-            "properties": [
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    4,
-                    4
-                  ],
-                  "fill": "dash"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Drive max"
-            },
-            "properties": [
-              {
-                "id": "custom.lineStyle",
-                "value": {
-                  "dash": [
-                    2,
-                    6
-                  ],
-                  "fill": "dot"
-                }
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-red",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 1
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 18,
-        "y": 63
-      },
-      "id": 37,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.2.0-17027759091",
-      "targets": [
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "expr": "smartctl_device_temperature{temperature_type=\"current\", device=~\"$smart_device\"}\n* on (device) group_left(model_name,interface) smartctl_device",
-          "legendFormat": "{{interface}}-{{model_name}} ({{device}})",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "expr": "(0 * max(smartctl_device_temperature{temperature_type=\"current\", device=~\"$smart_device\"})) + $hdd_normal_max",
-          "legendFormat": "Drive normal",
-          "refId": "N"
-        },
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "expr": "(0 * max(smartctl_device_temperature{temperature_type=\"current\", device=~\"$smart_device\"})) + $hdd_warn",
-          "legendFormat": "Drive warn",
-          "refId": "W"
-        },
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "expr": "(0 * max(smartctl_device_temperature{temperature_type=\"current\", device=~\"$smart_device\"})) + $hdd_red",
-          "legendFormat": "Drive red",
-          "refId": "R"
-        },
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "expr": "(0 * max(smartctl_device_temperature{temperature_type=\"current\", device=~\"$smart_device\"})) + $hdd_max",
-          "legendFormat": "Drive max",
-          "refId": "M"
-        }
-      ],
-      "title": "Drive Temps",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "uid": "$datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -4691,110 +3586,8 @@
               "mode": "off"
             }
           },
+          "links": [],
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "watt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 6,
-        "x": 0,
-        "y": 64
-      },
-      "id": 9,
-      "options": {
-        "dataLinks": [],
-        "legend": {
-          "calcs": [
-            "mean",
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.2.0-17027759091",
-      "targets": [
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "editorMode": "code",
-          "expr": "avg(DCGM_FI_DEV_POWER_USAGE{instance=~\"$gpu_instance\", gpu=~\"$gpu\"})",
-          "interval": "",
-          "legendFormat": "GPU {{gpu}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "GPU Power Usage",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "uid": "$datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "max": 100,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
@@ -4802,30 +3595,25 @@
               {
                 "color": "green",
                 "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
-          "unit": "percent"
+          "unit": "percentunit"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 11,
         "w": 6,
-        "x": 6,
-        "y": 64
+        "x": 18,
+        "y": 53
       },
-      "id": 32,
+      "id": 26,
       "options": {
-        "dataLinks": [],
         "legend": {
           "calcs": [
+            "min",
             "mean",
-            "lastNotNull",
             "max"
           ],
           "displayMode": "table",
@@ -4838,22 +3626,575 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.2.0-17027759091",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
-          "datasource": {
-            "uid": "$datasource"
-          },
           "editorMode": "code",
-          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{instance=~\"$gpu_instance\", gpu=~\"$gpu\"})",
-          "interval": "",
-          "legendFormat": "GPU {{gpu}}",
+          "expr": "rate(node_disk_io_time_seconds_total{instance=\"$instance\", device=~\"$diskdevices\"}[$__rate_interval])",
+          "format": "time_series",
+          "legendFormat": "{{device}}",
           "range": true,
-          "refId": "A"
+          "refId": "A",
+          "step": 240
         }
       ],
-      "title": "GPU Utilization",
+      "title": "Disk I/O Utilization",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "CPU time spent busy vs idle, split by activity type",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "percent"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Busy Iowait"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#890F02",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Idle"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#052B51",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Busy System"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#EAB839",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Busy User"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#0A437C",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Busy Other"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#6D1F62",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 6,
+        "x": 12,
+        "y": 64
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "width": 250
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=\"system\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "intervalFactor": 1,
+          "legendFormat": "Busy System",
+          "range": true,
+          "refId": "A",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=\"user\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
+          "format": "time_series",
+          "hide": false,
+          "intervalFactor": 1,
+          "legendFormat": "Busy User",
+          "range": true,
+          "refId": "B",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=\"iowait\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Busy Iowait",
+          "range": true,
+          "refId": "C",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=~\".*irq\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Busy IRQs",
+          "range": true,
+          "refId": "D",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode!=\"idle\",mode!=\"user\",mode!=\"system\",mode!=\"iowait\",mode!=\"irq\",mode!=\"softirq\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Busy Other",
+          "range": true,
+          "refId": "E",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(irate(node_cpu_seconds_total{instance=\"$instance\", mode=\"idle\"}[$__rate_interval])) / scalar(count(count(node_cpu_seconds_total{instance=\"$instance\"}) by (cpu)))",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Idle",
+          "range": true,
+          "refId": "F",
+          "step": 240
+        }
+      ],
+      "title": "CPU Basic",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "RAM and swap usage overview, including caches",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Swap used"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#BF1B00",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#E0F9D7",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "group": false,
+                  "mode": "normal"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cache + Buffer"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#052B51",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Free"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#7EB26D",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 6,
+        "x": 18,
+        "y": 64
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "width": 350
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "node_memory_MemTotal_bytes{instance=\"$instance\"}",
+          "format": "time_series",
+          "hide": false,
+          "intervalFactor": 1,
+          "legendFormat": "Total",
+          "range": true,
+          "refId": "A",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "node_memory_MemTotal_bytes{instance=\"$instance\"} - node_memory_MemFree_bytes{instance=\"$instance\"} - (node_memory_Cached_bytes{instance=\"$instance\"} + node_memory_Buffers_bytes{instance=\"$instance\"} + node_memory_SReclaimable_bytes{instance=\"$instance\"})",
+          "format": "time_series",
+          "hide": false,
+          "intervalFactor": 1,
+          "legendFormat": "Used",
+          "range": true,
+          "refId": "B",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "node_memory_Cached_bytes{instance=\"$instance\"} + node_memory_Buffers_bytes{instance=\"$instance\"} + node_memory_SReclaimable_bytes{instance=\"$instance\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Cache + Buffer",
+          "range": true,
+          "refId": "C",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "node_memory_MemFree_bytes{instance=\"$instance\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Free",
+          "range": true,
+          "refId": "D",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "(node_memory_SwapTotal_bytes{instance=\"$instance\"} - node_memory_SwapFree_bytes{instance=\"$instance\"})",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "Swap used",
+          "range": true,
+          "refId": "E",
+          "step": 240
+        }
+      ],
+      "title": "Memory Basic",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "description": "Resource pressure via PSI",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "links": [],
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "dark-yellow",
+                "value": 70
+              },
+              {
+                "color": "dark-red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 68
+      },
+      "id": 17,
+      "options": {
+        "displayMode": "basic",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
+      },
+      "pluginVersion": "12.2.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "irate(node_pressure_cpu_waiting_seconds_total{instance=\"$instance\"}[$__rate_interval])",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "CPU",
+          "range": false,
+          "refId": "A",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "irate(node_pressure_memory_waiting_seconds_total{instance=\"$instance\"}[$__rate_interval])",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "Mem",
+          "range": false,
+          "refId": "B",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "irate(node_pressure_io_waiting_seconds_total{instance=\"$instance\"}[$__rate_interval])",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "I/O",
+          "range": false,
+          "refId": "C",
+          "step": 240
+        },
+        {
+          "editorMode": "code",
+          "expr": "irate(node_pressure_irq_stalled_seconds_total{instance=\"$instance\"}[$__rate_interval])",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "Irq",
+          "range": false,
+          "refId": "D",
+          "step": 240
+        }
+      ],
+      "title": "Pressure",
+      "type": "bargauge"
     }
   ],
   "preload": false,
@@ -5177,5 +4518,5 @@
   "timezone": "browser",
   "title": "Media Server Dashboard",
   "uid": "47d71901-9729-44c3-8dd3-d9ac1b413e8e",
-  "version": 1
+  "version": 4
 }
