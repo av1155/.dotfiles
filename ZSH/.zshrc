@@ -302,6 +302,9 @@ fi
 # Add the following line in `~/.config/nvim/lua/plugins/astrocore.lua` (vim.g.python3_host_prog = os.getenv "NVIM_PYTHON_PATH",) to set the dynamic Python executable for pynvim
 # python3_host_prog = os.getenv "NVIM_PYTHON_PATH",
 
+aider () {
+  command conda run -n aider --no-capture-output aider "$@"
+}
 
 # <-------------------- ALIASES -------------------->
 # General
