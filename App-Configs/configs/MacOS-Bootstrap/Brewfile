@@ -1,7 +1,5 @@
 tap "av1155/scripts", "https://github.com/av1155/scripts.git"
 tap "heroku/brew"
-tap "homebrew/bundle"
-tap "homebrew/services"
 tap "jesseduffield/lazygit"
 tap "jstkdng/programs"
 tap "samtay/tui"
@@ -38,6 +36,8 @@ brew "cmatrix"
 brew "ruby"
 # Dependency manager for Cocoa projects
 brew "cocoapods"
+# Container runtimes on MacOS (and Linux) with minimal setup
+brew "colima", restart_service: :changed
 # Pure Scala Artifact Fetching
 brew "coursier"
 # Get, unpack, build, and install modules from CPAN
@@ -46,6 +46,10 @@ brew "cpanminus"
 brew "curl"
 # Load/unload environment variables based on $PWD
 brew "direnv"
+# Pack, ship and run any application as a lightweight container
+brew "docker"
+# Isolated development environments using Docker
+brew "docker-compose"
 # Modern, maintained replacement for ls
 brew "eza"
 # Like neofetch, but much faster because written mostly in C
@@ -124,6 +128,8 @@ brew "nss"
 brew "numpy"
 # Create, run, and share large language models (LLMs)
 brew "ollama", restart_service: :changed
+# AI coding agent, built for the terminal
+brew "opencode"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
 # Web-based PostgreSQL database browser
@@ -218,6 +224,10 @@ cask "chatbox"
 cask "chatgpt"
 # Hardware benchmarking utility
 cask "cinebench"
+# Anthropic's official Claude AI desktop app
+cask "claude"
+# Terminal-based AI coding assistant
+cask "claude-code"
 # UI for creating Windows installer ISO from UUPDump
 cask "crystalfetch"
 # Browser for SQLite databases
@@ -316,8 +326,6 @@ cask "vlc"
 cask "vnc-viewer"
 # Native desktop client for WhatsApp
 cask "whatsapp"
-# Wine wrapper built with SwiftUI
-cask "whisky"
 # Video communication and virtual meeting platform
 cask "zoom"
 mas "AdGuard for Safari", id: 1440147259
