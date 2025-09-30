@@ -36,6 +36,10 @@ brew "cmatrix"
 brew "ruby"
 # Dependency manager for Cocoa projects
 brew "cocoapods"
+# Search tool like grep and The Silver Searcher
+brew "ripgrep"
+# OpenAI's coding agent that runs in your terminal
+brew "codex"
 # Container runtimes on MacOS (and Linux) with minimal setup
 brew "colima", restart_service: :changed
 # Pure Scala Artifact Fetching
@@ -152,8 +156,6 @@ brew "pyinstaller"
 brew "python@3.11"
 # Generic machine emulator and virtualizer
 brew "qemu"
-# Search tool like grep and The Silver Searcher
-brew "ripgrep"
 # Tools for Multiple Arcade Machine Emulator
 brew "rom-tools"
 # Safe, concurrent, practical language
