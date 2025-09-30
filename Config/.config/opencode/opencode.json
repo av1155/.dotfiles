@@ -1,0 +1,50 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "share": "auto",
+    "permission": {
+        "edit": "ask",
+        "bash": "ask",
+        "webfetch": "allow"
+    },
+
+    "formatter": {
+        "prettier": {
+            "command": ["prettier", "--config", "{env:HOME}/.prettierrc.json", "--write", "$FILE"]
+        },
+        "clang-format": {
+            "command": ["clang-format", "-i", "-style=file", "$FILE"]
+        },
+        "gofmt": {
+            "disabled": false
+        },
+        "ruff": {
+            "disabled": false
+        }
+    },
+
+    "provider": {
+        "ollama": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "Ollama (local)",
+            "options": {
+                "baseURL": "http://localhost:11434/v1"
+            },
+            "models": {
+                "gpt-oss:20b": {
+                    "name": "gpt-oss"
+                }
+            }
+        }
+    },
+
+    "agent": {
+        "code-reviewer": {
+            "description": "Reviews code for best practices and potential issues",
+            "prompt": "You are a code reviewer. Focus on security, performance, and maintainability.",
+            "tools": {
+                "write": false,
+                "edit": false
+            }
+        }
+    }
+}
