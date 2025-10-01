@@ -15,6 +15,10 @@
         "clang-format": {
             "command": ["clang-format", "-i", "-style=file", "$FILE"],
         },
+        "stylua": {
+            "command": ["stylua", "--config-path", "{env:HOME}/.config/nvim/stylua.toml", "$FILE"],
+            "extensions": [".lua"],
+        },
     },
 
     "mcp": {
