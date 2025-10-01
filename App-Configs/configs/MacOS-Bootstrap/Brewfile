@@ -2,6 +2,7 @@ tap "av1155/scripts", "https://github.com/av1155/scripts.git"
 tap "heroku/brew"
 tap "jesseduffield/lazygit"
 tap "jstkdng/programs"
+tap "oven-sh/bun"
 tap "samtay/tui"
 tap "supabase/tap"
 # Extremely Fast Compression algorithm
@@ -28,6 +29,8 @@ brew "bitwarden-cli"
 brew "bottom"
 # Hacker News in your terminal
 brew "circumflex"
+# Formatting tools for C, C++, Obj-C, Java, JavaScript, TypeScript
+brew "clang-format"
 # Cross-platform make
 brew "cmake"
 # Console Matrix
@@ -150,6 +153,8 @@ brew "pkgconf"
 brew "pngpaste"
 # Theme for zsh
 brew "powerlevel10k"
+# Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
+brew "prettier"
 # Bundle a Python application and all its dependencies
 brew "pyinstaller"
 # Interpreted, interactive, object-oriented programming language
@@ -198,6 +203,8 @@ brew "zoxide"
 brew "av1155/scripts/javaprojectmanager"
 # Everything you need to get started with Heroku
 brew "heroku/brew/heroku"
+# Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
+brew "oven-sh/bun/bun"
 # Tetris in your terminal
 brew "samtay/tui/tetris"
 # Supabase CLI
