@@ -1,10 +1,12 @@
 {
     "$schema": "https://opencode.ai/config.json",
-    "permission": {
-        // "edit": "ask",
-        // "bash": "ask",
-        // "webfetch": "allow"
-    },
+    // "permission": {
+    //     "bash": "ask",
+    //     "edit": "ask",
+    //     "webfetch": "allow"
+    // },
+
+    "instructions": ["AGENTS.md", "docs/**/AGENTS.md", "docs/guidelines.md"],
 
     "formatter": {
         "prettier": {
@@ -12,6 +14,45 @@
         },
         "clang-format": {
             "command": ["clang-format", "-i", "-style=file", "$FILE"],
+        },
+    },
+
+    "mcp": {
+        "filesystem": {
+            "type": "local",
+            "enabled": true,
+            "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+        },
+        "git": {
+            "type": "local",
+            "enabled": true,
+            "command": ["uvx", "mcp-server-git"],
+        },
+        "fetch": {
+            "type": "local",
+            "enabled": true,
+            "command": ["uvx", "mcp-server-fetch"],
+        },
+        "sequential-thinking": {
+            "type": "local",
+            "enabled": true,
+            "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+        },
+        "playwright": {
+            "type": "local",
+            "enabled": true,
+            "command": ["npx", "@playwright/mcp@latest"],
+        },
+        "firecrawl": {
+            "type": "local",
+            "enabled": true,
+            "environment": { "FIRECRAWL_API_KEY": "{env:FIRECRAWL_API_KEY}" },
+            "command": ["npx", "-y", "firecrawl-mcp"],
+        },
+        "time": {
+            "type": "local",
+            "enabled": true,
+            "command": ["uvx", "mcp-server-time"],
         },
     },
 }

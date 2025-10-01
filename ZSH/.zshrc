@@ -926,26 +926,28 @@ export CLASSPATH="$CLASSPATH:."
 
 
 # <-------------------- API KEY CONFIGURATIONS -------------------->
-# Anthropic API Key
-if [ -f "$HOME/.config/anthropic/api_key" ]; then
-    ANTHROPIC_API_KEY=$(cat ~/.config/anthropic/api_key)
-    export ANTHROPIC_API_KEY
-else
-    echo "Anthropic API key not found at $HOME/.config/anthropic/api_key"
-fi
 
-# OpenAI API Key
-if [ -f "$HOME/.config/openai/api_key" ]; then
-    OPENAI_API_KEY=$(cat ~/.config/openai/api_key)
-    export OPENAI_API_KEY
-else
-    echo "OpenAI API key not found at $HOME/.config/openai/api_key"
-fi
+export_from_file() {
+  local var="$1" file="$2"
+  if [ -f "$file" ]; then
+    # strip CR/LF just in case
+    export "$var"="$(tr -d '\r\n' < "$file")"
+  else
+    echo "$var not found at $file"
+  fi
+}
 
-# Ollama API Base
-OLLAMA_API_BASE="http://127.0.0.1:11434"
-export OLLAMA_API_BASE
+# Anthropic
+export_from_file "ANTHROPIC_API_KEY" "$HOME/.config/anthropic/api_key"
 
+# OpenAI
+export_from_file "OPENAI_API_KEY" "$HOME/.config/openai/api_key"
+
+# Firecrawl (for firecrawl-mcp)
+export_from_file "FIRECRAWL_API_KEY" "$HOME/.config/firecrawl/api_key"
+
+# Ollama API base (local models)
+export OLLAMA_API_BASE="http://127.0.0.1:11434"
 
 # <-------------------- GENERAL CONFIGURATIONS -------------------->
 
