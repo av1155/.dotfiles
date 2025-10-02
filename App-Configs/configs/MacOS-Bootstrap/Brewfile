@@ -4,6 +4,7 @@ tap "jesseduffield/lazygit"
 tap "jstkdng/programs"
 tap "oven-sh/bun"
 tap "samtay/tui"
+tap "sst/tap"
 tap "supabase/tap"
 # Extremely Fast Compression algorithm
 brew "lz4"
@@ -33,6 +34,8 @@ brew "circumflex"
 brew "clang-format"
 # Cross-platform make
 brew "cmake"
+# Documentation for CMake
+brew "cmake-docs"
 # Console Matrix
 brew "cmatrix"
 # Powerful, clean, object-oriented scripting language
@@ -135,8 +138,6 @@ brew "nss"
 brew "numpy"
 # Create, run, and share large language models (LLMs)
 brew "ollama", restart_service: :changed
-# AI coding agent, built for the terminal
-brew "opencode"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
 # Web-based PostgreSQL database browser
@@ -173,6 +174,8 @@ brew "speedtest-cli"
 brew "starship"
 # Organize software neatly under a single directory tree (e.g. /usr/local)
 brew "stow"
+# Opinionated Lua code formatter
+brew "stylua"
 # Open source continuous file synchronization application
 brew "syncthing", restart_service: :changed
 # User interface to the TELNET protocol
@@ -183,6 +186,8 @@ brew "thefuck"
 brew "tlrc"
 # Terminal multiplexer
 brew "tmux"
+# Extremely fast Python package installer and resolver, written in Rust
+brew "uv"
 # Command-line interface for Vercel
 brew "vercel-cli"
 # Vi 'workalike' with many additional features
@@ -207,6 +212,8 @@ brew "heroku/brew/heroku"
 brew "oven-sh/bun/bun"
 # Tetris in your terminal
 brew "samtay/tui/tetris"
+# The AI coding agent built for the terminal.
+brew "sst/tap/opencode"
 # Supabase CLI
 brew "supabase/tap/supabase"
 # View, create, manipulate, print and manage files in Portable Document Format
