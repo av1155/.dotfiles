@@ -8,6 +8,9 @@
 
     "instructions": ["AGENTS.md", "docs/**/AGENTS.md", "docs/guidelines.md"],
 
+    "plugin": ["opencode-openai-codex-auth"],
+    "model": "openai/gpt-5-codex",
+
     "formatter": {
         "prettier": {
             "command": ["prettier", "--config", "{env:HOME}/.prettierrc.json", "--write", "$FILE"],
