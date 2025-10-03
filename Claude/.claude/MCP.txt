@@ -1,0 +1,21 @@
+# filesystem
+claude mcp add filesystem -- npx -y @modelcontextprotocol/server-filesystem .
+
+# git
+claude mcp add git -- uvx mcp-server-git
+
+# fetch
+claude mcp add fetch -- uvx mcp-server-fetch
+
+# context7  (uses an API key)
+claude mcp add context7 --env CONTEXT7_API_KEY=$CONTEXT7_API_KEY -- npx -y @upstash/context7-mcp
+
+# playwright
+claude mcp add playwright -- npx @playwright/mcp@latest
+
+# firecrawl
+claude mcp add firecrawl --env FIRECRAWL_API_KEY=$FIRECRAWL_API_KEY -- npx -y firecrawl-mcp
+
+# time
+claude mcp add time -- uvx mcp-server-time
+
