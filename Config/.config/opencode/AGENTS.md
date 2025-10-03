@@ -35,7 +35,8 @@ These conventions keep history consistent, enable automation, and make reviews f
 
 **Rules**
 
-- Use present tense, no trailing period, max ~72 chars for the subject.
+- **50/72 Rule**: Subject line max 50 chars (hard limit 72); body text wrapped at 72 chars per line.
+- Use present tense, no trailing period.
 - Use `!` after the scope or include a `BREAKING CHANGE:` footer for breaking changes.
 - Reference issues in footers, e.g. `Fixes #123`, `Refs #456`.
 - Prefer one logical change per commit; commit early and often on your branch.
