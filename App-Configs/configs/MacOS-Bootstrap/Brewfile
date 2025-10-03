@@ -278,6 +278,8 @@ cask "kitty"
 cask "lens"
 # Discover, download, and run local LLMs
 cask "lm-studio"
+# Mouse utility to add gesture functions and smooth scrolling to 3rd party mice
+cask "mac-mouse-fix"
 # Full TeX Live distribution with GUI applications
 cask "mactex"
 # Scanner app for math and science
