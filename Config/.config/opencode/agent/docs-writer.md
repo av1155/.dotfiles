@@ -1,7 +1,7 @@
 ---
 description: Writes/updates docs, ADRs, changelogs
 mode: subagent
-model: anthropic/claude-sonnet-4-5-20250929
+# model: anthropic/claude-sonnet-4-5-20250929
 temperature: 0.4
 tools:
     read: true

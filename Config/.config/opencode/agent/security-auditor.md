@@ -1,7 +1,7 @@
 ---
 description: Security audit for authZ/N, secrets, dependencies, config
 mode: subagent
-model: anthropic/claude-sonnet-4-5-20250929
+# model: anthropic/claude-sonnet-4-5-20250929
 temperature: 0.0
 tools:
     read: true
