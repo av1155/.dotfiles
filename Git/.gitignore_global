@@ -98,3 +98,7 @@ build/
 # DOTFILES #
 #############
 !Java-Jars/javaClasspath/*.jar
+
+# AI AGENTS #
+#############
+.opencode/

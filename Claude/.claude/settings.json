@@ -4,8 +4,6 @@
         "DISABLE_AUTOUPDATER": "1"
     },
     "includeCoAuthoredBy": false,
-    "alwaysThinkingEnabled": true,
-
     "hooks": {
         "PostToolUse": [
             {
@@ -18,5 +16,7 @@
                 ]
             }
         ]
-    }
+    },
+    "alwaysThinkingEnabled": false
 }
+
