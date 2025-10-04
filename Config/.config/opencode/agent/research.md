@@ -1,7 +1,7 @@
 ---
 description: Fetches external info/specs and extracts facts with citations
 mode: subagent
-# model: anthropic/claude-sonnet-4-5-20250929
+model: github-copilot/gpt-5
 temperature: 0.2
 tools:
     webfetch: true

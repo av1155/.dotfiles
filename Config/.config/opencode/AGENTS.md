@@ -37,8 +37,6 @@ This global guide defines how agents and developers work in this repo: shared Gi
 
 ---
 
-Note: When per-agent `model` is commented, agents inherit the top-level `model` from `opencode.jsonc`.
-
 ## Available MCP Servers
 
 | Server       | Primary Purpose       | Key Capabilities                           |
