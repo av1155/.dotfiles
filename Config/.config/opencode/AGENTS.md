@@ -2,7 +2,7 @@
 
 ## Overview & Operating Principles
 
-This global guide defines how agents and developers work in this repo: shared Git/GitHub conventions (commits, branches, PRs, reviews), repository hygiene, and how to use our MCP servers (`git`, `fetch`, `context7`, `time`). The goals are correctness, minimal diffs, reproducible builds, strong automation, and a linear, auditable history. Agents should prefer the smallest safe change, open draft PRs early, and rely on CI to validate changes.
+This global guide defines how agents and developers work in this repo: shared Git/GitHub conventions (commits, branches, PRs, reviews), repository hygiene, and how to use our MCP servers (`git`, `fetch`, `context7`, `playwright`, `time`). The goals are correctness, minimal diffs, reproducible builds, strong automation, and a linear, auditable history. Agents should prefer the smallest safe change, open draft PRs early, and rely on CI to validate changes.
 
 ---
 
@@ -19,6 +19,8 @@ This global guide defines how agents and developers work in this repo: shared Gi
 **Cheat sheet (trigger → agent → tools & notes → artifact/path):**
 
 - Review a diff/PR → **@code-reviewer** → `read, grep, glob, bash (mkdir/ls only); edit: deny` → `.opencode/reports/review.md`
+- Quick visual check/evidence → **@visual-checker** → `read, glob, mcp_playwright__*; edit: deny; webfetch: ask` → `.opencode/reports/visual-check.md`
+- Comprehensive interface review → **@design-review** → `read, grep, glob, webfetch: allow, mcp_playwright__*; edit: deny` → `.opencode/reports/design-review.md`
 - Security/secrets/CVEs → **@security-auditor** → `read, grep, glob, bash (mkdir/ls only); edit: deny` → `.opencode/reports/security.md`
 - Find specs/compare libs → **@research** → `webfetch: allow; read, write; bash (mkdir/ls only)` → `.opencode/research/{notes.md,citations.json}` (stop at ≥3 vetted or 2 dead ends)
 - Implement/refactor (small/medium) → **@refactorer** → `edit/write/patch: allow; bash: ask; webfetch: deny` → `.opencode/refactor/changes.md` (batch ≤3 edit sets)
@@ -37,22 +39,56 @@ This global guide defines how agents and developers work in this repo: shared Gi
 
 ---
 
-## Available MCP Servers
+## Visual Development
 
-| Server       | Primary Purpose       | Key Capabilities                           |
-| ------------ | --------------------- | ------------------------------------------ |
-| **git**      | Version control       | Status, diff, commit, branch management    |
-| **fetch**    | Simple web content    | Single URL fetching, markdown conversion   |
-| **context7** | Library documentation | Resolve library IDs, fetch up-to-date docs |
-| **time**     | Temporal operations   | Current time, timezone conversion          |
+### Design Principles
+
+- Treat `./context/design-principles.md` and `./context/style-guide.md` as the single source of truth.
+    > **Note:** If both `./context/design-principles.md` and `./context/style-guide.md` are missing, assume this repository has no user-facing interface or interaction work. Skip this `Visual Development` section entirely—do not create those files or run interface checks.
+- Default to clarity, consistency, and accessibility; prefer small, incremental changes.
+- Preserve original intent and information hierarchy unless requirements say otherwise.
+
+### Quick Visual Check
+
+Immediately after any visual change, the **primary agent** should run **@visual-checker** subagent or perform the following steps:
+
+1. **Identify scope** — list affected views/flows.
+2. **Open each view** — verify against the design principles and style guide.
+3. **Validate intent** — confirm the change satisfies the stated user need and acceptance criteria.
+4. **Accessibility basics** — contrast, focus order/visibility, labels/alt text, keyboard/assistive tech path.
+5. **Responsive/adaptive** — small, medium, and large breakpoints; no clipping, overflow, or unreadable content.
+6. **Theme/appearance parity** — light/dark (and high-contrast, if applicable) are consistent.
+7. **Respect preferences** — honor reduced motion and text scaling.
+8. **Evidence** — capture representative screenshots of every affected view (desktop and any failing breakpoint).
+9. **Quality** — check runtime logs for warnings/errors; note regressions.
+
+### Comprehensive Design Review
+
+The **primary agent** must invoke **@design-review** subagent when:
+
+- Introducing or revising patterns, navigation, layout, or design tokens.
+- Shipping large or highly visible changes.
+- Accessibility or responsiveness has non-trivial risk.
+- Before merging high-impact visual work.
+
+**@design-review** subagent validates conformance to the principles and style guide, accessibility, responsiveness across target breakpoints, theme parity, evidence collection, and outputs a prioritized list of fixes.
+
+### Definition of Done (Visual)
+
+- Conforms to `design-principles.md` and `style-guide.md`.
+- Meets acceptance criteria; no unintended regressions.
+- Accessibility basics pass; exceptions are documented and approved.
+- Works across target viewports and themes with stable layout/performance.
+- No runtime warnings/errors in changed views.
+- Screenshots and a brief change summary are attached to the PR/commit/task.
 
 ---
 
-### 🧭 Git & GitHub Conventions and Standards (for agents & developers)
+## 🧭 Git & GitHub Conventions and Standards (for agents & developers)
 
 These conventions keep history consistent, enable automation, and make reviews fast. Unless a repository explicitly states otherwise, **use trunk-based development with short‑lived branches, Conventional Commits, and squash‑merge into `main`.**
 
-#### 1) Commit Messages — Conventional Commits + SemVer
+### 1) Commit Messages — Conventional Commits + SemVer
 
 **Format**
 
@@ -90,7 +126,7 @@ docs(readme): add quickstart for docker
 revert: feat(search): add embedding cache (reverts commit abc123)
 ```
 
-#### 2) Branching Strategy
+### 2) Branching Strategy
 
 **Default: Trunk‑based**
 
@@ -107,7 +143,7 @@ revert: feat(search): add embedding cache (reverts commit abc123)
 
 - Multi‑release support or regulated release trains. If used, create `develop`, `release/x.y.z`, and `hotfix/x.y.z` per repo guidelines. Otherwise, avoid long‑lived branches.
 
-#### 3) Pull Requests (PR) & Code Review
+### 3) Pull Requests (PR) & Code Review
 
 **Opening a PR**
 
@@ -132,7 +168,7 @@ revert: feat(search): add embedding cache (reverts commit abc123)
 - [ ] Linked issues and labels set
 - [ ] PR is small and focused (or justified)
 
-#### 4) GitHub Repository Structure & Usage
+### 4) GitHub Repository Structure & Usage
 
 **Top‑level files**
 
@@ -173,7 +209,7 @@ revert: feat(search): add embedding cache (reverts commit abc123)
 - Enable Dependabot or equivalent for dependency updates.
 - Make required checks blocking via branch protection.
 
-#### 5) Agent Playbook (quick steps)
+### 5) Agent Playbook (quick steps)
 
 1. **Create branch**: `git_create_branch("feat/<area>-<summary>")`
 2. **Edit files**; run local tests.
@@ -184,6 +220,18 @@ revert: feat(search): add embedding cache (reverts commit abc123)
 7. **Checks**: ensure CI green; address review comments; update docs.
 8. **Merge**: squash‑merge; delete branch.
 9. **Release**: tag `vX.Y.Z` per SemVer and repository release workflow.
+
+---
+
+## Available MCP Servers
+
+| Server         | Primary Purpose       | Key Capabilities                           |
+| -------------- | --------------------- | ------------------------------------------ |
+| **git**        | Version control       | Status, diff, commit, branch management    |
+| **fetch**      | Simple web content    | Single URL fetching, markdown conversion   |
+| **context7**   | Library documentation | Resolve library IDs, fetch up-to-date docs |
+| **playwright** | Browser automation    | Click, type, navigate, screenshots         |
+| **time**       | Temporal operations   | Current time, timezone conversion          |
 
 ---
 
@@ -199,11 +247,7 @@ revert: feat(search): add embedding cache (reverts commit abc123)
 
 - Prefer `git MCP` for all VCS; restrict `bash` to read-only diagnostics.
 
----
-
-## Decision Trees
-
-### Git Operations Decision Tree
+#### Git Operations Decision Tree
 
 ```
 Working with git?
@@ -220,50 +264,6 @@ Working with git?
     ├── Switch branch → git_checkout
     └── Create branch → git_create_branch
 ```
-
----
-
-### 🌍 Global Engineering Conventions (repo‑agnostic)
-
-These apply to **all** projects and agents. They’re intentionally general and safe to adopt everywhere.
-
-**A. Tests & CI (fast, deterministic, hermetic)**
-
-- Tests are **isolated** and pass when run alone or in any order; avoid shared global state.
-- Default to **hermetic** tests: no live network, no external services; use fakes/stubs/fixtures.
-- Prefer **table‑driven** specs for combinatorial cases; keep cases small and readable.
-- Mark slow/integration tests and run them separately; keep PR checks fast.
-- Quarantine and deflake flaky tests quickly; add regression cases when fixed.
-
-**B. Docs & Generated Artifacts**
-
-- Generate docs from source annotations when possible; **do not edit generated files**.
-- Provide a script (e.g., `./scripts/docs`) and a CI check to verify generated output is current.
-- Keep `README` as the newcomer path (how to build, test, run, release); link deeper docs.
-
-**C. Feature Flags & Config**
-
-- Respect global and per‑scope toggles; default to **safe off** for risky changes.
-- Classify toggles (release/ops/experiment/permission); add owners and an expiry plan.
-- Remove stale flags promptly; capture behavior in tests with the flag on/off.
-
-**D. Scripts & Tooling**
-
-- Common tasks live in `./scripts`; scripts are **idempotent**, verbose on failure, and return non‑zero on error.
-- Provide `--help` and environment toggles for offline/headless CI.
-- Pin tool versions; ensure scripts run on Linux/macOS by default.
-
-**E. Logging & Telemetry**
-
-- Use **structured logs** with consistent levels; include request/trace IDs when available.
-- Never log secrets, tokens, or PII; sanitize inputs and truncate large payloads.
-- Keep test logs quiet by default; surface summaries and actionable errors in CI.
-
-**F. Reproducible Builds**
-
-- Pin dependencies with lockfiles; avoid floating `latest`.
-- Make builds **deterministic**; record or containerize the build environment.
-- Artifact/version metadata comes from the VCS (tag/commit); avoid embedding local machine state.
 
 ---
 
@@ -305,6 +305,8 @@ User: "Create Next.js middleware for JWT validation. use context7"
 - Use library IDs directly: "use library /supabase/supabase"
 - Prefer Context7 over generic knowledge for framework-specific code
 
+---
+
 ### 🌐 Fetch MCP Server
 
 **When to Use:**
@@ -319,6 +321,55 @@ User: "Create Next.js middleware for JWT validation. use context7"
 - 5000 character default limit (use `start_index` for pagination)
 - No JavaScript execution
 - No authentication support
+
+---
+
+### 🎭 Playwright MCP Server
+
+**When to Use**
+
+- Validate user-facing flows end-to-end (navigation, input, dialogs).
+- Run the **Quick Visual Check** and capture evidence (screenshots, console logs).
+- Smoke-test responsiveness and theme parity via viewport changes.
+
+**Typical Workflow**
+
+1. `browser_navigate(url)` → load the page
+2. `browser_snapshot()` → get the accessibility tree (for reasoning/actions)
+3. `browser_console_messages(onlyErrors=true)` → collect errors
+4. For each breakpoint (e.g., 360, 768, 1024, 1440):
+    - `browser_resize(width,height)`
+    - `browser_take_screenshot(fullPage=true, filename=...)`
+5. Interact as needed: `browser_type`, `browser_click`, `browser_select_option`, `browser_handle_dialog`, `browser_wait_for`
+6. Finish: `browser_close()`
+
+**Core Commands (most used)**
+
+- **Navigation & State:** `browser_navigate`, `browser_navigate_back`, `browser_wait_for`
+- **Snapshots & Evidence:** `browser_snapshot` (accessibility tree), `browser_take_screenshot(fullPage=...)`, `browser_console_messages(onlyErrors=true)`, `browser_network_requests`
+- **Interactions:** `browser_click`, `browser_type(text, submit?)`, `browser_fill_form(fields)`, `browser_select_option(values)`, `browser_hover`, `browser_press_key`
+- **Layout & Tabs:** `browser_resize(width,height)`, `browser_tabs(action, index?)`
+- **Optional Capabilities:** `--caps=pdf` → `browser_pdf_save(filename?)`; `--caps=vision` → XY pointer tools
+
+**Good Defaults**
+
+- Prefer **headed** (default) for parity with real users; add `--headless` only in CI.
+- Use `--isolated` for ephemeral sessions; seed auth via `--storage-state=path/to/state.json`.
+- Capture trace/video when debugging CI-only failures: `--save-trace`, `--save-video=1280x720`.
+
+**Example (Quick Visual Check)**
+
+```text
+browser_navigate("https://example.app/settings")
+browser_snapshot()
+browser_console_messages(onlyErrors=true)
+for (w,h) in [(360,640),(768,1024),(1024,768),(1440,900)]:
+  browser_resize(w,h)
+  browser_take_screenshot(fullPage=true, filename=`settings-${w}x${h}.png`)
+browser_close()
+```
+
+---
 
 ### ⏰ Time MCP Server
 
@@ -336,6 +387,7 @@ User: "Create Next.js middleware for JWT validation. use context7"
 Git ops        → git
 Simple URL     → fetch
 Library docs   → context7
+Interaction    → playwright
 Time/timezone  → time
 
 ALWAYS:
@@ -353,6 +405,7 @@ ALWAYS:
 | Tool unavailable    | Check env vars, use fallback tool          |
 | Git conflicts       | Show diff, explain options, await decision |
 | Web content missing | Try different extraction method/tool       |
+| Automation fails    | Check snapshot, verify element refs        |
 
 ---
 

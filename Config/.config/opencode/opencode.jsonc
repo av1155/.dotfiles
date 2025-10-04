@@ -3,11 +3,11 @@
 
     "model": "anthropic/claude-sonnet-4-5-20250929",
 
-    // "permission": {
-    //     "bash": "ask",
-    //     "edit": "ask",
-    //     "webfetch": "allow",
-    // },
+    "permission": {
+        "bash": "ask",
+        "edit": "ask",
+        "webfetch": "allow",
+    },
 
     "plugin": ["opencode-openai-codex-auth"],
 
@@ -48,7 +48,7 @@
         },
         "playwright": {
             "type": "local",
-            "enabled": false,
+            "enabled": true,
             "command": ["npx", "@playwright/mcp@latest"],
         },
         "firecrawl": {
@@ -315,6 +315,40 @@
                     "terraform *": "deny",
                 },
                 "edit": "allow",
+            },
+            "design-review": {
+                "description": "Comprehensive visual design review (a11y, responsiveness, theme parity)",
+                "mode": "subagent",
+                "model": "github-copilot/gpt-5",
+                "temperature": 0.1,
+                "tools": {
+                    "read": true,
+                    "grep": true,
+                    "glob": true,
+                    "webfetch": true,
+                    "mcp_playwright__*": true,
+                },
+                "permission": {
+                    "edit": "deny",
+                    "webfetch": "allow",
+                    "bash": { "*": "deny" },
+                },
+            },
+            "visual-checker": {
+                "description": "Automates Quick Visual Check (navigate, screenshots, console logs, breakpoints)",
+                "mode": "subagent",
+                "model": "github-copilot/gpt-5",
+                "temperature": 0.1,
+                "tools": {
+                    "read": true,
+                    "glob": true,
+                    "mcp_playwright__*": true,
+                },
+                "permission": {
+                    "edit": "deny",
+                    "webfetch": "ask",
+                    "bash": { "*": "deny" },
+                },
             },
         },
     },

@@ -1,8 +1,41 @@
-# Global `AGENTS.md` - MCP Server Operations Guide
+# Agent Cheat Sheet
 
-## Core Principle: Choose the Right Tool First
+## Overview & Operating Principles
 
-This document defines how AI agents should interact with the available Model Context Protocol (MCP) servers. Always select the most appropriate tool for the task, considering efficiency, safety, and user experience.
+This global guide defines how agents and developers work in this repo: shared Git/GitHub conventions (commits, branches, PRs, reviews), repository hygiene, and how to use our MCP servers (`git`, `fetch`, `context7`, `time`). The goals are correctness, minimal diffs, reproducible builds, strong automation, and a linear, auditable history. Agents should prefer the smallest safe change, open draft PRs early, and rely on CI to validate changes.
+
+---
+
+## Subagents: What You Can Call & When
+
+**Delegation policy (Build/Plan):**
+
+- Prefer **read-only** first (review/security/research).
+- For code changes → **@refactorer** → **@linter** (≤2 passes) → **@test-runner** → **@code-reviewer**.
+- If tests fail → **@debugger** (diagnose) → **@refactorer** (minimal fix).
+- Docs/CHANGELOG → **@docs-writer**. Deps → **@dependency-updater**.
+- Unsure? **@router** (max 3 loops), then halt and ask.
+
+**Cheat sheet (trigger → agent → tools & notes → artifact/path):**
+
+- Review a diff/PR → **@code-reviewer** → `read, grep, glob, bash (mkdir/ls only); edit: deny` → `.opencode/reports/review.md`
+- Security/secrets/CVEs → **@security-auditor** → `read, grep, glob, bash (mkdir/ls only); edit: deny` → `.opencode/reports/security.md`
+- Find specs/compare libs → **@research** → `webfetch: allow; read, write; bash (mkdir/ls only)` → `.opencode/research/{notes.md,citations.json}` (stop at ≥3 vetted or 2 dead ends)
+- Implement/refactor (small/medium) → **@refactorer** → `edit/write/patch: allow; bash: ask; webfetch: deny` → `.opencode/refactor/changes.md` (batch ≤3 edit sets)
+- Format/lint → **@linter** → `bash: ask (eslint/prettier/ruff/etc allowed); edit: allow` → `.opencode/lint/report.json` (≤2 autofix passes)
+- Run tests → **@test-runner** → `bash: ask (common test cmds allowed)` → `.opencode/test/summary.json`
+- Debug failing test/trace → **@debugger** → `read, grep, glob, webfetch: allow; bash (mkdir/ls only); edit: ask` → `.opencode/debug/hypothesis.md`
+- Write docs/ADR/changelog → **@docs-writer** → `read/write/edit: allow; webfetch: ask; bash (mkdir/ls only)` → `.opencode/docs/*` or patches
+- Update dependencies safely → **@dependency-updater** → `bash: ask (install/upgrade cmds allowed); edit: allow` → `.opencode/deps/upgrade_report.md`
+- Pick next agent → **@router** → `read, grep, glob; webfetch: ask; bash (mkdir/ls only); edit: deny` → emits `STATUS::router` (≤3 loops)
+
+**Routing hints:**
+
+- Reviewer → Refactorer if **≤100 LOC** and tests exist; else escalate to Plan.
+- Tests → Refactorer if **single-file fix ≤50 LOC**; otherwise Tests → Debugger.
+- Security → Dependency-updater for vulnerable deps, then back to Security to validate.
+
+---
 
 ## Available MCP Servers
 
@@ -112,6 +145,8 @@ Working with git?
 4. edit_file with dryRun=false → apply changes
 ```
 
+---
+
 ### 🔧 Git MCP Server
 
 **Workflow Standards:**
@@ -133,6 +168,8 @@ type(scope): description
 - chore: maintenance
 - test: testing
 ```
+
+---
 
 ### 📚 Context7 MCP Server
 
@@ -172,6 +209,8 @@ User: "Create Next.js middleware for JWT validation. use context7"
 - Use library IDs directly: "use library /supabase/supabase"
 - Prefer Context7 over generic knowledge for framework-specific code
 
+---
+
 ### 🌐 Fetch MCP Server
 
 **When to Use:**
@@ -186,6 +225,8 @@ User: "Create Next.js middleware for JWT validation. use context7"
 - 5000 character default limit (use `start_index` for pagination)
 - No JavaScript execution
 - No authentication support
+
+---
 
 ### 🔥 Firecrawl MCP Server
 
@@ -211,6 +252,8 @@ User: "Create Next.js middleware for JWT validation. use context7"
 }
 ```
 
+---
+
 ### 🎭 Playwright MCP Server
 
 **Core Workflow:**
@@ -235,6 +278,8 @@ User: "Create Next.js middleware for JWT validation. use context7"
 - Current time: `get_current_time` with IANA timezone
 - Conversions: `convert_time` between timezones
 - Always use IANA format: 'America/New_York', not 'EST'
+
+---
 
 ### 🧠 Sequential Thinking MCP Server
 
