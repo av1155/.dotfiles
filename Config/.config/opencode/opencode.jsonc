@@ -42,12 +42,11 @@
         },
         "context7": {
             "type": "local",
+            "environment": { "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}" },
             "command": [
                 "npx",
                 "-y",
-                "@upstash/context7-mcp",
-                "--api-key",
-                "{env:CONTEXT7_API_KEY}",
+                "@upstash/context7-mcp"
             ],
             "enabled": true,
         },
@@ -78,7 +77,7 @@
         "router": {
             "description": "Supervisor router; selects subagents and enforces stop conditions",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.1,
             "tools": { "read": true, "grep": true, "glob": true, "webfetch": true, "bash": true },
             "permission": {
@@ -96,7 +95,7 @@
         "research": {
             "description": "Fetches external info/specs and extracts facts with citations",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.2,
             "tools": {
                 "webfetch": true,
@@ -121,7 +120,7 @@
         "code-reviewer": {
             "description": "Static code review: correctness, quality, maintainability",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.1,
             "tools": { "read": true, "grep": true, "glob": true, "edit": false, "bash": true },
             "permission": {
@@ -139,7 +138,7 @@
         "security-auditor": {
             "description": "Security audit for authZ/N, secrets, dependencies, config",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.0,
             "tools": { "read": true, "grep": true, "glob": true, "bash": true },
             "permission": {
@@ -157,7 +156,7 @@
         "linter": {
             "description": "Runs formatters/linters; auto-fixes safe issues",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.1,
             "tools": {
                 "bash": true,
@@ -193,7 +192,7 @@
         "refactorer": {
             "description": "Applies safe code changes per plan/review; small/medium edits",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.15,
             "tools": {
                 "edit": true,
@@ -219,7 +218,7 @@
         "test-runner": {
             "description": "Executes tests, summarizes failures, recommends fixes",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.1,
             "tools": { "bash": true, "read": true, "grep": true },
             "permission": {
@@ -247,7 +246,7 @@
         "debugger": {
             "description": "Diagnoses failures from logs/traces; proposes minimal fix",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.1,
             "tools": { "read": true, "grep": true, "glob": true, "webfetch": true, "bash": true },
             "permission": {
@@ -265,7 +264,7 @@
         "docs-writer": {
             "description": "Writes/updates docs, ADRs, changelogs",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.4,
             "tools": {
                 "read": true,
@@ -290,7 +289,7 @@
         "dependency-updater": {
             "description": "Upgrades dependencies safely with security/compat checks",
             "mode": "subagent",
-            "model": "anthropic/claude-sonnet-4-5-20250929",
+            // "model": "anthropic/claude-sonnet-4-5-20250929",
             "temperature": 0.15,
             "tools": {
                 "bash": true,
