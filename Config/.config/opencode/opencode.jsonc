@@ -3,11 +3,11 @@
 
     "model": "anthropic/claude-sonnet-4-5-20250929",
 
-    "permission": {
-        "bash": "ask",
-        "edit": "ask",
-        "webfetch": "allow",
-    },
+    // "permission": {
+    //     "bash": "ask",
+    //     "edit": "ask",
+    //     "webfetch": "allow",
+    // },
 
     "plugin": ["opencode-openai-codex-auth"],
 
