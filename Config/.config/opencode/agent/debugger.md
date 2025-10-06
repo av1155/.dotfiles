@@ -3,16 +3,18 @@ description: Diagnoses failures from logs/traces; proposes minimal fix
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.1
+
 tools:
     read: true
     grep: true
     glob: true
+    write: false
+    edit: false
     webfetch: true
     bash: true
-    git*: true
-    time*: true
+
 permission:
-    edit: ask
+    edit: deny
     webfetch: allow
     bash:
         "mkdir -p .opencode": allow

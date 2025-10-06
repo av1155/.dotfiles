@@ -3,6 +3,7 @@ description: Writes/updates docs, ADRs, changelogs
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.4
+
 tools:
     read: true
     write: true
@@ -10,7 +11,8 @@ tools:
     grep: true
     glob: true
     bash: true
-    time*: true
+    webfetch: true
+
 permission:
     edit: allow
     webfetch: ask

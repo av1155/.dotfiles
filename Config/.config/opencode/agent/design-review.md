@@ -3,18 +3,21 @@ description: Comprehensive visual design review (accessibility, responsiveness, 
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.1
+
 tools:
     read: true
     grep: true
     glob: true
+    edit: false
+    write: false
+    bash: false
     webfetch: true
-    time*: true
     playwright*: true
+
 permission:
     edit: deny
     webfetch: allow
-    bash:
-        "*": deny
+    bash: deny
 ---
 
 You are a **design review** subagent. Perform a thorough, tool-assisted review of the changed UI.

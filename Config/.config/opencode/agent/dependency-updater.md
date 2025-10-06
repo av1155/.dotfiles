@@ -3,17 +3,21 @@ description: Upgrades dependencies safely with security/compat checks
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.15
+
 tools:
-    bash: true
     read: true
-    write: true
-    patch: true
     grep: true
     glob: true
-    time*: true
+    write: true
+    edit: true
+    patch: true
+    bash: true
+    webfetch: false
+
 permission:
+    edit: allow
+    webfetch: deny
     bash:
-        "*": ask
         "npm ci": allow
         "npm install --no-audit --no-fund": allow
         "pnpm install --frozen-lockfile": allow
@@ -27,12 +31,12 @@ permission:
         "mkdir -p .opencode": allow
         "mkdir -p .opencode/deps": allow
         "ls .opencode*": allow
-        "git push": ask
+        "git push": deny
         "terraform *": deny
-    edit: allow
+        "*": ask
 ---
 
-Perform conservative upgrades; run build/tests; generate an upgrade report.
+Perform conservative upgrades; generate an upgrade report. Delegate all tests to @test-runner.
 
 Filesystem policy:
 

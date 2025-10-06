@@ -24,18 +24,18 @@
 
 **Quick Reference – Subagents & Permissions:**
 
-- **@code-reviewer** – _Static diff review_ (tools: read/grep/glob, `bash` limited to `mkdir/ls`; edits denied) → outputs review comments to `.opencode/reports/review.md`.
-- **@visual-checker** – _UI smoke test_ (tools: read/glob, `playwright` actions; edits denied; `webfetch` on ask) → outputs a checklist with screenshots to `.opencode/reports/visual-check.md`.
-- **@design-review** – _Full UX audit_ (tools: read/grep/glob, `webfetch` allowed, `playwright` actions; edits denied) → outputs an accessibility/responsiveness report to `.opencode/reports/design-review.md`.
-- **@security-auditor** – _Secrets & CVE scan_ (tools: read/grep/glob, `bash` limited to `mkdir/ls`; edits denied) → outputs findings to `.opencode/reports/security.md`.
-- **@research** – _External info with citations_ (tools: `webfetch` allowed; read/write; `bash` limited to `mkdir/ls`) → outputs `.opencode/research/notes.md` with references (stops after 3 quality sources or 2 dead ends).
-- **@refactorer** – _Implement/refactor code_ (tools: edit/write/patch allowed; `bash` on ask; `webfetch` denied) → writes changes (≤3 file edits per batch) and logs to `.opencode/refactor/changes.md`.
-- **@linter** – _Format & lint_ (tools: `bash` for linters on ask; edits allowed) → writes lint results to `.opencode/lint/report.json` (max 2 auto-fix rounds).
-- **@test-runner** – _Run tests_ (tools: `bash` for test commands on ask; read allowed) → outputs summary (pass/fail counts) to `.opencode/test/summary.json`.
-- **@debugger** – _Diagnose test failures_ (tools: read/grep/glob, `webfetch` allowed, `bash` limited to `mkdir/ls`; edits on ask) → outputs hypotheses to `.opencode/debug/hypothesis.md`.
-- **@docs-writer** – _Update docs/ADR_ (tools: read/write/edit allowed; `webfetch` on ask; `bash` limited to `mkdir/ls`) → writes to `.opencode/docs/*` or suggests minimal doc patches.
-- **@dependency-updater** – _Safe dependency upgrades_ (tools: `bash` for package manager commands on ask; edits allowed) → writes an upgrade report to `.opencode/deps/upgrade_report.md`.
-- **@router** – _Decision maker_ (tools: read/grep/glob, `webfetch` on ask; no edits) → does not produce a file; returns `STATUS::router` with next agent or `halt`.
+- **@code-reviewer** – _Performs static code/diff review_ (reads changed files and diffs; **read-only git via bash allow-list**: `git status`, `git diff`/`--staged`, `git show`, `git log -n`; `bash` otherwise limited to `mkdir -p .opencode*`/`ls`; **webfetch allowed** for spec lookups; **edits denied**) → returns review markdown; a write-capable agent (e.g., `@docs-writer`) may persist it to `.opencode/reports/review.md`.
+- **@visual-checker** – _UI smoke test_ (tools: read/glob, **`playwright*` enabled**, **`webfetch` on ask**; **edits denied**) → emits checklist + screenshots to `.opencode/reports/visual-check.md`.
+- **@design-review** – _Full UX audit_ (tools: read/grep/glob, **`playwright*` enabled**, **`webfetch` allowed**; **edits denied**) → emits report to `.opencode/reports/design-review.md`.
+- **@security-auditor** – _Secrets & CVE scan_ (tools: read/grep/glob, `bash` limited to `mkdir/ls`; **`webfetch` allowed**; **edits denied**) → emits `.opencode/reports/security.md`.
+- **@research** – _External info with citations_ (tools: read/write; **`brave-search*`/`duckduckgo*`/`firecrawl*`/`fetch*`/`context7*` enabled**, **`webfetch` allowed**; **edits ask**) → writes `.opencode/research/notes.md`, `.opencode/research/citations.json`.
+- **@refactorer** – _Implement/refactor code_ (tools: write/edit/patch; **`magic*` enabled**; **`webfetch` denied**; `bash` on ask) → writes changes (≤3 files/batch) + `.opencode/refactor/changes.md`.
+- **@linter** – _Format & lint_ (tools: write/edit/patch; `bash` allows configured linters; **`webfetch` denied**) → `.opencode/lint/report.json` (max 2 autofix rounds).
+- **@test-runner** – _Run tests_ (`bash` allows common test commands; **`webfetch` denied**; **edits denied**) → emits summary intended for `.opencode/test/summary.json`.
+- **@debugger** – _Diagnose test failures_ (tools: read/grep/glob; **`webfetch` allowed**; `bash` limited to `mkdir/ls`; **edits denied**) → emits `.opencode/debug/hypothesis.md`.
+- **@docs-writer** – _Update docs/ADR_ (tools: read/write/edit; **`webfetch` on ask**; `bash` limited to `mkdir/ls`) → writes to `.opencode/docs/*`.
+- **@dependency-updater** – _Safe dependency upgrades_ (tools: write/edit/patch; `bash` allows pkg-mgr commands; **`webfetch` denied**) → `.opencode/deps/upgrade_report.md`. **Tests are delegated to `@test-runner`.**
+- **@router** – _Decision maker_ (tools: read/grep/glob; **`webfetch` on ask**; **no edits**) → returns `STATUS::router` with next agent or `halt`.
 
 **Routing Hints:**
 
@@ -287,13 +287,48 @@ The agent should:
 
 ### 🪄 magic (UI Component Generation Server)
 
-**Purpose:** Generate **production-ready UI components** (TypeScript/React) from natural-language prompts.
+**Purpose:** Generate **production-ready React/TypeScript UI components** from natural-language prompts using the Magic MCP server.
 
-**When to Use:** Front-end scaffolding and refactors. Best paired with the `@refactorer` subagent (edits allowed).
+**When to Use:** Front-end scaffolding, layout refactors, or component rewrites. Best paired with the `@refactorer` subagent
 
-**Tips:**
+**How to Use:**
 
-- Describe layout, breakpoints, states, and constraints up front (reduces regen).
-- Keep usage restricted to UI-editing agents to avoid unwanted diffs.
+- Primary routes UI requests to `@refactorer` with `magic*`. Provide a prompt describing layout, breakpoints, states, data, and target paths.
+- Magic returns generated component files (and types/styles) plus a summary of modified paths.
+- Be explicit about layout and states to reduce regeneration.
 
 ---
+
+## Subagent Tool Access Overview
+
+The following **MCP tool namespaces are globally disabled** and then **enabled per-agent**:
+
+```jsonc
+"tools": {
+  "git*": false,
+  "time*": false,
+  "fetch*": false,
+  "firecrawl*": false,
+  "brave-search*": false,
+  "duckduckgo*": false,
+  "context7*": false,
+  "playwright*": false,
+  "magic*": false
+}
+```
+
+**Hint-only registry (MCP namespaces each subagent enables):**
+
+- **@research:** `brave-search*`, `duckduckgo*`, `firecrawl*`, `fetch*`, `context7*`, and built-ins
+- **@visual-checker:** `playwright*`, and built-ins
+- **@design-review:** `playwright*`, and built-ins
+- **@refactorer:** `magic*`, and built-ins
+- **@code-reviewer:** - (no MCP namespace; uses built-ins)
+- **@security-auditor:** - (no MCP namespace; uses built-ins)
+- **@debugger:** - (no MCP namespace; uses built-ins)
+- **@docs-writer:** - (no MCP namespace; uses built-ins)
+- **@linter:** - (no MCP namespace; uses built-ins)
+- **@test-runner:** - (no MCP namespace; uses built-ins)
+- **@router:** - (no MCP namespace; uses built-ins)
+
+> This list is **advisory** so the primary can phrase tool-aware requests (e.g., "use `brave-search`...").

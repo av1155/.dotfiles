@@ -3,16 +3,20 @@ description: Automates the Quick Visual Check (navigate, screenshots, console lo
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.1
+
 tools:
     read: true
     glob: true
-    time*: true
+    edit: false
+    write: false
+    bash: false
+    webfetch: true
     playwright*: true
+
 permission:
     edit: deny
     webfetch: ask
-    bash:
-        "*": deny
+    bash: deny
 ---
 
 You are a **visual checker** subagent that runs the rapid smoke test described in AGENTS.md.

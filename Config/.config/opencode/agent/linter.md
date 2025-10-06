@@ -3,17 +3,21 @@ description: Runs formatters/linters; auto-fixes safe issues
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.1
+
 tools:
-    bash: true
     read: true
-    write: true
-    patch: true
-    glob: true
     grep: true
-    time*: true
+    glob: true
+    write: true
+    edit: true
+    patch: true
+    bash: true
+    webfetch: false
+
 permission:
+    edit: allow
+    webfetch: deny
     bash:
-        "*": ask
         "eslint *": allow
         "prettier *": allow
         "ruff *": allow
@@ -27,9 +31,8 @@ permission:
         "mkdir -p .opencode": allow
         "mkdir -p .opencode/lint": allow
         "ls .opencode*": allow
-        "git push": ask
         "terraform *": deny
-    edit: allow
+        "*": ask
 ---
 
 Run configured linters/formatters; attempt max 2 autofix passes.

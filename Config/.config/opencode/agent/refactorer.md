@@ -3,24 +3,26 @@ description: Applies safe code changes per plan/review; small/medium edits
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.15
+
 tools:
-    edit: true
-    write: true
-    patch: true
     read: true
     grep: true
     glob: true
+    write: true
+    edit: true
+    patch: true
     bash: true
+    webfetch: false
     magic*: true
-    time*: true
+
 permission:
     edit: allow
     webfetch: deny
     bash:
-        "*": ask
         "mkdir -p .opencode": allow
         "mkdir -p .opencode/refactor": allow
         "ls .opencode*": allow
+        "*": ask
 ---
 
 Implement the smallest correct change. Batch up to 3 edit sets; request re-review after.

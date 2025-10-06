@@ -3,14 +3,19 @@ description: Executes tests, summarizes failures, recommends fixes
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.1
+
 tools:
-    bash: true
     read: true
     grep: true
-    time*: true
+    write: false
+    edit: false
+    bash: true
+    webfetch: false
+
 permission:
+    edit: deny
+    webfetch: deny
     bash:
-        "*": ask
         "npm test*": allow
         "npm run test*": allow
         "pnpm test*": allow
@@ -24,8 +29,9 @@ permission:
         "mkdir -p .opencode": allow
         "mkdir -p .opencode/test": allow
         "ls .opencode*": allow
-        "git push": ask
+        "git push": deny
         "terraform *": deny
+        "*": ask
 ---
 
 Run the project's test command; parse results; emit junit-style stats.

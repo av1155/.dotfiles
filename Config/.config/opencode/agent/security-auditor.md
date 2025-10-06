@@ -3,13 +3,16 @@ description: Security audit for authZ/N, secrets, dependencies, config
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.0
+
 tools:
     read: true
     grep: true
     glob: true
+    edit: false
+    write: false
+    webfetch: true
     bash: true
-    git*: true
-    time*: true
+
 permission:
     edit: deny
     webfetch: allow

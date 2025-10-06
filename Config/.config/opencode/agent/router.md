@@ -3,13 +3,16 @@ description: Supervisor router; selects subagents and enforces stop conditions
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.1
+
 tools:
     read: true
     grep: true
     glob: true
-    webfetch: true
+    write: false
+    edit: false
     bash: true
-    time*: true
+    webfetch: true
+
 permission:
     edit: deny
     webfetch: ask

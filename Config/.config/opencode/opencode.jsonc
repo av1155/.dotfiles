@@ -6,7 +6,7 @@
     "permission": {
         "bash": "ask",
         "edit": "ask",
-        "webfetch": "allow",
+        "webfetch": "ask",
     },
 
     "plugin": ["opencode-openai-codex-auth"],
@@ -77,16 +77,38 @@
     },
 
     "tools": {
-        // Disable all MCP tool namespaces by default
-        "git*": true,
-        "fetch*": false,
+        "git*": false,
         "time*": false,
+        "fetch*": false,
         "firecrawl*": false,
         "brave-search*": false,
         "duckduckgo*": false,
         "context7*": false,
         "playwright*": false,
         "magic*": false,
+    },
+
+    "agent": {
+        "build": {
+            "mode": "primary",
+            "tools": {
+                "write": true,
+                "edit": true,
+                "bash": true,
+                "webfetch": false,
+                "git*": true,
+                "time*": true,
+            },
+        },
+        "plan": {
+            "mode": "primary",
+            "tools": {
+                "write": false,
+                "edit": false,
+                "bash": false,
+                "webfetch": false,
+            },
+        },
     },
 
     "keybinds": {

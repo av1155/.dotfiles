@@ -3,22 +3,24 @@ description: Fetches external info/specs and extracts facts with citations
 mode: subagent
 model: github-copilot/gpt-5
 temperature: 0.2
+
 tools:
-    webfetch: true
-    write: true
     read: true
     grep: true
     glob: true
+    write: true
+    edit: false
+    webfetch: true
     bash: true
-    time*: true
     fetch*: true
     brave-search*: true
     duckduckgo*: true
     firecrawl*: true
     context7*: true
+
 permission:
-    webfetch: allow
     edit: ask
+    webfetch: allow
     bash:
         "mkdir -p .opencode": allow
         "mkdir -p .opencode/research": allow
