@@ -9,6 +9,7 @@ tools:
     glob: true
     webfetch: true
     bash: true
+    time*: true
 permission:
     edit: deny
     webfetch: ask

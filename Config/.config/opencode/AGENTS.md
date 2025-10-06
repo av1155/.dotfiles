@@ -114,13 +114,19 @@ The design review will check against all principles and the style guide, test ac
 
 ## Available MCP Servers (Tools)
 
-| Server         | Purpose               | Capabilities (common commands)            |
-| -------------- | --------------------- | ----------------------------------------- |
-| **git**        | Version control       | Git status, diff, add, commit, branch ops |
-| **fetch**      | Web fetch (no JS)     | Retrieve single-page content (HTML/JSON)  |
-| **context7**   | Library documentation | Fetch up-to-date official docs by package |
-| **playwright** | Browser automation    | Headless UI interaction, screenshots, PDF |
-| **time**       | Date/time utilities   | Current time, format conversion           |
+| Server           | Purpose               | Capabilities (common commands)            |
+| ---------------- | --------------------- | ----------------------------------------- |
+| **git**          | Version control       | Git status, diff, add, commit, branch ops |
+| **time**         | Date/time utilities   | Current time, format conversion           |
+| **fetch**        | Web fetch (no JS)     | Retrieve single-page content (HTML/JSON)  |
+| **brave-search** | Web & news search     | Fresh web/news results; images, videos    |
+| **duckduckgo**   | Web search + fetch    | Query DDG; fetch & clean page content     |
+| **firecrawl**    | Crawl & scrape sites  | Crawl/scrape/search/extract full sites    |
+| **context7**     | Library documentation | Fetch up-to-date official docs by package |
+| **playwright**   | Browser automation    | Headless UI interaction, screenshots, PDF |
+| **magic**        | UI component gen      | Generate TS/React UI from prompts         |
+
+---
 
 ### 🔧 git (Version Control Server)
 
@@ -152,6 +158,80 @@ Working with git?
     └── git_create_branch <name> (new branch)
 ```
 
+---
+
+### ⏰ time (Time Server)
+
+**Usage:** Provides current timestamps and timezone conversions.
+
+- `get_current_time(timezone="Area/Location")` returns the current date-time in the specified IANA timezone.
+- `convert_time(timestamp, from_timezone, to_timezone)` converts a given time between zones.
+
+Use this for scheduling, logging, or any time-sensitive logic. (All timezones should be given in standard IANA format like `America/New_York`.)
+
+---
+
+### 🌐 fetch (Web Fetch Server)
+
+**Purpose:** Fetch simple web content quickly (no dynamic JS or login).
+
+**Use Cases:** Retrieving static pages or files, scraping raw HTML or text, calling open APIs returning JSON/XML.
+
+**Limitations:**
+
+- Max ~5000 characters per request (use `start_index` and multiple calls for longer content).
+- No JavaScript execution (use `playwright` if the page needs scripts run).
+- No support for authenticated pages or complex interactions.
+
+---
+
+### 🔥 firecrawl (Crawl & Scrape Server)
+
+**Purpose:** Turn a **site or section of a site** into clean Markdown/HTML/structured data. Supports **scrape**, **crawl** (multi-page), **map** (URL discovery), **search**, and **extract** (structured data).
+
+**When to Use:** Deep research, RAG seeding, or whenever you need more than one page (docs, handbooks, blogs). Handles JS-rendered pages, anti-bot hurdles, and large batches.
+
+**Tips:**
+
+- Scope crawls (limit depth/pages) and request only needed formats (e.g., `markdown`, `html`) to save credits/time.
+
+---
+
+### 🔎 brave-search (Web & News Search Server)
+
+**Purpose:** High-signal web/news discovery; images & videos.
+
+**When to Use:** External research and time-sensitive scans. Prefer over `fetch` for exploration; use `fetch` for a known single page or API.
+
+**Core Commands:**
+
+- `brave_web_search(query, freshness=pd|pw|pm|py, count=...)`
+- `brave_news_search(query, freshness=...)`
+- `brave_image_search(query, count=...)`
+- `brave_video_search(query, freshness=...)`
+
+**Best Practices:**
+
+- Bound scope with `freshness` (`pd`=24h, `pw`=7d, `pm`=31d, `py`=365d) and `country/search_lang`.
+- Keep `safesearch` ≥ `moderate`; use `strict` for images.
+
+**Free plan:** no `brave_summarizer`; skip `brave_local_search` (fallback: `web_search` + `result_filter=locations`)
+
+---
+
+### 🦆 duckduckgo (Web Search + Content Fetch Server)
+
+**Purpose:** Fast general web search and **content fetching** with built-in rate limiting and LLM-friendly output. Tools include `search(query, max_results=10)` and `fetch_content(url)` for cleaned page text.
+
+**When to Use:** Broad discovery (non-news) and quick retrieval of readable page content—especially when you want DDG’s neutral coverage and lightweight fetch. Rate limits (e.g., ~30 search/min, ~20 fetch/min) are handled by the server.
+
+**Tips:**
+
+- Start with `search` to shortlist sources → `fetch_content` on the best few.
+- Prefer **brave-search** for time-sensitive news filters; use **duckduckgo** for general web breadth.
+
+---
+
 ### 📚 context7 (Library Docs Server)
 
 **When to Use:** Whenever you need current documentation or code examples from a specific library or framework (especially if your training data might be outdated).
@@ -176,17 +256,7 @@ The agent should:
 - `get-library-docs("/vercel/next.js", topic="middleware")` → retrieves the latest Next.js middleware docs
 - Then craft the middleware code using the retrieved official API details.
 
-### 🌐 fetch (Web Fetch Server)
-
-**Purpose:** Fetch simple web content quickly (no dynamic JS or login).
-
-**Use Cases:** Retrieving static pages or files, scraping raw HTML or text, calling open APIs returning JSON/XML.
-
-**Limitations:**
-
-- Max ~5000 characters per request (use `start_index` and multiple calls for longer content).
-- No JavaScript execution (use `playwright` if the page needs scripts run).
-- No support for authenticated pages or complex interactions.
+---
 
 ### 🎭 playwright (Browser Automation Server)
 
@@ -213,11 +283,17 @@ The agent should:
 - Use `--isolated` for each test session to avoid state leaks. Provide stored auth state via `--storage-state=path/to/state.json` if you need a logged-in session.
 - Enable trace or video capture (`--save-trace`, `--save-video`) when debugging flaky tests or CI-only failures.
 
-### ⏰ time (Time Server)
+---
 
-**Usage:** Provides current timestamps and timezone conversions.
+### 🪄 magic (UI Component Generation Server)
 
-- `get_current_time(timezone="Area/Location")` returns the current date-time in the specified IANA timezone.
-- `convert_time(timestamp, from_timezone, to_timezone)` converts a given time between zones.
+**Purpose:** Generate **production-ready UI components** (TypeScript/React) from natural-language prompts.
 
-Use this for scheduling, logging, or any time-sensitive logic. (All timezones should be given in standard IANA format like `America/New_York`.)
+**When to Use:** Front-end scaffolding and refactors. Best paired with the `@refactorer` subagent (edits allowed).
+
+**Tips:**
+
+- Describe layout, breakpoints, states, and constraints up front (reduces regen).
+- Keep usage restricted to UI-editing agents to avoid unwanted diffs.
+
+---

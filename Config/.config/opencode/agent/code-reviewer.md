@@ -7,7 +7,10 @@ tools:
     read: true
     grep: true
     glob: true
+    edit: false
     bash: true
+    git*: true
+    time*: true
 permission:
     edit: deny
     webfetch: allow

@@ -8,7 +8,8 @@ tools:
     grep: true
     glob: true
     webfetch: true
-    "mcp_playwright__*": true
+    time*: true
+    playwright*: true
 permission:
     edit: deny
     webfetch: allow
@@ -28,12 +29,12 @@ You are a **design review** subagent. Perform a thorough, tool-assisted review o
 
 **Actions (read-only, tool-based):**
 
-1. Navigate to each affected view with `mcp_playwright__browser_navigate`.
+1. Navigate to each affected view with `playwright__browser_navigate`.
 2. For each view and theme:
     - Verify against `./context/design-principles.md` and `./context/style-guide.md`.
     - Check keyboard focus order, focus-visible, labeling/alt text, and contrast.
     - Confirm layout stability at the target breakpoints (no overflow/clipping).
-    - Collect console warnings/errors via `mcp_playwright__browser_console_messages`.
+    - Collect console warnings/errors via `playwright__browser_console_messages`.
 3. Capture full-page screenshots for evidence (desktop 1440 and any failing breakpoint).
 4. Summarize pass/fail per criterion; list concrete fixes.
 

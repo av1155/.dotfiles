@@ -7,6 +7,7 @@ tools:
     bash: true
     read: true
     grep: true
+    time*: true
 permission:
     bash:
         "*": ask

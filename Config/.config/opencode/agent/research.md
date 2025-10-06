@@ -10,6 +10,12 @@ tools:
     grep: true
     glob: true
     bash: true
+    time*: true
+    fetch*: true
+    brave-search*: true
+    duckduckgo*: true
+    firecrawl*: true
+    context7*: true
 permission:
     webfetch: allow
     edit: ask

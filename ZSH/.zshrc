@@ -949,6 +949,12 @@ export_from_file "FIRECRAWL_API_KEY" "$HOME/.config/firecrawl/api_key"
 # Context7 (for up-to-date docs)
 export_from_file "CONTEXT7_API_KEY" "$HOME/.config/context7/api_key"
 
+# Brave Seacrh (for web search)
+export_from_file "BRAVE_API_KEY" "$HOME/.config/brave_search/api_key"
+
+# Brave Seacrh (for web search)
+export_from_file "MAGIC_MCP_API_KEY" "$HOME/.config/magic_mcp/api_key"
+
 # Ollama API base (local models)
 export OLLAMA_API_BASE="http://127.0.0.1:11434"
 

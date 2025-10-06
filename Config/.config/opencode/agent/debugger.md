@@ -9,6 +9,8 @@ tools:
     glob: true
     webfetch: true
     bash: true
+    git*: true
+    time*: true
 permission:
     edit: ask
     webfetch: allow

@@ -8,6 +8,8 @@ tools:
     grep: true
     glob: true
     bash: true
+    git*: true
+    time*: true
 permission:
     edit: deny
     webfetch: allow

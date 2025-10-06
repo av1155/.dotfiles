@@ -10,6 +10,7 @@ tools:
     patch: true
     glob: true
     grep: true
+    time*: true
 permission:
     bash:
         "*": ask

@@ -11,6 +11,8 @@ tools:
     grep: true
     glob: true
     bash: true
+    magic*: true
+    time*: true
 permission:
     edit: allow
     webfetch: deny

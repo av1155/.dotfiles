@@ -10,6 +10,7 @@ tools:
     grep: true
     glob: true
     bash: true
+    time*: true
 permission:
     edit: allow
     webfetch: ask
