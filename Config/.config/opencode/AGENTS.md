@@ -25,6 +25,7 @@
 **Quick Reference – Subagents & Permissions:**
 
 - **@code-reviewer** – _Performs static code/diff review_ (reads changed files and diffs; **read-only git via bash allow-list**: `git status`, `git diff`/`--staged`, `git show`, `git log -n`; `bash` otherwise limited to `mkdir -p .opencode*`/`ls`; **webfetch allowed** for spec lookups; **edits denied**) → returns review markdown; a write-capable agent (e.g., `@docs-writer`) may persist it to `.opencode/reports/review.md`.
+- **@investigator** – _Scopes the work & maps flows_ (finds relevant files with read/grep/glob + read-only git via bash allow-list; **no edits**, **no webfetch**) → writes `.opencode/research/investigation_report.md` and `.opencode/research/flow_report.md`.
 - **@visual-checker** – _UI smoke test_ (tools: read/glob, **`playwright*` enabled**, **`webfetch` on ask**; **edits denied**) → emits checklist + screenshots to `.opencode/reports/visual-check.md`.
 - **@design-review** – _Full UX audit_ (tools: read/grep/glob, **`playwright*` enabled**, **`webfetch` allowed**; **edits denied**) → emits report to `.opencode/reports/design-review.md`.
 - **@security-auditor** – _Secrets & CVE scan_ (tools: read/grep/glob, `bash` limited to `mkdir/ls`; **`webfetch` allowed**; **edits denied**) → emits `.opencode/reports/security.md`.
@@ -41,6 +42,7 @@
 
 - Small diff (<100 LOC) with tests? → `@code-reviewer` might suggest directly using `@refactorer`.
 - Test failures isolated to one area? → `@debugger` to analyze, then back to `@refactorer`.
+- Ambiguous/broad tasks? → Start with `@investigator` → primary ingests the reports → then delegate to `@refactorer` / `@test-runner` / `@code-reviewer` as needed.
 - Security issues in dependencies? → `@dependency-updater` to patch, then `@security-auditor` to re-check.
 
 ---
@@ -327,6 +329,7 @@ The following **MCP tool namespaces are globally disabled** and then **enabled p
 - **@security-auditor:** - (no MCP namespace; uses built-ins)
 - **@debugger:** - (no MCP namespace; uses built-ins)
 - **@docs-writer:** - (no MCP namespace; uses built-ins)
+- **@investigator:** — (no MCP namespace; uses built-ins)
 - **@linter:** - (no MCP namespace; uses built-ins)
 - **@test-runner:** - (no MCP namespace; uses built-ins)
 - **@router:** - (no MCP namespace; uses built-ins)
