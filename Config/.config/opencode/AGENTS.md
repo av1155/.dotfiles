@@ -334,4 +334,4 @@ The following **MCP tool namespaces are globally disabled** and then **enabled p
 - **@test-runner:** - (no MCP namespace; uses built-ins)
 - **@router:** - (no MCP namespace; uses built-ins)
 
-> This list is **advisory** so the primary can phrase tool-aware requests (e.g., "use `brave-search`...").
+> This list is **advisory** so the primary can phrase tool-aware requests.
