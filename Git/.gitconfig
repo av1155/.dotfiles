@@ -1,71 +1,83 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Identity
+# ─────────────────────────────────────────────────────────────────────────────
 [user]
+    name = av1155
     email = 117413846+av1155@users.noreply.github.com
-	name = av1155
-    # signingkey = [GPG Key ID]
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Core & defaults
+# ─────────────────────────────────────────────────────────────────────────────
 [core]
     editor = code --wait
     autocrlf = input
     excludesfile = ~/.gitignore_global
+    pager = delta
 
-[alias]
-    count = !git ls-remote --heads origin | wc -l
-    lg = log --graph --oneline --decorate --all
+[init]
+    defaultBranch = main
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Colors
+# ─────────────────────────────────────────────────────────────────────────────
 [color]
     ui = auto
     status = auto
     branch = auto
     diff = auto
 
-[init]
-    defaultBranch = main
+# ─────────────────────────────────────────────────────────────────────────────
+# Aliases
+# ─────────────────────────────────────────────────────────────────────────────
+[alias]
+    count = !git ls-remote --heads origin | wc -l
+    lg = log --graph --oneline --decorate --all
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Workflow prefs
+# ─────────────────────────────────────────────────────────────────────────────
 [push]
     default = current
-
-[merge]
-    conflictStyle = diff3
-
-[rebase]
-    autosquash = true
 
 [pull]
     rebase = false
 
+[rebase]
+    autosquash = true
+
+[merge]
+    conflictStyle = diff3
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Diff / Delta
+# ─────────────────────────────────────────────────────────────────────────────
 [diff]
-  algorithm = histogram
-
-[filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
-
-[core]
-    pager = delta
+    algorithm = histogram
+    colorMoved = default
 
 [interactive]
     diffFilter = delta --color-only
 
 [delta]
-    navigate = true    # use n and N to move between diff section
+    navigate = true
     side-by-side = true
 
-    # delta detects terminal colors automaticaly; set one of these to disable auto-detection
-    # dark = true
-    # light = true
+# ─────────────────────────────────────────────────────────────────────────────
+# Git LFS
+# ─────────────────────────────────────────────────────────────────────────────
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
 
-[merge]
-    conflictStyle = diff3
-
-[diff]
-    colorMoved = default
-
+# ─────────────────────────────────────────────────────────────────────────────
+# Credentials (GitHub CLI)
+# ─────────────────────────────────────────────────────────────────────────────
 [credential "https://github.com"]
-	helper = 
-	helper = !/opt/homebrew/bin/gh auth git-credential
+    helper =
+    helper = !/opt/homebrew/bin/gh auth git-credential
 
 [credential "https://gist.github.com"]
-	helper = 
-	helper = !/opt/homebrew/bin/gh auth git-credential
+    helper =
+    helper = !/opt/homebrew/bin/gh auth git-credential
