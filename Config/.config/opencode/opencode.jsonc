@@ -9,8 +9,6 @@
         "webfetch": "ask",
     },
 
-    "plugin": ["opencode-openai-codex-auth"],
-
     "formatter": {
         "prettier": {
             "command": ["prettier", "--config", "{env:HOME}/.prettierrc.json", "--write", "$FILE"],
@@ -119,8 +117,8 @@
         "session_unshare": "none",
         "session_interrupt": "esc",
         "session_compact": "<leader>c",
-        "session_child_cycle": "ctrl+alt+]",
-        "session_child_cycle_reverse": "ctrl+alt+[",
+        "session_child_cycle_reverse": "alt+;",
+        "session_child_cycle": "alt+'",
         "messages_first": "ctrl+g",
         "messages_last": "ctrl+alt+g",
         "input_newline": "shift+enter,alt+j",

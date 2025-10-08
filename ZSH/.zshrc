@@ -318,6 +318,7 @@ alias zen-browser='io.github.zen_browser.zen'
 alias h="history"
 alias pn="pnpm"
 alias gcopylog='git log --pretty=format:"%ad | %an%n%s%n%b%n" --date=short | pbcopy'
+alias gt='git --no-pager log --graph --abbrev-commit --decorate --all --format="%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white) - %an%C(reset)%C(auto) %d%C(reset)"'
 # alias fd='fdfind'
 
 # ----------------------------
