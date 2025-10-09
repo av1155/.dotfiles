@@ -108,15 +108,15 @@ The installation script handles everything automatically:
     ./install.sh
     ```
 
-**What the script does:**
+    **What the script does:**
 
-- ✅ Auto-detects required base directories (`.config`, `.ssh`, `.fonts`, `Library`)
-- ✅ Creates missing directories
-- ✅ Detects conflicts with existing files
-- ✅ Backs up conflicting files to `filename.bak` (with notification)
-- ✅ Runs `stow --restow */` safely
-- ✅ Idempotent—safe to run multiple times
-- ✅ Offers optional troubleshooting menu for fixing common issues
+    - ✅ Auto-detects required base directories (`.config`, `.ssh`, `.fonts`, `Library`)
+    - ✅ Creates missing directories
+    - ✅ Detects conflicts with existing files
+    - ✅ Backs up conflicting files to `filename.bak` (with notification)
+    - ✅ Runs `stow --restow */` safely
+    - ✅ Idempotent—safe to run multiple times
+    - ✅ Offers optional troubleshooting menu for fixing common issues
 
 1. Restart your shell:
 
