@@ -1,8 +1,6 @@
 # <======================== .ZPROFILE FILE ========================>
 
 # <------------------- SYSTEM DETECTION ------------------->
-# Identify the operating system and architecture
-
 case "$(uname -s)" in
 Darwin) # macOS
 
@@ -112,6 +110,3 @@ esac
 
 # <==================== END OF .ZPROFILE FILE =====================>
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion

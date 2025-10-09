@@ -79,13 +79,13 @@ if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
         fi
 
         new_session_name=$(tmux list-sessions -F "#S" | grep -E 'session[0-9]*' | awk -F 'session' '{print $2}' | sort -n | tail -n1)
-        
+
         if [ -z "$new_session_name" ]; then
           new_session_name=1
         else
           new_session_name=$((new_session_name + 1))
         fi
-        
+
         exec tmux new-session -s "session$new_session_name"
       fi
     fi

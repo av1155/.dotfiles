@@ -1,0 +1,4 @@
+channels:
+  - conda-forge
+auto_activate: true
+env_prompt: ''
