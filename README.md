@@ -109,7 +109,6 @@ The installation script handles everything automatically:
     ```
 
     **What the script does:**
-
     - ✅ Auto-detects required base directories (`.config`, `.ssh`, `.fonts`, `Library`)
     - ✅ Creates missing directories
     - ✅ Detects conflicts with existing files

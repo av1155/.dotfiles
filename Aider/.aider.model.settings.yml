@@ -1,3 +1,0 @@
-- name: ollama_chat/gpt-oss:20b
-  extra_params:
-    num_ctx: 65536
