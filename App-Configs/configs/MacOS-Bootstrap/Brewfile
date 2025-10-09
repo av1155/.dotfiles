@@ -152,8 +152,6 @@ brew "pipenv"
 brew "pkgconf"
 # Paste PNG into files
 brew "pngpaste"
-# Theme for zsh
-brew "powerlevel10k"
 # Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
 brew "prettier"
 # Bundle a Python application and all its dependencies
@@ -170,8 +168,6 @@ brew "rust"
 brew "rustup"
 # Command-line interface for https://speedtest.net bandwidth tests
 brew "speedtest-cli"
-# Cross-shell prompt for astronauts
-brew "starship"
 # Organize software neatly under a single directory tree (e.g. /usr/local)
 brew "stow"
 # Opinionated Lua code formatter
@@ -270,6 +266,8 @@ cask "gpgfrontend"
 cask "imageoptim"
 # JetBrains tools manager
 cask "jetbrains-toolbox"
+# Menu bar manager
+cask "jordanbaird-ice"
 # Open-source keystroke visualiser
 cask "keycastr"
 # GPU-based terminal emulator
