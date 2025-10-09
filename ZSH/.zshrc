@@ -1,5 +1,4 @@
 # <------------------- SYSTEM DETECTION ------------------->
-# Identify the operating system and architecture
 
 OS=$(uname -s)
 ARCHITECTURE=$(uname -m)
@@ -7,41 +6,25 @@ KERNEL_INFO=$(uname -r)
 HOSTNAME=$(uname -n)
 
 case "$OS" in
-Darwin) # macOS
-
-    # homebrew
+Darwin)
     if ! command -v brew &>/dev/null; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
     HOMEBREW_PATH=$(brew --prefix)
 
-    # Oh-my-zsh
     [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
     export ZSH="$HOME/.oh-my-zsh"
 
-    # powerlevel10k
-    [ ! -d "$HOMEBREW_PATH/share/powerlevel10k" ] && brew install powerlevel10k
-    POWERLEVEL10K_DIR="$HOME/powerlevel10k"
-
-    # miniforge3
     ! command -v conda &>/dev/null && brew install miniforge
     CONDA_PATH="$HOMEBREW_PATH/Caskroom/miniforge/base"
     ;;
 
 Linux)
     if grep -qi "microsoft" /proc/version && [ ! -f "/etc/arch-release" ]; then
-        # WSL detected and it's not Arch Linux
-
-        # Oh-my-zsh
         [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
         export ZSH="$HOME/.oh-my-zsh"
 
-        # powerlevel10k
-        POWERLEVEL10K_DIR="$HOME/powerlevel10k"
-        [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-
-        # miniforge3
         if [ ! -d "$HOME/miniforge3" ]; then
             curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
             bash "Miniforge3-$(uname)-$(uname -m).sh"
@@ -49,17 +32,9 @@ Linux)
         CONDA_PATH="$HOME/miniforge3"
 
     elif [[ "$ARCHITECTURE" == "aarch64" ]]; then 
-        # Raspberry Pi 5 or other ARM-based Linux systems
-
-        # Oh-my-zsh
         [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
         export ZSH="$HOME/.oh-my-zsh"
 
-        # powerlevel10k
-        POWERLEVEL10K_DIR="$HOME/powerlevel10k"
-        [ ! -d "$POWERLEVEL10K_DIR" ] && git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-
-        # miniforge3
         if [ ! -d "$HOME/miniforge3" ]; then
             curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
             bash "Miniforge3-$(uname)-$(uname -m).sh"
@@ -67,9 +42,6 @@ Linux)
         CONDA_PATH="$HOME/miniforge3"
 
     elif [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
-        # Arch Linux
-
-        # Install paru if not installed
         if ! command -v paru &>/dev/null; then
             sudo pacman -S --needed base-devel
             git clone https://aur.archlinux.org/paru.git
@@ -78,15 +50,9 @@ Linux)
             cd ~ || return
         fi
 
-        # Oh-my-zsh
         [ ! -d "/usr/share/oh-my-zsh" ] && paru -S --noconfirm oh-my-zsh-git
         export ZSH="/usr/share/oh-my-zsh"
 
-        # powerlevel10k
-        POWERLEVEL10K_DIR="/usr/share/zsh-theme-powerlevel10k"
-        [ ! -d "$POWERLEVEL10K_DIR" ] && paru -S --noconfirm zsh-theme-powerlevel10k-git
-
-        # miniforge3
         if [ ! -d "$HOME/miniforge3" ]; then
             curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
             bash "Miniforge3-$(uname)-$(uname -m).sh"
@@ -99,28 +65,19 @@ esac
 
 # <------------------ Auto Start Tmux Session ------------------>
 
-# Skip terminal-specific commands if run by IntelliJ
 if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
-    # Only run this code if it's an interactive shell (not when loaded by IntelliJ)
-    
     if command -v tmux &> /dev/null && [ -n "$PS1" ] && [ -t 1 ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
-      # Check if any tmux sessions are running
       if ! tmux list-sessions &>/dev/null; then
-        # No sessions exist, create or attach to "main"
         exec tmux new-session -s main
       else
-        # Check if "main" exists
         if tmux has-session -t main &>/dev/null; then
-          # If "main" exists, attach to it unless it's already attached
           if ! tmux list-clients -t main | grep -q .; then
             exec tmux attach-session -t main
           fi
         else
-          # "main" session has been killed, recreate it
           exec tmux new-session -s main
         fi
 
-        # If "main" is already attached or unavailable, create a new session with incrementing name
         new_session_name=$(tmux list-sessions -F "#S" | grep -E 'session[0-9]*' | awk -F 'session' '{print $2}' | sort -n | tail -n1)
         
         if [ -z "$new_session_name" ]; then
@@ -137,35 +94,25 @@ fi
 
 # <------------------- OH-MY-ZSH AND PLUGINS ------------------->
 
-# Oh My Zsh configuration
-zstyle ':omz:update' mode auto # Enable automatic updates without prompt
+zstyle ':omz:update' mode auto
 
-# ZPLUG
 export ZPLUG_HOME="$HOME/.zplug"
 
-# If Zplug is not already installed, clone it manually
 if [ ! -d "$ZPLUG_HOME" ]; then
     git clone https://github.com/zplug/zplug "$ZPLUG_HOME"
 fi
 
-# Source Zplug and configure plugins
 if [ -d "$ZPLUG_HOME" ]; then
     source "$ZPLUG_HOME"/init.zsh
 
-    # Configuration (PLUGINS):
     zplug "mafredri/zsh-async", from:github
     zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
-    # zplug "plugins/git", from:oh-my-zsh, defer:2
     zplug "plugins/conda", from:oh-my-zsh, defer:2
     zplug "chrissicool/zsh-256color", defer:2
     zplug "zsh-users/zsh-autosuggestions", defer:2
     zplug "zsh-users/zsh-syntax-highlighting", defer:2
     zplug load
 
-    # Clean up orphaned plugins (run manually if needed):
-    # zplug clean
-
-    # Install missing plugins
     if ! zplug check --verbose; then
         printf "Install? [y/N]: "
         if read -q; then
@@ -174,52 +121,28 @@ if [ -d "$ZPLUG_HOME" ]; then
         fi
     fi
 
-    # Pure Prompt Configuration
     zstyle :prompt:pure:git:stash show yes
 fi
 
-# Path to powerlevel10k theme
-# source "$POWERLEVEL10K_DIR/powerlevel10k.zsh-theme"
-
-# plugins=( git sudo zsh-256color zsh-autosuggestions zsh-syntax-highlighting )
 source "$ZSH"/oh-my-zsh.sh
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 
 # <---------------------- INITIALIZATION ----------------------->
 
-# fastfetch if installed
 if command -v fastfetch &>/dev/null; then
     fastfetch --logo small --logo-padding-top 1
 fi
 
-# NVM
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# Add gem folder's bin path to PATH
-path+=(
-    $(ruby -e 'puts File.join(Gem.user_dir, "bin")')
-)
-
-if ! gem which colorls &>/dev/null; then
-    gem install colorls
-fi
-
-# colorls tab completion
-source "$(dirname "$(gem which colorls)")/tab_complete.sh"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 
 # <-------------------- CONDA INITIALIZATION ------------------>
-export AUTO_ACTIVATE_CONDA=true # Set to true to auto-activate the base environment
 
-# Set the Conda executable path
+export AUTO_ACTIVATE_CONDA=true
 CONDA_EXEC_PATH="$CONDA_PATH/bin/conda"
 
-# Initialize Conda
 if [ -f "$CONDA_EXEC_PATH" ]; then
     __conda_setup="$("$CONDA_EXEC_PATH" 'shell.zsh' 'hook' 2>/dev/null)"
     if [ $? -eq 0 ]; then
@@ -249,18 +172,15 @@ else
 fi
 
 unset __conda_setup
-# <<< END CONDA INITIALIZATION
 
 
 # <------------------ NVIM PYTHON PATH CONFIGURATION ------------------>
 
-# Function to set NVIM_PYTHON_PATH
 if command -v conda &>/dev/null; then
     set_python_path_for_neovim() {
         if [[ -n "$CONDA_PREFIX" ]]; then
             export NVIM_PYTHON_PATH="$CONDA_PREFIX/bin/python"
         else
-            # Fallback to system Python (Python 3) if Conda is not active
             local system_python_path
             system_python_path=$(which python3)
             if [[ -z "$system_python_path" ]]; then
@@ -271,10 +191,8 @@ if command -v conda &>/dev/null; then
         fi
     }
 
-    # Initialize NVIM_PYTHON_PATH
     set_python_path_for_neovim
 
-    # Hook into the precmd function
     function precmd_set_python_path() {
         if [[ "$PREV_CONDA_PREFIX" != "$CONDA_PREFIX" ]]; then
             set_python_path_for_neovim
@@ -282,15 +200,12 @@ if command -v conda &>/dev/null; then
         fi
     }
 
-    # Save the initial Conda prefix
     PREV_CONDA_PREFIX="$CONDA_PREFIX"
 
-    # Add the hook to precmd
     autoload -U add-zsh-hook
     add-zsh-hook precmd precmd_set_python_path
 
 else
-    # Non-Conda environment: Check if Python is installed
     python_path=$(which python3)
     if [[ -z "$python_path" ]]; then
         echo "Python is not installed. Please install Python to use with Neovim."
@@ -299,16 +214,14 @@ else
     fi
 fi
 
-# Add the following line in `~/.config/nvim/lua/plugins/astrocore.lua` (vim.g.python3_host_prog = os.getenv "NVIM_PYTHON_PATH",) to set the dynamic Python executable for pynvim
-# python3_host_prog = os.getenv "NVIM_PYTHON_PATH",
-
 aider () {
   command conda run -n aider --no-capture-output aider "$@"
 }
 
+
 # <-------------------- ALIASES -------------------->
-# General
-alias mkdir='mkdir -p' # Always mkdir a path
+
+alias mkdir='mkdir -p'
 alias c='clear'
 alias v='nvim'
 alias vc='code'
@@ -319,127 +232,12 @@ alias h="history"
 alias pn="pnpm"
 alias gcopylog='git log --pretty=format:"%ad | %an%n%s%n%b%n" --date=short | pbcopy'
 alias gt='git --no-pager log --graph --abbrev-commit --decorate --all --format="%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white) - %an%C(reset)%C(auto) %d%C(reset)"'
-# alias fd='fdfind'
-
-# ----------------------------
-
-# --- git subtree helpers (general purpose) ---
-
-# Resolve subtree prefix (defaults to CWD relative to repo root)
-_subtree_prefix() {
-  if [[ -n "$1" ]]; then
-    printf '%s\n' "$1"
-    return
-  fi
-  local p
-  p=$(git rev-parse --show-prefix 2>/dev/null) || { echo "Not in a git repo." >&2; return 1; }
-  [[ -z "$p" ]] && { echo "You're at repo root; cd into the subtree folder or pass a prefix." >&2; return 1; }
-  printf '%s\n' "${p%/}"  # strip trailing slash
-}
-
-# Detect default branch of a remote
-_subtree_default_branch() {
-  local remote="$1" head
-  head=$(git symbolic-ref -q --short "refs/remotes/${remote}/HEAD" 2>/dev/null) \
-    || head=$(git remote show "$remote" 2>/dev/null | sed -n 's/.*HEAD branch: //p')
-  if [[ -n "$head" ]]; then
-    printf '%s\n' "${head#"${remote}"/}"
-  elif git rev-parse -q --verify "refs/remotes/${remote}/main" >/dev/null; then
-    echo main
-  elif git rev-parse -q --verify "refs/remotes/${remote}/master" >/dev/null; then
-    echo master
-  else
-    echo main
-  fi
-}
-
-# Read dir-local config: store per-subtree settings in .git at key "subtree.<prefix>.*"
-# Set with: git config "subtree.<prefix>.remote" upstream ; git config "subtree.<prefix>.branch" main
-_subtree_cfg() {
-  local prefix="$1" key="$2"
-  git config --get "subtree.${prefix}.${key}" 2>/dev/null
-}
-
-gspush() {
-  if [[ $1 == "-h" || $1 == "--help" || $1 == "--usage" ]]; then
-    echo "Usage: gspush [prefix] [remote] [branch]"; echo
-    echo "Push a subtree to a remote branch."
-    echo " - prefix: path to subtree (defaults to current dir relative to repo root)"
-    echo " - remote: remote name (defaults to subtree.<prefix>.remote, else 'assignment' or 'upstream')"
-    echo " - branch: branch name (defaults to subtree.<prefix>.branch, else remote’s default, else main)"
-    return 0
-  fi
-  local prefix remote branch top
-  prefix=$(_subtree_prefix "$1") || return 1
-  remote="${2:-$(_subtree_cfg "$prefix" remote)}"
-  [[ -z "$remote" ]] && { git remote get-url assignment >/dev/null 2>&1 && remote=assignment; }
-  [[ -z "$remote" ]] && { git remote get-url upstream   >/dev/null 2>&1 && remote=upstream; }
-  [[ -z "$remote" ]] && { echo "Remote not set. Run 'gspush --usage'." >&2; return 1; }
-  branch="${3:-$(_subtree_cfg "$prefix" branch)}"
-  [[ -z "$branch" ]] && branch=$(_subtree_default_branch "$remote")
-  top=$(git rev-parse --show-toplevel) || { echo "Not in a git repo." >&2; return 1; }
-  echo "Pushing subtree: prefix='$prefix' → ${remote}/${branch}"
-  ( cd "$top" && git subtree push --prefix="$prefix" "$remote" "$branch" )
-}
-
-gspull() {
-  if [[ $1 == "-h" || $1 == "--help" || $1 == "--usage" ]]; then
-    echo "Usage: gspull [prefix] [remote] [branch]"; echo
-    echo "Pull a subtree from a remote branch (with squash)."
-    echo " - prefix: path to subtree (defaults to current dir relative to repo root)"
-    echo " - remote: remote name (defaults to subtree.<prefix>.remote, else 'assignment' or 'upstream')"
-    echo " - branch: branch name (defaults to subtree.<prefix>.branch, else remote’s default, else main)"
-    return 0
-  fi
-  local prefix remote branch top
-  prefix=$(_subtree_prefix "$1") || return 1
-  remote="${2:-$(_subtree_cfg "$prefix" remote)}"
-  [[ -z "$remote" ]] && { git remote get-url assignment >/dev/null 2>&1 && remote=assignment; }
-  [[ -z "$remote" ]] && { git remote get-url upstream   >/dev/null 2>&1 && remote=upstream; }
-  [[ -z "$remote" ]] && { echo "Remote not set. Run 'gspull --usage'." >&2; return 1; }
-  branch="${3:-$(_subtree_cfg "$prefix" branch)}"
-  [[ -z "$branch" ]] && branch=$(_subtree_default_branch "$remote")
-  top=$(git rev-parse --show-toplevel) || { echo "Not in a git repo." >&2; return 1; }
-  echo "Pulling subtree: ${remote}/${branch} → prefix='$prefix' (squash)"
-  ( cd "$top" && git subtree pull --prefix="$prefix" "$remote" "$branch" --squash )
-}
-
-gssub() {
-  if [[ $1 == "-h" || $1 == "--help" || $1 == "--usage" ]]; then
-    echo "Usage: gssub [prefix] [remote] [branch]"
-    echo
-    echo "Preview commits and diffstat that would be pushed for a subtree."
-    echo " - prefix: path to subtree (defaults to current dir relative to repo root)"
-    echo " - remote: remote name (defaults to subtree.<prefix>.remote, else 'assignment' or 'upstream')"
-    echo " - branch: branch name (defaults to subtree.<prefix>.branch, else remote’s default, else main)"
-    return 0
-  fi
-
-  local prefix remote branch
-  prefix=$(_subtree_prefix "$1") || return 1
-  remote="${2:-$(_subtree_cfg "$prefix" remote)}"
-  [[ -z "$remote" ]] && { git remote get-url assignment >/dev/null 2>&1 && remote=assignment; }
-  [[ -z "$remote" ]] && { git remote get-url upstream   >/dev/null 2>&1 && remote=upstream; }
-  [[ -z "$remote" ]] && { echo "Remote not set. Run 'gssub --usage'." >&2; return 1; }
-
-  branch="${3:-$(_subtree_cfg "$prefix" branch)}"
-  [[ -z "$branch" ]] && branch=$(_subtree_default_branch "$remote")
-
-  echo "== Commits to push (HEAD not in ${remote}/${branch}) for $prefix =="
-  git log --oneline --decorate --graph "${remote}/${branch}..HEAD" -- ":/$prefix"
-  echo
-  echo "== Diffstat vs ${remote}/${branch} =="
-  git diff --stat "${remote}/${branch}..HEAD" -- ":/$prefix"
-}
-
-# ----------------------------
 
 gscopy() {
-  # flags
   local print_only=0 OPTIND opt
   while getopts ":ph" opt; do
     case "$opt" in
-      p) print_only=1 ;;  # print to stdout (for piping) instead of pbcopy
+      p) print_only=1 ;;
       h)
         echo "Usage: gscopy [-p]" >&2
         echo "  -p  print prompt to stdout (no clipboard/status message)" >&2
@@ -458,7 +256,6 @@ gscopy() {
   local branch files ins dels
   branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 
-  # Count any change: staged, unstaged, untracked
   files=$(
     {
       git status --porcelain=v1
@@ -466,13 +263,11 @@ gscopy() {
     } | awk 'NF' | wc -l | tr -d ' '
   )
 
-  # Sum insertions/deletions across staged + unstaged + untracked
   read -r ins dels <<EOF_STATS
 $(
   {
     git diff --cached --numstat
     git diff --numstat
-    # Untracked files as additions from /dev/null
     while IFS= read -r -d '' f; do
       git diff --no-index --numstat /dev/null "$f"
     done < <(git ls-files --others --exclude-standard -z)
@@ -499,7 +294,6 @@ EOF
   local worth_branch="no"
   if (( files >= 4 || (ins + dels) >= 80 )); then worth_branch="yes"; fi
 
-  # Guess a scope from most-changed top-level path (staged+unstaged)
   local scope_guess
   scope_guess=$(
     {
@@ -509,7 +303,6 @@ EOF
   )
   [[ -z "$scope_guess" ]] && scope_guess="core"
 
-  # Sanitize: lowercase, replace non-alnum with '-', trim leading/trailing '-'
   scope_guess=$(printf '%s' "$scope_guess" \
     | tr '[:upper:]' '[:lower:]' \
     | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')
@@ -569,11 +362,9 @@ EOF
     git status --porcelain=v1
     echo
 
-    # Diffs: staged, unstaged
     git diff --cached --no-color
     git diff --no-color
 
-    # Untracked files: show full content as additions
     while IFS= read -r -d '' f; do
         echo
         git diff --no-color --no-index /dev/null "$f"
@@ -585,13 +376,10 @@ EOF
   (( print_only )) || echo "Commit prompt (all changes) copied to clipboard." >&2
 }
 
-# ----------------------------
-
 if command -v nvim &>/dev/null; then
     export EDITOR='nvim'
 fi
 
-# ----- Bat (better cat) -----
 if [ ! -d "$(bat --config-dir)/themes" ]; then
     mkdir -p "$(bat --config-dir)/themes"
 
@@ -605,103 +393,77 @@ if [ ! -d "$(bat --config-dir)/themes" ]; then
 fi
 export BAT_THEME="Catppuccin Macchiato"
 
-# ----thefuck alias ----
 eval "$(thefuck --alias)"
 eval "$(thefuck --alias fk)"
 
-# ---- Zoxide (better cd) ----
 eval "$(zoxide init zsh)"
 alias cd="z"
 
-# ---- GitHub CLI Copilot ----
 eval "$(gh copilot alias -- zsh)"
 
-# Listing
-alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first' # short list
-alias  l='eza -A -lh --git --icons=auto --sort=name --group-directories-first' # long list
-alias la='eza -lha --git --icons=auto --sort=name --group-directories-first' # long list all
-alias ld='eza -A -lhD --git --icons=auto --sort=name' # long list dirs
-# alias lt='eza -A --git --icons=auto --tree --level=3 --ignore-glob ".git|node_modules|*.log|*.tmp|dist|build|.DS_Store|*.swp|*.swo|.idea|__pycache__|coverage|env|venv|*.ttf|Icon?"'
+alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first'
+alias  l='eza -A -lh --git --icons=auto --sort=name --group-directories-first'
+alias la='eza -lha --git --icons=auto --sort=name --group-directories-first'
+alias ld='eza -A -lhD --git --icons=auto --sort=name'
 
 function lt() {
-    local depth="${1:-3}" # Use $1 if depth is passed, otherwise default to 3
+    local depth="${1:-3}"
     eza -A --git --icons=auto --tree --level="$depth" --ignore-glob ".git|node_modules|*.log|*.tmp|dist|build|.DS_Store|*.swp|*.swo|.idea|__pycache__|coverage|env|venv|*.ttf|Icon?"
 }
 
-# # Colorls
-# alias ls="colorls -A --gs --sd"                   # Lists most files, directories first, with git status.
-# alias la="colorls -oA --sd --gs"                  # Full listing of all files, directories first, with git status.
-# alias lf="colorls -foa --sd --gs"                 # File-only listing, directories first, with git status.
-# alias lt="colorls --tree=3 --sd --gs --hyperlink" # Tree view of directories with git status and hyperlinks.
-
-# Pacman and AUR helpers (Linux-specific)
 if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
-    alias un='$aurhelper -Rns' # uninstall package
-    alias up='$aurhelper -Syu' # update system/package/aur
-    alias pl='$aurhelper -Qs' # list installed package
-    alias pa='$aurhelper -Ss' # list available package
-    alias pc='$aurhelper -Sc' # remove unused cache
-    alias po='$aurhelper -Qtdq | $aurhelper -Rns -' # remove unused packages, also try > $aurhelper -Qqd | $aurhelper -Rsu --print -
+    alias un='$aurhelper -Rns'
+    alias up='$aurhelper -Syu'
+    alias pl='$aurhelper -Qs'
+    alias pa='$aurhelper -Ss'
+    alias pc='$aurhelper -Sc'
+    alias po='$aurhelper -Qtdq | $aurhelper -Rns -'
 fi
 
-# Quick directory navigation
 alias ..='cd ..'
 alias ...='cd ../..'
 alias .3='cd ../../..'
 alias .4='cd ../../../..'
 alias .5='cd ../../../../..'
 
-# Git Aliases
-# Staging and Committing
-alias ga="git add"                                      # Stage all changes
-alias gap="git add -p"                                  # Stage changes interactively
-alias gcm="git commit -m"                               # Commit with a message
-alias gra="git commit --amend --reset-author --no-edit" # Amend the last commit without changing its message
-alias unwip="git reset HEAD~"                           # Undo the last commit but keep changes
-alias uncommit="git reset HEAD~ --hard"                 # Undo the last commit and discard changes
+alias ga="git add"
+alias gap="git add -p"
+alias gcm="git commit -m"
+alias gra="git commit --amend --reset-author --no-edit"
+alias unwip="git reset HEAD~"
+alias uncommit="git reset HEAD~ --hard"
 
-# Branch and Merge
-alias gco="git checkout"                                                               # Switch branches or restore working tree files
-alias gpfwl="git push --force-with-lease"                                              # Force push with lease for safety
-alias gprune="git branch --merged main | grep -v '^[ *]*main\$' | xargs git branch -d" # Delete branches merged into main
+alias gco="git checkout"
+alias gpfwl="git push --force-with-lease"
+alias gprune="git branch --merged main | grep -v '^[ *]*main\$' | xargs git branch -d"
 
-# Repository Status and Inspection
-alias gs="git status"                      # Show the working tree status
-alias gd="git diff"                        # Show the changes
-alias gl="git lg"                          # Show commit logs in a graph format
-alias glo="git log --oneline"              # Show commit logs in a single line each
-alias glt="git describe --tags --abbrev=0" # Describe the latest tag
+alias gs="git status"
+alias gd="git diff"
+alias gl="git lg"
+alias glo="git log --oneline"
+alias glt="git describe --tags --abbrev=0"
 
-# Remote Operations
-alias gpr="git pull -r"              # Pull with rebase
-alias gup="gco main && gpr && gco -" # Update the current branch with changes from main
+alias gpr="git pull -r"
+alias gup="gco main && gpr && gco -"
 
-# Stashing
-alias hangon="git stash save -u" # Stash changes including untracked files
-alias gsp="git stash pop"        # Apply stashed changes and remove them from the stash
+alias hangon="git stash save -u"
+alias gsp="git stash pop"
 
-# Cleanup
-alias gclean="git clean -df"                                # Remove untracked files and directories
-alias cleanstate="unwip && git checkout . && git clean -df" # Undo last commit, revert changes, and clean untracked files
+alias gclean="git clean -df"
+alias cleanstate="unwip && git checkout . && git clean -df"
 
-# Tmux Aliases
-alias ta="tmux attach -t"                   # Attaches tmux to a session (example: ta portal)
-alias tn="tmux new-session -s "             # Creates a new session
-alias tk="tmux kill-session -t "            # Kill session
-alias tl="tmux list-sessions"               # Lists all ongoing sessions
-alias td="tmux detach"                      # Detach from session
-alias tc="clear; tmux clear-history; clear" # Tmux Clear pane
+alias ta="tmux attach -t"
+alias tn="tmux new-session -s "
+alias tk="tmux kill-session -t "
+alias tl="tmux list-sessions"
+alias td="tmux detach"
+alias tc="clear; tmux clear-history; clear"
 
 
 # <------------------- CUSTOM FUNCTIONS ------------------->
 
-#Display Pokemon
-#pokemon-colorscripts --no-title -r 1,3,6
-
 if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
 
-    # Command Not Found Handler
-    # In case a command is not found, try to find the package that has it
     function command_not_found_handler {
         local purple='\e[1;35m' bright='\e[0;1m' green='\e[1;32m' reset='\e[0m'
         printf 'zsh: command not found: %s\n' "$1"
@@ -721,14 +483,12 @@ if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "arch
         return 127
     }
 
-    # Detect the AUR wrapper
     if pacman -Qi yay &>/dev/null ; then
     aurhelper="yay"
     elif pacman -Qi paru &>/dev/null ; then
     aurhelper="paru"
     fi
 
-    # Function to install packages
     function in {
         local -a inPkg=("$@")
         local -a arch=()
@@ -752,10 +512,9 @@ if [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "arch
     }
 fi
 
-# FCD: Navigate directories using fd, fzf, and eza
 if command -v fd &>/dev/null && command -v fzf &>/dev/null && command -v eza &>/dev/null; then
     fcd() {
-        local depth="${1:-9}" # Default depth is 9, but can be overridden by first argument
+        local depth="${1:-9}"
         local dir
         dir=$(fd --type d --hidden --max-depth "$depth" \
             --exclude '.git' \
@@ -780,8 +539,6 @@ if command -v fd &>/dev/null && command -v fzf &>/dev/null && command -v eza &>/
     }
 fi
 
-# Fuzzy Finder + Nvim
-# Searches files with 'fd', previews with 'bat', and opens in 'nvim' via 'fzf'.
 command -v fd &>/dev/null && command -v fzf &>/dev/null &&
     command -v bat &>/dev/null && command -v nvim &>/dev/null &&
     function fzf_find_edit() {
@@ -791,7 +548,6 @@ command -v fd &>/dev/null && command -v fzf &>/dev/null &&
     }
 alias f='fzf_find_edit'
 
-# Yazi: A directory navigator with fzf
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
 	yazi "$@" --cwd-file="$tmp"
@@ -803,38 +559,31 @@ function y() {
 
 
 # <-------------------- FZF INITIALIZATION -------------------->
+
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 eval "$(fzf --zsh)"
 
-# --- setup fzf theme ---
-fg="#CBE0F0"           # Foreground color
-bg="#011628"           # Background color [UNUSED]
-bg_highlight="#143652" # Background highlight color [UNUSED]
-purple="#B388FF"       # Purple color for highlights
-blue="#06BCE4"         # Blue color for info
-cyan="#2CF9ED"         # Cyan color for various elements
+fg="#CBE0F0"
+bg="#011628"
+bg_highlight="#143652"
+purple="#B388FF"
+blue="#06BCE4"
+cyan="#2CF9ED"
 
-# Set default FZF options
 export FZF_DEFAULT_OPTS="-m --height 70% --border --extended --layout=reverse --color=fg:${fg},hl:${purple},fg+:${fg},hl+:${purple},info:${blue},prompt:${cyan},pointer:${cyan},marker:${cyan},spinner:${cyan},header:${cyan}"
 
-# -- Use fd instead of fzf --
 export FZF_DEFAULT_COMMAND="fd --hidden --strip-cwd-prefix --exclude .git"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND="fd --type=d --hidden --strip-cwd-prefix --exclude .git"
 
-# Use fd (https://github.com/sharkdp/fd) for listing path candidates.
-# - The first argument to the function ($1) is the base path to start traversal
-# - See the source code (completion.{bash,zsh}) for the details.
 _fzf_compgen_path() {
     fd --hidden --exclude .git . "$1"
 }
 
-# Use fd to generate the list for directory completion
 _fzf_compgen_dir() {
     fd --type=d --hidden --exclude .git . "$1"
 }
 
-# https://github.com/junegunn/fzf-git.sh
 if [ ! -f ~/fzf-git.sh/fzf-git.sh ]; then
     git clone https://github.com/junegunn/fzf-git.sh.git ~/fzf-git.sh
 fi
@@ -843,9 +592,6 @@ source ~/fzf-git.sh/fzf-git.sh
 export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always --line-range :500 {}'"
 export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
 
-# Advanced customization of fzf options via _fzf_comprun function
-# - The first argument to the function is the name of the command.
-# - You should make sure to pass the rest of the arguments to fzf.
 _fzf_comprun() {
     local command=$1
     shift
@@ -879,39 +625,29 @@ fi
 
 export PRETTIERD_DEFAULT_CONFIG="$HOME/.dotfiles/Formatting-Files/.prettierrc.json"
 
-# Detect the architecture
 if [[ "$OS" == "Darwin" && "$ARCHITECTURE" == "arm64" ]]; then
-    # macOS
     FONT_SIZE="17"
     BACKGROUND_OPACITY="0.7"
     MACOS_OPTION_AS_ALT="left"
-
 elif [[ "$OS" == "Linux" && "$ARCHITECTURE" == "x86_64" ]]; then
-    # Arch Linux
     FONT_SIZE="9.5"
     BACKGROUND_OPACITY="0.8"
 else
-    # Fallback
     FONT_SIZE="12"
     BACKGROUND_OPACITY="0.7"
 fi
 
-# Create the dynamic kitty config directory if it doesn't exist
 kitty_config_dir="$HOME/.dotfiles/Config/.config/kitty"
 if [ ! -d "$kitty_config_dir" ]; then
     mkdir -p "$kitty_config_dir"
 fi
 
-# Create the dynamic kitty config file
 printf "font_size %s\nbackground_opacity %s\nmacos_option_as_alt %s" "$FONT_SIZE" "$BACKGROUND_OPACITY" "$MACOS_OPTION_AS_ALT" > "$kitty_config_dir/dynamic.conf"
 
-# JAVA CLASSPATH CONFIGURATION
 JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/Java-Jars/javaClasspath"
 
-# Clear existing java classpath entries
 export CLASSPATH=""
 
-# Add each jar file found in the directory and its subdirectories to the CLASSPATH
 for jar in "$JAVA_CLASSPATH_PREFIX"/*.jar; do
     if [ -e "$jar" ]; then
         if [ -z "$CLASSPATH" ]; then
@@ -922,7 +658,6 @@ for jar in "$JAVA_CLASSPATH_PREFIX"/*.jar; do
     fi
 done
 
-# Finally, append the current directory to the CLASSPATH
 export CLASSPATH="$CLASSPATH:."
 
 
@@ -931,63 +666,36 @@ export CLASSPATH="$CLASSPATH:."
 export_from_file() {
   local var="$1" file="$2"
   if [ -f "$file" ]; then
-    # strip CR/LF just in case
     export "$var"="$(tr -d '\r\n' < "$file")"
   else
     echo "$var not found at $file"
   fi
 }
 
-# Anthropic
 export_from_file "ANTHROPIC_API_KEY" "$HOME/.config/anthropic/api_key"
-
-# OpenAI
 export_from_file "OPENAI_API_KEY" "$HOME/.config/openai/api_key"
-
-# Firecrawl (for firecrawl-mcp)
 export_from_file "FIRECRAWL_API_KEY" "$HOME/.config/firecrawl/api_key"
-
-# Context7 (for up-to-date docs)
 export_from_file "CONTEXT7_API_KEY" "$HOME/.config/context7/api_key"
-
-# Brave Seacrh (for web search)
 export_from_file "BRAVE_API_KEY" "$HOME/.config/brave_search/api_key"
-
-# Brave Seacrh (for web search)
 export_from_file "MAGIC_MCP_API_KEY" "$HOME/.config/magic_mcp/api_key"
 
-# Ollama API base (local models)
 export OLLAMA_API_BASE="http://127.0.0.1:11434"
+
 
 # <-------------------- GENERAL CONFIGURATIONS -------------------->
 
-# fix paru: sudo ln -s /usr/lib/libalpm.so.15 /usr/lib/libalpm.so.14
-# When paru is updated (fixed), then: sudo rm /usr/lib/libalpm.so.14
-
-# Then reinstall paru:
-# sudo pacman -S --needed base-devel
-# git clone https://aur.archlinux.org/paru.git
-# cd paru
-# makepkg -si
-
-# Added by LM Studio CLI (lms)
 export PATH="$PATH:$HOME/.cache/lm-studio/bin"
-
-# Flutterfire
 export PATH="$PATH:$HOME/.pub-cache/bin"
 
-# pnpm
 export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-# pnpm end
+
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
-# Enable WSLg GPU acceleration only inside WSL
 if grep -qi microsoft /proc/version 2>/dev/null; then
   export GALLIUM_DRIVER=d3d12
   export LIBVA_DRIVER_NAME=d3d12
 fi
-
