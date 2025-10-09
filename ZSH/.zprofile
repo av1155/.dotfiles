@@ -5,24 +5,24 @@ case "$(uname -s)" in
 Darwin) # macOS
 
     # <============ HOMEBREW PATH + DYNAMIC PATH DETECTION ============>
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-
-    # Ensure Homebrew Ruby is prioritized over system Ruby
-    export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+    if [ -x "/opt/homebrew/bin/brew" ]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+        
+        # Ensure Homebrew Ruby is prioritized over system Ruby
+        export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+    fi
 
     if command -v brew &>/dev/null; then
         HOMEBREW_PATH=$(brew --prefix)
-    fi
-
-    # <================== DYNAMIC PATH CONFIGURATION ==================>
-    if command -v brew &>/dev/null; then
-        path+=("$(brew --prefix)/bin")
-        path+=("$(brew --prefix git)/bin")
-        path+=("$(brew --prefix dotnet)/bin")
-        path+=("$(brew --prefix ruby)/bin")
-        path+=("$(brew --prefix go)/bin")
-        path+=("$(brew --prefix julia)/bin")
-        path+=("$(brew --prefix coursier)/bin")
+        
+        # <================== DYNAMIC PATH CONFIGURATION ==================>
+        path+=("$HOMEBREW_PATH/bin")
+        path+=("$HOMEBREW_PATH/opt/git/bin")
+        path+=("$HOMEBREW_PATH/opt/dotnet/bin")
+        path+=("$HOMEBREW_PATH/opt/ruby/bin")
+        path+=("$HOMEBREW_PATH/opt/go/bin")
+        path+=("$HOMEBREW_PATH/opt/julia/bin")
+        path+=("$HOMEBREW_PATH/opt/coursier/bin")
     fi
 
     # Set GOBIN environment variable
@@ -37,17 +37,23 @@ Darwin) # macOS
     fi
 
     # JAVA
-    export JAVA_HOME=$(/usr/libexec/java_home)
-    export PATH=$JAVA_HOME/bin:$PATH
-
-    # For compilers to find OpenJDK you may need to set:
-    export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
+    if /usr/libexec/java_home &>/dev/null; then
+        export JAVA_HOME=$(/usr/libexec/java_home)
+        export PATH=$JAVA_HOME/bin:$PATH
+        
+        # For compilers to find OpenJDK you may need to set:
+        if [ -n "$HOMEBREW_PATH" ]; then
+            export CPPFLAGS="-I$HOMEBREW_PATH/opt/openjdk/include"
+        fi
+    fi
 
     # Added by Toolbox App
     path+=("$HOME/Library/Application Support/JetBrains/Toolbox/scripts")
 
     # DOTNET
-    export DOTNET_ROOT="$HOMEBREW_PATH/opt/dotnet/libexec"
+    if [ -n "$HOMEBREW_PATH" ]; then
+        export DOTNET_ROOT="$HOMEBREW_PATH/opt/dotnet/libexec"
+    fi
 
     # <================== PERL & RUBY INITIALIZATION ==================>
 
@@ -67,22 +73,24 @@ Darwin) # macOS
     # 2. Find the user gem bin directory, run on the terminal: `gem env gemdir`
     # 3. Add the user gem bin directory to PATH in the shell profile
 
-    # Dynamically get the user gem bin directory
-    user_gem_bin=$(ruby -e 'puts Gem.user_dir')/bin
+    if command -v ruby &>/dev/null; then
+        # Dynamically get the user gem bin directory
+        user_gem_bin=$(ruby -e 'puts Gem.user_dir' 2>/dev/null)/bin
 
-    # Dynamically get the Homebrew gem bin directory
-    homebrew_gem_bin=$(ruby -e 'puts Gem.bindir')
+        # Dynamically get the Homebrew gem bin directory
+        homebrew_gem_bin=$(ruby -e 'puts Gem.bindir' 2>/dev/null)
 
-    # Check if the directories exist and add them to PATH
-    if [ -d "$user_gem_bin" ]; then
-        export PATH="$user_gem_bin:$PATH"
-    fi
-    if [ -d "$homebrew_gem_bin" ]; then
-        export PATH="$homebrew_gem_bin:$PATH"
+        # Check if the directories exist and add them to PATH
+        if [ -d "$user_gem_bin" ]; then
+            export PATH="$user_gem_bin:$PATH"
+        fi
+        if [ -d "$homebrew_gem_bin" ]; then
+            export PATH="$homebrew_gem_bin:$PATH"
+        fi
     fi
     # <<< END RUBY INITIALIZATION
 
-    PATH=~/.console-ninja/.bin:$PATH
+    export PATH="$HOME/.console-ninja/.bin:$PATH"
     ;;
 
 Linux)

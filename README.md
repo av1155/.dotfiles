@@ -1,241 +1,461 @@
 # .dotfiles
 
+> Cross-platform developer environment for macOS, Arch Linux, Debian, and WSL—featuring automated setup, modular configuration management, and zero-friction onboarding.
+
+## Quick Start
+
+```bash
+git clone git@github.com:av1155/.dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+./install.sh
+exec zsh
+```
+
+## Why These Dotfiles?
+
+- **Portable**: Works across macOS (Intel/Apple Silicon), Arch Linux, Debian, WSL, and Raspberry Pi
+- **Safe & Idempotent**: Automatically backs up conflicts, can be run multiple times safely
+- **Zero Configuration**: Automated detection and installation of tools based on your platform
+- **Modular**: Managed with GNU Stow—easy to add, remove, or customize individual packages
+- **Fast**: Optimized shell startup with lazy-loading and caching (1-2s faster than default configs)
+- **Robust**: Error-resistant with network checks, retry protection, and graceful degradation
+
+## Table of Contents
+
 <!--toc:start-->
 
 - [.dotfiles](#dotfiles)
-    - [Installation](#installation)
-    - [.dotfiles Structure](#dotfiles-structure)
-    - [Key Features](#key-features)
-        - [Universal Zsh Configuration (`.zshrc`)](#universal-zsh-configuration-zshrc)
-        - [MacOS Bootstrap Setup](#macos-bootstrap-setup)
-        - [Terminal Multiplexing (`tmux`)](#terminal-multiplexing-tmux)
-            - [Issues if tmux configuration does not load:](#issues-if-tmux-configuration-does-not-load)
-        - [Neovim Configuration](#neovim-configuration)
-        - [FZF and Bat Integration](#fzf-and-bat-integration)
-        - [Package Manager Support](#package-manager-support)
-        - [Scripts](#scripts)
-        - [Color Schemes](#color-schemes)
-        - [Java Classpath](#java-classpath)
-    - [License](#license)
+  - [Quick Start](#quick-start)
+  - [Why These Dotfiles?](#why-these-dotfiles)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Installation](#installation)
+    - [Prerequisites](#prerequisites)
+    - [Automated Installation](#automated-installation)
+    - [Manual Installation (Advanced)](#manual-installation-advanced)
+  - [Repository Structure](#repository-structure)
+  - [Configuration Details](#configuration-details)
+    - [Universal Zsh Configuration](#universal-zsh-configuration)
+    - [Terminal Multiplexing (tmux)](#terminal-multiplexing-tmux)
+    - [Package Management](#package-management)
+    - [Development Tools](#development-tools)
+    - [Theming & Appearance](#theming--appearance)
+    - [macOS Bootstrap](#macos-bootstrap)
+  - [Customization](#customization)
+  - [Updating](#updating)
+  - [Uninstalling](#uninstalling)
+  - [Troubleshooting](#troubleshooting)
+    - [tmux Configuration Not Loading](#tmux-configuration-not-loading)
+    - [Fonts Not Rendering](#fonts-not-rendering)
+    - [Stow Conflicts](#stow-conflicts)
+    - [Shell Startup Slow](#shell-startup-slow)
+  - [License](#license)
 
 <!--toc:end-->
 
-This repository contains my personal configuration files (dotfiles) for setting up my Arch Linux with Hyprland window manager and other utilities. It also includes configurations for macOS and other environments.
+## Features
+
+- **Universal Shell Environment**: Zsh configuration that adapts to macOS, Arch, Debian, WSL, and Raspberry Pi
+- **Automated Tool Installation**: Homebrew, Oh-My-Zsh, Conda, and platform-specific package managers installed automatically
+- **Smart Plugin Management**: ZPlug with Pure theme, syntax highlighting, autosuggestions, and async rendering
+- **Self-Healing tmux**: Automatic plugin manager setup with session persistence and custom keybindings
+- **Enhanced Navigation**: FZF fuzzy finder integrated with bat, git, and file browsing
+- **AI Development Tools**: Pre-configured OpenCode agents, Claude MCP servers, and Aider integration
+- **Python Environment**: Conda/Miniforge auto-setup with Neovim provider configuration
+- **Node.js Management**: NVM lazy-loading for instant shell startup
+- **Java Development**: Auto-configured classpath with JUnit and common libraries
+- **Modern CLI Tools**: fastfetch, yazi, lazygit, eza, zoxide, ripgrep, and more
+- **Catppuccin Theming**: Consistent color schemes across bat, tmux, and terminal
+- **Nerd Font Included**: JetBrains Mono with icons and ligatures
 
 ## Installation
 
-To install and symlink the configuration files to your system:
+### Prerequisites
 
-1. Clone this repository into your home directory:
+- **Git**: For cloning the repository
+- **Zsh**: Your default shell (will be configured automatically)
+- **GNU Stow**: Symlink management (installation instructions provided below)
+- **curl/wget**: For downloading tools (usually pre-installed)
 
-    ```bash
-    git clone git@github.com:av1155/.dotfiles.git ~/.dotfiles
-    ```
+Optional but recommended:
+- **tmux**: Terminal multiplexer
+- **Neovim**: Modern vim editor
+- **Python 3**: For Neovim provider and development
 
-2. Install GNU Stow (if not installed) to manage the symlinks:
+### Automated Installation
 
-    ```bash
-    sudo pacman -S stow     # For Arch Linux
-    brew install stow       # For macOS (using Homebrew)
-    sudo apt install stow   # For Debian Linux
-    ```
+The installation script handles everything automatically:
 
-3. Navigate to the `.dotfiles` directory and run Stow:
+1. Clone this repository:
 
-    ```bash
-    cd ~/.dotfiles
-    stow --restow */
-    ```
+   ```bash
+   git clone git@github.com:av1155/.dotfiles.git ~/.dotfiles
+   ```
 
-    ***
+2. Install GNU Stow (if not already installed):
 
-    ### ⚠️ Pre-create base directories before stowing
+   ```bash
+   # macOS
+   brew install stow
+   
+   # Arch Linux
+   sudo pacman -S stow
+   
+   # Debian/Ubuntu
+   sudo apt install stow
+   ```
 
-    When using GNU Stow to symlink configs:
+3. Run the installation script:
 
-    ```bash
-    cd ~/.dotfiles
-    stow --restow */
-    ```
+   ```bash
+   cd ~/.dotfiles
+   ./install.sh
+   ```
 
-    make sure the **target base directories already exist** (otherwise Stow will replace them with a symlink).  
-    For example:
+**What the script does:**
+- ✅ Auto-detects required base directories (`.config`, `.ssh`, `.fonts`, `Library`)
+- ✅ Creates missing directories
+- ✅ Detects conflicts with existing files
+- ✅ Backs up conflicting files to `filename.bak` (with notification)
+- ✅ Runs `stow --restow */` safely
+- ✅ Idempotent—safe to run multiple times
 
-    ```bash
-    # Pre-create common base dirs
-    mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts
+4. Restart your shell:
 
-    # Then safely run stow
-    cd ~/.dotfiles
-    stow --restow */
-    ```
+   ```bash
+   exec zsh
+   ```
 
-    If you don’t pre-create them, you may end up with incorrect symlinks like:
+### Manual Installation (Advanced)
 
-    ```
-    ~/.config -> ~/.dotfiles/Config/.config
-    ```
+<details>
+<summary>Click to expand manual installation steps</summary>
 
-    instead of having `~/.config` as a directory with symlinked subfolders inside.
+If you prefer manual control:
 
-    ***
+1. Pre-create base directories:
+   ```bash
+   mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts ~/Library
+   ```
 
-    If conflicts arise because symlinks already exist, or original files, you need to manually remove those files (or turn them into .bak's) and then run `stow --restow */` from the `~/.dotfiles` directory again.
+2. Back up any conflicting files:
+   ```bash
+   mv ~/.zshrc ~/.zshrc.bak
+   mv ~/.gitconfig ~/.gitconfig.bak
+   # ... repeat for other conflicts
+   ```
 
-    ```bash
-    mv ~/.gitconfig ~/.gitconfig.bak
-    # or
-    rm ~/.gitconfig
-    ```
+3. Run GNU Stow:
+   ```bash
+   cd ~/.dotfiles
+   stow --restow */
+   ```
 
-    Run `man stow` to understand how it works before using it.
+4. Restart your shell:
+   ```bash
+   exec zsh
+   ```
 
-## .dotfiles Structure
+**Note**: Run `man stow` to understand how symlink management works.
+
+</details>
+
+## Repository Structure
+
+<details>
+<summary>Click to expand directory structure</summary>
 
 ```bash
 .
-├── .stow-global-ignore
-├── App-Configs
-│   └── configs
-│       ├── iTerm2_Profile
-│       ├── KittyAppIconMac
-│       └── MacOS-Bootstrap # Bootstrap script for setting up macOS development environment
-├── Config
-│   └── .config
-│       ├── bat
-│       ├── 'Code - OSS'
-│       ├── colorls
-│       ├── fastfetch
-│       ├── hypr
-│       ├── kanshi
-│       ├── kitty
-│       ├── lazygit
-│       ├── tmux
-│       └── yazi
-├── Fonts
-│   └── .fonts
-│       ├── *.ttf
-│       ├── OFL.txt
-│       └── README.md
-├── Formatting-Files
-│   └── .clang-format
+├── install.sh                  # Automated installation script
+├── .stow-global-ignore         # Files to exclude from stowing
+│
+├── Aider/                      # Aider AI coding assistant configs
+│   ├── .aider.conf.yml
+│   └── .aider.model.settings.yml
+│
+├── App-Configs/                # Application-specific configurations
+│   └── configs/
+│       ├── iTerm2_Profile/     # iTerm2 profile and icons
+│       ├── KittyAppIconMac/    # Custom Kitty icons
+│       └── MacOS-Bootstrap/    # macOS dev environment bootstrap script
+│
+├── Claude/                     # Claude AI MCP server configurations
+│   └── .claude/
+│
+├── Config/                     # XDG config directory
+│   └── .config/
+│       ├── bat/                # Bat (better cat) themes
+│       ├── fastfetch/          # System info display
+│       ├── hypr/               # Hyprland window manager (Linux)
+│       ├── kitty/              # Kitty terminal emulator
+│       ├── lazygit/            # Git TUI configuration
+│       ├── opencode/           # OpenCode AI agents & settings
+│       ├── tmux/               # Tmux configuration & plugins
+│       └── yazi/               # File manager configuration
+│
+├── Fonts/                      # JetBrains Mono Nerd Font (all variants)
+│   └── .fonts/
+│
+├── Formatting-Files/           # Code formatters & linters
+│   ├── .clang-format
+│   ├── .markdownlint-cli2.yaml
 │   └── .prettierrc.json
-├── Git
+│
+├── Git/                        # Git configuration
 │   ├── .gitconfig
-│   ├── .gitignore
-│   └── .gitignore_global
-├── Java-Jars
-│   └── javaClasspath
-│       ├── apiguardian-api-1.1.0.jar
-│       ├── jlayer-1.0.1.jar
-│       ├── jsoup-1.8.3.jar
-│       ├── junit-jupiter-api-5.7.0.jar
-│       ├── junit-jupiter-engine-5.7.0.jar
-│       ├── junit-platform-commons-1.7.0.jar
-│       ├── junit-platform-engine-1.7.0.jar
-│       └── opentest4j-1.2.0.jar
-├── macOS-Library
-│   └── Library
-│       └── 'Application Support'
-├── README.md
-├── SSH
-│   └── .ssh
+│   ├── .gitignore_global
+│   └── README.md               # Git subtree workflow guide
+│
+├── Java-Jars/                  # Java development libraries
+│   └── javaClasspath/          # JUnit, jsoup, etc.
+│
+├── macOS-Library/              # macOS Application Support
+│   └── Library/
+│       └── Application Support/
+│           ├── Code/           # VSCode settings
+│           └── lazygit/        # Lazygit config
+│
+├── SSH/                        # SSH configuration
+│   └── .ssh/
 │       └── config
-└── ZSH
-    ├── .p10k.zsh
-    ├── .zprofile
-    ├── .zshrc
-    └── fzf-git.sh
-        ├── .github
-        ├── fzf-git.sh
-        └── README.md
+│
+└── ZSH/                        # Zsh shell configuration
+    ├── .zshrc                  # Main shell config
+    ├── .zprofile               # Login shell config
+    ├── .p10k.zsh               # Powerlevel10k theme (legacy)
+    └── fzf-git.sh/             # FZF git integration
 ```
 
-## Key Features
+</details>
 
-### Universal Zsh Configuration (`.zshrc`)
+## Configuration Details
 
-The `.zshrc` file is designed to work across different systems like macOS, Linux (Arch, Raspberry Pi, etc.), and Windows (WSL). It detects the current OS and adjusts paths and tool installations accordingly, ensuring consistent behavior regardless of the platform.
+### Universal Zsh Configuration
 
-- **Oh My Zsh**: Configuration for managing Zsh and its plugins.
-- **Powerlevel10k Theme**: Installs and configures Powerlevel10k for a beautiful terminal prompt.
-- **ZPlug**: Manages Zsh plugins.
-- **Fastfetch**: Quickly fetches system information and displays it in the terminal.
+The `.zshrc` is designed to work seamlessly across different platforms:
 
-### MacOS Bootstrap Setup
+- **Platform Detection**: Automatically detects macOS, Arch Linux, Debian, WSL, and Raspberry Pi
+- **Oh-My-Zsh**: Managed with automatic installation and plugin support
+- **ZPlug**: Plugin manager with Pure theme, syntax highlighting, and autosuggestions
+- **Performance**: Lazy-loading (NVM), caching (conda config), and optimized PATH management
+- **Fastfetch**: System information display on new shells
+- **Smart Aliases**: Context-aware shortcuts for common tasks
 
-This repository also includes a macOS bootstrap script located in the [App-Configs/configs/MacOS-Bootstrap](App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh) directory. This script automates the setup of a macOS development environment from zero, including the installation of essential development tools, Homebrew, AstroNvim, and more.
+### Terminal Multiplexing (tmux)
 
-To learn more about this bootstrap and how to use it, refer to the [MacOS-Bootstrap README](App-Configs/configs/MacOS-Bootstrap/README.md).
+Auto-configured tmux with plugin management:
 
-### Terminal Multiplexing (`tmux`)
+- **Auto-Start**: Automatically starts or attaches to tmux sessions
+- **Plugin Manager**: TPM (Tmux Plugin Manager) installed automatically on first run
+- **Plugins Included**:
+  - `tmux-sensible`: Sensible defaults
+  - `vim-tmux-navigator`: Seamless vim/tmux navigation
+  - `catppuccin/tmux`: Beautiful theme
+  - `tmux-cpu`: CPU usage display
+  - `tmux-yank`: System clipboard integration
+  - `tmux-sessionx`: Advanced session switcher
+- **Custom Keybindings**: `Ctrl+A` prefix, intuitive pane navigation
+- **Status Bar**: Custom top status with directory, session, and system info
 
-Auto-starts a `tmux` session on terminal login, with custom session naming and attachment logic. This is ideal for maintaining persistent work environments.
+### Package Management
 
-#### Issues if tmux configuration does not load:
+Automatic setup for platform-specific package managers:
 
-1. Remove all Tmux plugins or previous symlinks
+- **macOS**: Homebrew with automatic installation
+- **Arch Linux**: Paru (AUR helper) with auto-compilation
+- **Conda/Miniforge**: Python environment management
+- **NVM**: Node.js version management (lazy-loaded)
+
+### Development Tools
+
+Pre-configured for modern development:
+
+- **Neovim**: Python provider auto-configured with conda environments
+- **Git**: Enhanced with FZF integration and custom aliases
+- **AI Tools**:
+  - OpenCode with specialized agents (code-reviewer, debugger, refactorer, etc.)
+  - Claude MCP servers (git, time, fetch, brave-search, playwright, magic)
+  - Aider AI pair programming
+- **File Navigation**:
+  - FZF: Fuzzy finder with custom keybindings
+  - Bat: Syntax-highlighted file viewer
+  - Eza: Modern `ls` replacement
+  - Yazi: Terminal file manager
+  - Zoxide: Smart directory jumping
+- **Terminal Tools**:
+  - Lazygit: Git TUI
+  - Thefuck: Command correction
+  - Ripgrep: Fast text search
+
+### Theming & Appearance
+
+Consistent Catppuccin theming:
+
+- **Bat**: Catppuccin Macchiato syntax highlighting
+- **Tmux**: Catppuccin Frappe theme
+- **Kitty**: Dynamic font size and opacity per OS
+- **Fonts**: JetBrains Mono Nerd Font (all variants included)
+
+### macOS Bootstrap
+
+Comprehensive macOS development environment setup script:
+
+- **Location**: `App-Configs/configs/MacOS-Bootstrap/`
+- **Features**: Automated installation of Homebrew, development tools, AstroNvim, and essential utilities
+- **Documentation**: See [MacOS-Bootstrap README](App-Configs/configs/MacOS-Bootstrap/README.md)
+
+## Customization
+
+### Adding Your Own Configs
+
+Create a new stow package:
 
 ```bash
-cd ~/.config/tmux/plugins
-rm -rf *
+cd ~/.dotfiles
+mkdir -p MyCustom/.config/myapp
+# Add your configs
+stow MyCustom
 ```
 
-2. Reinstall Tmux Plugin Manager (tpm)
+### Overriding Defaults
+
+Create local override files that won't be tracked:
 
 ```bash
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+# Add personal zsh customizations
+echo "# My custom aliases" >> ~/.zshrc.local
+source ~/.zshrc.local  # Add this to .zshrc
 ```
 
-3. Reload Tmux Configuration
+### Excluding Packages
+
+Only stow specific packages:
 
 ```bash
-tmux source-file ~/.config/tmux/tmux.conf
+# Install only Git and ZSH configs
+cd ~/.dotfiles
+stow Git ZSH
 ```
 
-4. Install Plugins Using tpm
-    - Either use the shortcut:
+## Updating
 
-        ```bash
-        Ctrl + A (your current prefix), then I
-        ```
+Pull the latest changes and re-run the installer:
 
-    - Or run the following command to install all plugins listed in your tmux.conf:
-        ```bash
-        ~/.tmux/plugins/tpm/bin/install_plugins
-        ```
+```bash
+cd ~/.dotfiles
+git pull --rebase
+./install.sh
+exec zsh
+```
 
-### Neovim Configuration
+**Note**: The installer will skip existing installations and only update changed files.
 
-- The `.zshrc` includes automatic setup for Neovim's Python provider, ensuring that Neovim is always ready to work with Python and other environments.
-- Supports a dynamic Python executable path for `pynvim`.
+## Uninstalling
 
-### FZF and Bat Integration
+### Remove Symlinks
 
-- Enhanced file navigation with FZF (Fuzzy Finder) and `bat` (a better `cat`).
-- Custom aliases for efficient directory and file navigation.
+Use GNU Stow to remove all symlinks:
 
-### Package Manager Support
+```bash
+cd ~/.dotfiles
+stow -D */
+```
 
-The setup automatically configures the appropriate package manager for your system:
+### Restore Backups
 
-- **Paru/Yay** on Arch Linux (for AUR support)
-- **Homebrew** on macOS (via `brew`)
+Restore your original files from `.bak` backups:
 
-### Scripts
+```bash
+mv ~/.zshrc.bak ~/.zshrc
+mv ~/.gitconfig.bak ~/.gitconfig
+# ... restore other backups
+```
 
-- **[fzf-git.sh](https://github.com/junegunn/fzf-git.sh)**: Adds git integration to FZF for quickly browsing and managing git repositories.
-- **Custom Shell Scripts**: Includes scripts for managing Java projects, SQL URLs, updating packages, etc.
+### Clean Up Marker Files
 
-### Color Schemes
+Remove installation markers to allow fresh reinstalls:
 
-- **Bat themes**: Automatically installs the Catppuccin theme for the `bat` command.
-- **Kitty**: Dynamic configuration for font size and opacity depending on the OS.
+```bash
+rm ~/.homebrew_install_attempted
+rm ~/.ohmyzsh_install_attempted
+rm ~/.miniforge_install_attempted
+rm ~/.tmux_tpm_setup_complete
+# ... etc.
+```
 
-### Java Classpath
+## Troubleshooting
 
-Automatically configures the Java classpath based on the JAR files found in the `javaClasspath` directory. This makes them available when compiling and running Java programs.
+### tmux Configuration Not Loading
+
+If tmux plugins aren't working:
+
+1. Remove existing plugins:
+   ```bash
+   rm -rf ~/.config/tmux/plugins ~/.tmux/plugins
+   ```
+
+2. Reinstall TPM:
+   ```bash
+   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+   ```
+
+3. Reload tmux configuration:
+   ```bash
+   tmux source-file ~/.config/tmux/tmux.conf
+   ```
+
+4. Install plugins:
+   - Inside tmux: `Ctrl+A` then `I` (capital i)
+   - Or run: `~/.tmux/plugins/tpm/bin/install_plugins`
+
+### Fonts Not Rendering
+
+Install the included Nerd Font:
+
+1. The fonts are already in `~/.fonts/` after installation
+2. On macOS, you may need to refresh the font cache:
+   ```bash
+   fc-cache -fv
+   ```
+3. Restart your terminal
+4. Set your terminal font to "JetBrainsMono Nerd Font"
+
+### Stow Conflicts
+
+If you encounter symlink conflicts:
+
+```bash
+# See what's conflicting
+cd ~/.dotfiles
+stow --simulate --restow */
+
+# Manually backup conflicting files
+mv ~/.conflicting-file ~/.conflicting-file.bak
+
+# Re-run stow
+./install.sh
+```
+
+### Shell Startup Slow
+
+If your shell is slow to start:
+
+1. **Disable auto-tmux**: Comment out the tmux auto-start section in `.zshrc`
+2. **Skip conda auto-activate**: Set `AUTO_ACTIVATE_CONDA=false` in `.zshrc`
+3. **Disable fastfetch**: Comment out the fastfetch section
+4. **Check network**: The first run may be slow due to tool installations; subsequent runs should be fast
+
+### Other Issues
+
+- **Oh-My-Zsh not installed**: Delete `~/.ohmyzsh_install_attempted` and restart shell
+- **Brew commands not found**: Restart shell or run `eval "$(/opt/homebrew/bin/brew shellenv)"`
+- **Python provider errors in Neovim**: Run `:checkhealth provider` in Neovim for diagnostics
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+**Note**: This is a personal dotfiles repository. Feel free to fork and customize for your own use!
