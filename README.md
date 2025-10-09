@@ -119,6 +119,7 @@ The installation script handles everything automatically:
 - ✅ Backs up conflicting files to `filename.bak` (with notification)
 - ✅ Runs `stow --restow */` safely
 - ✅ Idempotent—safe to run multiple times
+- ✅ Offers optional troubleshooting menu for fixing common issues
 
 4. Restart your shell:
 
@@ -247,7 +248,7 @@ The `.zshrc` is designed to work seamlessly across different platforms:
 Auto-configured tmux with plugin management:
 
 - **Auto-Start**: Automatically starts or attaches to tmux sessions
-- **Plugin Manager**: TPM (Tmux Plugin Manager) installed automatically on first run
+- **Plugin Manager**: TPM (Tmux Plugin Manager) can be set up via the troubleshooting menu
 - **Plugins Included**:
   - `tmux-sensible`: Sensible defaults
   - `vim-tmux-navigator`: Seamless vim/tmux navigation
@@ -386,9 +387,25 @@ rm ~/.tmux_tpm_setup_complete
 
 ## Troubleshooting
 
+### Interactive Troubleshooting Menu
+
+The installation script includes an interactive troubleshooting menu. Run it anytime with:
+
+```bash
+cd ~/.dotfiles
+./install.sh
+```
+
+When prompted, choose `y` to access the troubleshooting menu with these options:
+
+1. **Fix Tmux Plugin Manager (TPM)**: Installs or repairs TPM installation
+2. **Reinstall all Tmux plugins**: Removes and reinstalls all tmux plugins
+3. **Reset Tmux configuration completely**: Nuclear option—completely removes and reinstalls everything tmux-related
+4. **Exit**: Return to normal operation
+
 ### tmux Configuration Not Loading
 
-If tmux plugins aren't working:
+If tmux plugins aren't working, use the troubleshooting menu above, or manually:
 
 1. Remove existing plugins:
    ```bash

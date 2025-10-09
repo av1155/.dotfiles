@@ -154,29 +154,6 @@ Linux)
 esac
 
 
-# <------------------ Tmux Plugin Manager Setup ------------------>
-
-if command -v tmux &>/dev/null && [ ! -f "$HOME/.tmux_tpm_setup_complete" ] && _check_network; then
-    if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
-        echo "Setting up tmux plugin manager..."
-        
-        rm -rf "$HOME/.config/tmux/plugins" "$HOME/.tmux/plugins" 2>/dev/null
-        mkdir -p "$HOME/.tmux/plugins"
-        
-        if git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm" 2>/dev/null; then
-            if [ -f "$HOME/.config/tmux/tmux.conf" ]; then
-                if command -v tmux &>/dev/null; then
-                    "$HOME/.tmux/plugins/tpm/bin/install_plugins" 2>/dev/null
-                fi
-                touch "$HOME/.tmux_tpm_setup_complete"
-                echo "✓ Tmux plugin manager installed successfully"
-            fi
-        else
-            echo "Warning: Failed to install tmux plugin manager" >&2
-        fi
-    fi
-fi
-
 # <------------------ Auto Start Tmux Session ------------------>
 
 if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then

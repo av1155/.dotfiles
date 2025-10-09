@@ -122,3 +122,114 @@ echo ""
 echo "Backup files (if any) are saved with '$BACKUP_SUFFIX' extension"
 echo "You can now start a new shell or run: exec zsh"
 echo ""
+
+echo "Would you like to run the troubleshooting menu? (y/N)"
+read -r response
+if [[ "$response" =~ ^[Yy]$ ]]; then
+    while true; do
+        echo ""
+        echo "================================================"
+        echo "  Troubleshooting Menu"
+        echo "================================================"
+        echo ""
+        echo "  1) Fix Tmux Plugin Manager (TPM)"
+        echo "  2) Reinstall all Tmux plugins"
+        echo "  3) Reset Tmux configuration completely"
+        echo "  4) Exit"
+        echo ""
+        echo -n "Select an option (1-4): "
+        read -r choice
+        
+        case $choice in
+            1)
+                echo ""
+                echo "Fixing Tmux Plugin Manager..."
+                
+                if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+                    echo "  - TPM directory already exists"
+                else
+                    echo "  - Installing TPM..."
+                    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+                    echo "  ✓ TPM installed"
+                fi
+                
+                if [ -f "$HOME/.config/tmux/tmux.conf" ]; then
+                    echo "  - Reloading tmux configuration..."
+                    tmux source-file "$HOME/.config/tmux/tmux.conf" 2>/dev/null && echo "  ✓ Configuration reloaded" || echo "  ! No active tmux session"
+                fi
+                
+                touch "$HOME/.tmux_tpm_setup_complete"
+                echo "  ✓ TPM setup marker created"
+                echo ""
+                echo "To install plugins, either:"
+                echo "  - Press Ctrl+A then I (inside tmux)"
+                echo "  - Run: ~/.tmux/plugins/tpm/bin/install_plugins"
+                ;;
+                
+            2)
+                echo ""
+                echo "Reinstalling all Tmux plugins..."
+                
+                if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+                    echo "  ! TPM not found. Please run option 1 first."
+                else
+                    echo "  - Cleaning old plugins..."
+                    find "$HOME/.tmux/plugins" -mindepth 1 -maxdepth 1 -type d ! -name 'tpm' -exec rm -rf {} +
+                    
+                    echo "  - Installing plugins..."
+                    "$HOME/.tmux/plugins/tpm/bin/install_plugins"
+                    echo "  ✓ Plugins reinstalled"
+                    
+                    if [ -f "$HOME/.config/tmux/tmux.conf" ]; then
+                        echo "  - Reloading configuration..."
+                        tmux source-file "$HOME/.config/tmux/tmux.conf" 2>/dev/null && echo "  ✓ Configuration reloaded" || echo "  ! No active tmux session"
+                    fi
+                fi
+                ;;
+                
+            3)
+                echo ""
+                echo "⚠️  WARNING: This will remove ALL tmux plugins and reinstall from scratch"
+                echo -n "Are you sure? (y/N): "
+                read -r confirm
+                
+                if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                    echo "  - Removing all plugin directories..."
+                    rm -rf "$HOME/.config/tmux/plugins" "$HOME/.tmux/plugins" 2>/dev/null
+                    
+                    echo "  - Creating fresh plugin directory..."
+                    mkdir -p "$HOME/.tmux/plugins"
+                    
+                    echo "  - Cloning TPM..."
+                    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+                    
+                    echo "  - Installing plugins..."
+                    "$HOME/.tmux/plugins/tpm/bin/install_plugins"
+                    
+                    touch "$HOME/.tmux_tpm_setup_complete"
+                    echo "  ✓ Complete reset finished"
+                    
+                    if [ -f "$HOME/.config/tmux/tmux.conf" ]; then
+                        echo "  - Reloading configuration..."
+                        tmux source-file "$HOME/.config/tmux/tmux.conf" 2>/dev/null && echo "  ✓ Configuration reloaded" || echo "  ! Start a new tmux session to apply changes"
+                    fi
+                else
+                    echo "  Cancelled."
+                fi
+                ;;
+                
+            4)
+                echo ""
+                echo "Exiting troubleshooting menu."
+                break
+                ;;
+                
+            *)
+                echo ""
+                echo "Invalid option. Please select 1-4."
+                ;;
+        esac
+    done
+fi
+
+echo ""
