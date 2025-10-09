@@ -46,12 +46,7 @@ exec zsh
   - [Uninstalling](#uninstalling)
   - [Troubleshooting](#troubleshooting)
     - [tmux Configuration Not Loading](#tmux-configuration-not-loading)
-    - [Fonts Not Rendering](#fonts-not-rendering)
     - [Stow Conflicts](#stow-conflicts)
-    - [Shell Startup Slow](#shell-startup-slow)
-  - [License](#license)
-
-<!--toc:end-->
 
 ## Features
 
@@ -78,6 +73,7 @@ exec zsh
 - **curl/wget**: For downloading tools (usually pre-installed)
 
 Optional but recommended:
+
 - **tmux**: Terminal multiplexer
 - **Neovim**: Modern vim editor
 - **Python 3**: For Neovim provider and development
@@ -88,31 +84,32 @@ The installation script handles everything automatically:
 
 1. Clone this repository:
 
-   ```bash
-   git clone git@github.com:av1155/.dotfiles.git ~/.dotfiles
-   ```
+    ```bash
+    git clone git@github.com:av1155/.dotfiles.git ~/.dotfiles
+    ```
 
-2. Install GNU Stow (if not already installed):
+1. Install GNU Stow (if not already installed):
 
-   ```bash
-   # macOS
-   brew install stow
-   
-   # Arch Linux
-   sudo pacman -S stow
-   
-   # Debian/Ubuntu
-   sudo apt install stow
-   ```
+    ```bash
+    # macOS
+    brew install stow
 
-3. Run the installation script:
+    # Arch Linux
+    sudo pacman -S stow
 
-   ```bash
-   cd ~/.dotfiles
-   ./install.sh
-   ```
+    # Debian/Ubuntu
+    sudo apt install stow
+    ```
+
+1. Run the installation script:
+
+    ```bash
+    cd ~/.dotfiles
+    ./install.sh
+    ```
 
 **What the script does:**
+
 - ✅ Auto-detects required base directories (`.config`, `.ssh`, `.fonts`, `Library`)
 - ✅ Creates missing directories
 - ✅ Detects conflicts with existing files
@@ -121,11 +118,11 @@ The installation script handles everything automatically:
 - ✅ Idempotent—safe to run multiple times
 - ✅ Offers optional troubleshooting menu for fixing common issues
 
-4. Restart your shell:
+1. Restart your shell:
 
-   ```bash
-   exec zsh
-   ```
+    ```bash
+    exec zsh
+    ```
 
 ### Manual Installation (Advanced)
 
@@ -135,27 +132,31 @@ The installation script handles everything automatically:
 If you prefer manual control:
 
 1. Pre-create base directories:
-   ```bash
-   mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts ~/Library
-   ```
 
-2. Back up any conflicting files:
-   ```bash
-   mv ~/.zshrc ~/.zshrc.bak
-   mv ~/.gitconfig ~/.gitconfig.bak
-   # ... repeat for other conflicts
-   ```
+    ```bash
+    mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts ~/Library
+    ```
 
-3. Run GNU Stow:
-   ```bash
-   cd ~/.dotfiles
-   stow --restow */
-   ```
+1. Back up any conflicting files:
 
-4. Restart your shell:
-   ```bash
-   exec zsh
-   ```
+    ```bash
+    mv ~/.zshrc ~/.zshrc.bak
+    mv ~/.gitconfig ~/.gitconfig.bak
+    # ... repeat for other conflicts
+    ```
+
+1. Run GNU Stow:
+
+    ```bash
+    cd ~/.dotfiles
+    stow --restow */
+    ```
+
+1. Restart your shell:
+
+    ```bash
+    exec zsh
+    ```
 
 **Note**: Run `man stow` to understand how symlink management works.
 
@@ -170,10 +171,6 @@ If you prefer manual control:
 .
 ├── install.sh                  # Automated installation script
 ├── .stow-global-ignore         # Files to exclude from stowing
-│
-├── Aider/                      # Aider AI coding assistant configs
-│   ├── .aider.conf.yml
-│   └── .aider.model.settings.yml
 │
 ├── App-Configs/                # Application-specific configurations
 │   └── configs/
@@ -224,7 +221,6 @@ If you prefer manual control:
 └── ZSH/                        # Zsh shell configuration
     ├── .zshrc                  # Main shell config
     ├── .zprofile               # Login shell config
-    ├── .p10k.zsh               # Powerlevel10k theme (legacy)
     └── fzf-git.sh/             # FZF git integration
 ```
 
@@ -277,7 +273,6 @@ Pre-configured for modern development:
 - **AI Tools**:
   - OpenCode with specialized agents (code-reviewer, debugger, refactorer, etc.)
   - Claude MCP servers (git, time, fetch, brave-search, playwright, magic)
-  - Aider AI pair programming
 - **File Navigation**:
   - FZF: Fuzzy finder with custom keybindings
   - Bat: Syntax-highlighted file viewer
@@ -408,35 +403,26 @@ When prompted, choose `y` to access the troubleshooting menu with these options:
 If tmux plugins aren't working, use the troubleshooting menu above, or manually:
 
 1. Remove existing plugins:
-   ```bash
-   rm -rf ~/.config/tmux/plugins ~/.tmux/plugins
-   ```
 
-2. Reinstall TPM:
-   ```bash
-   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-   ```
+    ```bash
+    rm -rf ~/.config/tmux/plugins ~/.tmux/plugins
+    ```
 
-3. Reload tmux configuration:
-   ```bash
-   tmux source-file ~/.config/tmux/tmux.conf
-   ```
+1. Reinstall TPM:
 
-4. Install plugins:
-   - Inside tmux: `Ctrl+A` then `I` (capital i)
-   - Or run: `~/.tmux/plugins/tpm/bin/install_plugins`
+    ```bash
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+    ```
 
-### Fonts Not Rendering
+1. Reload tmux configuration:
 
-Install the included Nerd Font:
+    ```bash
+    tmux source-file ~/.config/tmux/tmux.conf
+    ```
 
-1. The fonts are already in `~/.fonts/` after installation
-2. On macOS, you may need to refresh the font cache:
-   ```bash
-   fc-cache -fv
-   ```
-3. Restart your terminal
-4. Set your terminal font to "JetBrainsMono Nerd Font"
+1. Install plugins:
+    - Inside tmux: `Ctrl+A` then `I` (capital i)
+    - Or run: `~/.tmux/plugins/tpm/bin/install_plugins`
 
 ### Stow Conflicts
 
@@ -454,25 +440,8 @@ mv ~/.conflicting-file ~/.conflicting-file.bak
 ./install.sh
 ```
 
-### Shell Startup Slow
-
-If your shell is slow to start:
-
-1. **Disable auto-tmux**: Comment out the tmux auto-start section in `.zshrc`
-2. **Skip conda auto-activate**: Set `AUTO_ACTIVATE_CONDA=false` in `.zshrc`
-3. **Disable fastfetch**: Comment out the fastfetch section
-4. **Check network**: The first run may be slow due to tool installations; subsequent runs should be fast
-
 ### Other Issues
 
 - **Oh-My-Zsh not installed**: Delete `~/.ohmyzsh_install_attempted` and restart shell
 - **Brew commands not found**: Restart shell or run `eval "$(/opt/homebrew/bin/brew shellenv)"`
 - **Python provider errors in Neovim**: Run `:checkhealth provider` in Neovim for diagnostics
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-**Note**: This is a personal dotfiles repository. Feel free to fork and customize for your own use!
