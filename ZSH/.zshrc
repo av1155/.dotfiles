@@ -5,63 +5,177 @@ ARCHITECTURE=$(uname -m)
 KERNEL_INFO=$(uname -r)
 HOSTNAME=$(uname -n)
 
+_check_network() {
+    curl -s --connect-timeout 2 -o /dev/null https://www.google.com || \
+    curl -s --connect-timeout 2 -o /dev/null https://www.github.com
+}
+
 case "$OS" in
 Darwin)
     if ! command -v brew &>/dev/null; then
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        eval "$(/opt/homebrew/bin/brew shellenv)"
+        if [ ! -f "$HOME/.homebrew_install_attempted" ] && _check_network; then
+            if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 2>/dev/null; then
+                if [ -x "/opt/homebrew/bin/brew" ]; then
+                    eval "$(/opt/homebrew/bin/brew shellenv)"
+                    touch "$HOME/.homebrew_install_attempted"
+                fi
+            else
+                touch "$HOME/.homebrew_install_attempted"
+                echo "Warning: Homebrew installation failed. Install manually: https://brew.sh" >&2
+            fi
+        fi
     fi
-    HOMEBREW_PATH=$(brew --prefix)
+    if command -v brew &>/dev/null; then
+        HOMEBREW_PATH=$(brew --prefix)
+    fi
 
-    [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-    export ZSH="$HOME/.oh-my-zsh"
+    if [ ! -d "$HOME/.oh-my-zsh" ] && [ ! -f "$HOME/.ohmyzsh_install_attempted" ] && _check_network; then
+        if sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended 2>/dev/null; then
+            touch "$HOME/.ohmyzsh_install_attempted"
+        else
+            touch "$HOME/.ohmyzsh_install_attempted"
+            echo "Warning: Oh-My-Zsh installation failed" >&2
+        fi
+    fi
+    [ -d "$HOME/.oh-my-zsh" ] && export ZSH="$HOME/.oh-my-zsh"
 
-    ! command -v conda &>/dev/null && brew install miniforge
-    CONDA_PATH="$HOMEBREW_PATH/Caskroom/miniforge/base"
+    if ! command -v conda &>/dev/null && command -v brew &>/dev/null; then
+        brew install miniforge 2>/dev/null || echo "Warning: Miniforge installation failed" >&2
+    fi
+    if [ -n "$HOMEBREW_PATH" ] && [ -d "$HOMEBREW_PATH/Caskroom/miniforge/base" ]; then
+        CONDA_PATH="$HOMEBREW_PATH/Caskroom/miniforge/base"
+    fi
     ;;
 
 Linux)
     if grep -qi "microsoft" /proc/version && [ ! -f "/etc/arch-release" ]; then
-        [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-        export ZSH="$HOME/.oh-my-zsh"
-
-        if [ ! -d "$HOME/miniforge3" ]; then
-            curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-            bash "Miniforge3-$(uname)-$(uname -m).sh"
+        if [ ! -d "$HOME/.oh-my-zsh" ] && [ ! -f "$HOME/.ohmyzsh_install_attempted" ] && _check_network; then
+            if sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended 2>/dev/null; then
+                touch "$HOME/.ohmyzsh_install_attempted"
+            else
+                touch "$HOME/.ohmyzsh_install_attempted"
+                echo "Warning: Oh-My-Zsh installation failed" >&2
+            fi
         fi
-        CONDA_PATH="$HOME/miniforge3"
+        [ -d "$HOME/.oh-my-zsh" ] && export ZSH="$HOME/.oh-my-zsh"
+
+        if [ ! -d "$HOME/miniforge3" ] && [ ! -f "$HOME/.miniforge_install_attempted" ] && _check_network; then
+            temp_dir=$(mktemp -d)
+            installer="Miniforge3-$(uname)-$(uname -m).sh"
+            if curl -fsSL -o "$temp_dir/$installer" "https://github.com/conda-forge/miniforge/releases/latest/download/$installer" 2>/dev/null; then
+                if bash "$temp_dir/$installer" -b -p "$HOME/miniforge3" 2>/dev/null; then
+                    touch "$HOME/.miniforge_install_attempted"
+                    [ -x "$HOME/miniforge3/bin/conda" ] && "$HOME/miniforge3/bin/conda" init zsh 2>/dev/null
+                else
+                    touch "$HOME/.miniforge_install_attempted"
+                    echo "Warning: Miniforge installation failed" >&2
+                fi
+            else
+                touch "$HOME/.miniforge_install_attempted"
+                echo "Warning: Miniforge download failed" >&2
+            fi
+            rm -rf "$temp_dir"
+        fi
+        [ -d "$HOME/miniforge3" ] && CONDA_PATH="$HOME/miniforge3"
 
     elif [[ "$ARCHITECTURE" == "aarch64" ]]; then 
-        [ ! -d "$HOME/.oh-my-zsh" ] && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-        export ZSH="$HOME/.oh-my-zsh"
-
-        if [ ! -d "$HOME/miniforge3" ]; then
-            curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-            bash "Miniforge3-$(uname)-$(uname -m).sh"
+        if [ ! -d "$HOME/.oh-my-zsh" ] && [ ! -f "$HOME/.ohmyzsh_install_attempted" ] && _check_network; then
+            if sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended 2>/dev/null; then
+                touch "$HOME/.ohmyzsh_install_attempted"
+            else
+                touch "$HOME/.ohmyzsh_install_attempted"
+                echo "Warning: Oh-My-Zsh installation failed" >&2
+            fi
         fi
-        CONDA_PATH="$HOME/miniforge3"
+        [ -d "$HOME/.oh-my-zsh" ] && export ZSH="$HOME/.oh-my-zsh"
+
+        if [ ! -d "$HOME/miniforge3" ] && [ ! -f "$HOME/.miniforge_install_attempted" ] && _check_network; then
+            temp_dir=$(mktemp -d)
+            installer="Miniforge3-$(uname)-$(uname -m).sh"
+            if curl -fsSL -o "$temp_dir/$installer" "https://github.com/conda-forge/miniforge/releases/latest/download/$installer" 2>/dev/null; then
+                if bash "$temp_dir/$installer" -b -p "$HOME/miniforge3" 2>/dev/null; then
+                    touch "$HOME/.miniforge_install_attempted"
+                    [ -x "$HOME/miniforge3/bin/conda" ] && "$HOME/miniforge3/bin/conda" init zsh 2>/dev/null
+                else
+                    touch "$HOME/.miniforge_install_attempted"
+                    echo "Warning: Miniforge installation failed" >&2
+                fi
+            else
+                touch "$HOME/.miniforge_install_attempted"
+                echo "Warning: Miniforge download failed" >&2
+            fi
+            rm -rf "$temp_dir"
+        fi
+        [ -d "$HOME/miniforge3" ] && CONDA_PATH="$HOME/miniforge3"
 
     elif [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
-        if ! command -v paru &>/dev/null; then
-            sudo pacman -S --needed base-devel
-            git clone https://aur.archlinux.org/paru.git
-            cd paru || return
-            makepkg -si
-            cd ~ || return
+        if ! command -v paru &>/dev/null && [ ! -f "$HOME/.paru_install_attempted" ] && _check_network; then
+            if sudo pacman -S --needed --noconfirm base-devel 2>/dev/null; then
+                temp_dir=$(mktemp -d)
+                if git clone https://aur.archlinux.org/paru.git "$temp_dir/paru" 2>/dev/null; then
+                    (cd "$temp_dir/paru" && makepkg -si --noconfirm 2>/dev/null)
+                    touch "$HOME/.paru_install_attempted"
+                else
+                    touch "$HOME/.paru_install_attempted"
+                    echo "Warning: Paru installation failed" >&2
+                fi
+                rm -rf "$temp_dir"
+            else
+                touch "$HOME/.paru_install_attempted"
+                echo "Warning: base-devel installation failed" >&2
+            fi
         fi
 
-        [ ! -d "/usr/share/oh-my-zsh" ] && paru -S --noconfirm oh-my-zsh-git
-        export ZSH="/usr/share/oh-my-zsh"
-
-        if [ ! -d "$HOME/miniforge3" ]; then
-            curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-            bash "Miniforge3-$(uname)-$(uname -m).sh"
+        if [ ! -d "/usr/share/oh-my-zsh" ] && command -v paru &>/dev/null; then
+            paru -S --noconfirm oh-my-zsh-git 2>/dev/null || echo "Warning: Oh-My-Zsh installation failed" >&2
         fi
-        CONDA_PATH="$HOME/miniforge3"
+        [ -d "/usr/share/oh-my-zsh" ] && export ZSH="/usr/share/oh-my-zsh"
+
+        if [ ! -d "$HOME/miniforge3" ] && [ ! -f "$HOME/.miniforge_install_attempted" ] && _check_network; then
+            temp_dir=$(mktemp -d)
+            installer="Miniforge3-$(uname)-$(uname -m).sh"
+            if curl -fsSL -o "$temp_dir/$installer" "https://github.com/conda-forge/miniforge/releases/latest/download/$installer" 2>/dev/null; then
+                if bash "$temp_dir/$installer" -b -p "$HOME/miniforge3" 2>/dev/null; then
+                    touch "$HOME/.miniforge_install_attempted"
+                    [ -x "$HOME/miniforge3/bin/conda" ] && "$HOME/miniforge3/bin/conda" init zsh 2>/dev/null
+                else
+                    touch "$HOME/.miniforge_install_attempted"
+                    echo "Warning: Miniforge installation failed" >&2
+                fi
+            else
+                touch "$HOME/.miniforge_install_attempted"
+                echo "Warning: Miniforge download failed" >&2
+            fi
+            rm -rf "$temp_dir"
+        fi
+        [ -d "$HOME/miniforge3" ] && CONDA_PATH="$HOME/miniforge3"
     fi
     ;;
 esac
 
+
+# <------------------ Tmux Plugin Manager Setup ------------------>
+
+if command -v tmux &>/dev/null && [ ! -f "$HOME/.tmux_tpm_setup_complete" ] && _check_network; then
+    if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+        echo "Setting up tmux plugin manager..."
+        
+        rm -rf "$HOME/.config/tmux/plugins" "$HOME/.tmux/plugins" 2>/dev/null
+        mkdir -p "$HOME/.tmux/plugins"
+        
+        if git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm" 2>/dev/null; then
+            if [ -f "$HOME/.config/tmux/tmux.conf" ]; then
+                if command -v tmux &>/dev/null; then
+                    "$HOME/.tmux/plugins/tpm/bin/install_plugins" 2>/dev/null
+                fi
+                touch "$HOME/.tmux_tpm_setup_complete"
+                echo "✓ Tmux plugin manager installed successfully"
+            fi
+        else
+            echo "Warning: Failed to install tmux plugin manager" >&2
+        fi
+    fi
+fi
 
 # <------------------ Auto Start Tmux Session ------------------>
 
@@ -98,11 +212,14 @@ zstyle ':omz:update' mode auto
 
 export ZPLUG_HOME="$HOME/.zplug"
 
-if [ ! -d "$ZPLUG_HOME" ]; then
-    git clone https://github.com/zplug/zplug "$ZPLUG_HOME"
+if [ ! -d "$ZPLUG_HOME" ] && _check_network; then
+    if ! git clone https://github.com/zplug/zplug "$ZPLUG_HOME" 2>/dev/null; then
+        echo "Warning: Zplug installation failed" >&2
+        rm -rf "$ZPLUG_HOME"
+    fi
 fi
 
-if [ -d "$ZPLUG_HOME" ]; then
+if [ -d "$ZPLUG_HOME" ] && [ -f "$ZPLUG_HOME/init.zsh" ]; then
     source "$ZPLUG_HOME"/init.zsh
 
     zplug "mafredri/zsh-async", from:github
@@ -124,18 +241,36 @@ if [ -d "$ZPLUG_HOME" ]; then
     zstyle :prompt:pure:git:stash show yes
 fi
 
-source "$ZSH"/oh-my-zsh.sh
+[ -n "$ZSH" ] && [ -f "$ZSH/oh-my-zsh.sh" ] && source "$ZSH/oh-my-zsh.sh"
 
 
 # <---------------------- INITIALIZATION ----------------------->
 
-if command -v fastfetch &>/dev/null; then
-    fastfetch --logo small --logo-padding-top 1
+if command -v fastfetch &>/dev/null && [ -z "$FASTFETCH_SHOWN" ]; then
+    export FASTFETCH_SHOWN=1
+    fastfetch --logo small --logo-padding-top 1 &
 fi
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+nvm() {
+    unset -f nvm
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    nvm "$@"
+}
+
+node() {
+    unset -f node
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    node "$@"
+}
+
+npm() {
+    unset -f npm
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    npm "$@"
+}
 
 
 # <-------------------- CONDA INITIALIZATION ------------------>
@@ -156,16 +291,19 @@ if [ -f "$CONDA_EXEC_PATH" ]; then
         fi
     fi
 
-    if "$CONDA_EXEC_PATH" config --show | grep -q "auto_activate_base"; then
-        config_key="auto_activate_base"
-    else
-        config_key="auto_activate"
-    fi
+    if [ ! -f "$HOME/.conda_configured" ]; then
+        if "$CONDA_EXEC_PATH" config --show | grep -q "auto_activate_base"; then
+            config_key="auto_activate_base"
+        else
+            config_key="auto_activate"
+        fi
 
-    if [ "$AUTO_ACTIVATE_CONDA" = "true" ]; then
-        "$CONDA_EXEC_PATH" config --set "$config_key" true
-    else
-        "$CONDA_EXEC_PATH" config --set "$config_key" false
+        if [ "$AUTO_ACTIVATE_CONDA" = "true" ]; then
+            "$CONDA_EXEC_PATH" config --set "$config_key" true
+        else
+            "$CONDA_EXEC_PATH" config --set "$config_key" false
+        fi
+        touch "$HOME/.conda_configured"
     fi
 else
     echo "Conda executable not found at $CONDA_EXEC_PATH"
@@ -380,26 +518,63 @@ if command -v nvim &>/dev/null; then
     export EDITOR='nvim'
 fi
 
-if [ ! -d "$(bat --config-dir)/themes" ]; then
-    mkdir -p "$(bat --config-dir)/themes"
-
-    wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Latte.tmTheme
-    wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Frappe.tmTheme
-    wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Macchiato.tmTheme
-    wget -P "$(bat --config-dir)/themes" https://github.com/catppuccin/bat/raw/main/themes/Catppuccin%20Mocha.tmTheme
-
-    bat cache --build
-    bat --list-themes
+if command -v bat &>/dev/null; then
+    bat_themes_dir="$(bat --config-dir)/themes"
+    
+    themes=(
+        "Catppuccin Latte.tmTheme"
+        "Catppuccin Frappe.tmTheme"
+        "Catppuccin Macchiato.tmTheme"
+        "Catppuccin Mocha.tmTheme"
+    )
+    
+    all_themes_exist=true
+    for theme in "${themes[@]}"; do
+        if [ ! -f "$bat_themes_dir/$theme" ]; then
+            all_themes_exist=false
+            break
+        fi
+    done
+    
+    if [ "$all_themes_exist" = false ] && [ ! -f "$bat_themes_dir/.themes_installed" ] && _check_network; then
+        mkdir -p "$bat_themes_dir"
+        
+        all_downloaded=true
+        for theme in "${themes[@]}"; do
+            theme_file="$bat_themes_dir/$theme"
+            if [ ! -f "$theme_file" ]; then
+                theme_url=$(echo "$theme" | sed 's/ /%20/g')
+                if ! wget -q -O "$theme_file" "https://github.com/catppuccin/bat/raw/main/themes/$theme_url" 2>/dev/null; then
+                    all_downloaded=false
+                    rm -f "$theme_file"
+                    break
+                fi
+            fi
+        done
+        
+        if [ "$all_downloaded" = true ]; then
+            bat cache --build >/dev/null 2>&1
+            touch "$bat_themes_dir/.themes_installed"
+        else
+            echo "Warning: bat themes download incomplete" >&2
+        fi
+    fi
+    export BAT_THEME="Catppuccin Macchiato"
 fi
-export BAT_THEME="Catppuccin Macchiato"
 
-eval "$(thefuck --alias)"
-eval "$(thefuck --alias fk)"
+if command -v thefuck &>/dev/null; then
+    eval "$(thefuck --alias)"
+    eval "$(thefuck --alias fk)"
+fi
 
-eval "$(zoxide init zsh)"
-alias cd="z"
+if command -v zoxide &>/dev/null; then
+    eval "$(zoxide init zsh)"
+    alias cd="z"
+fi
 
-eval "$(gh copilot alias -- zsh)"
+if command -v gh &>/dev/null; then
+    eval "$(gh copilot alias -- zsh)"
+fi
 
 alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first'
 alias  l='eza -A -lh --git --icons=auto --sort=name --group-directories-first'
@@ -585,9 +760,9 @@ _fzf_compgen_dir() {
 }
 
 if [ ! -f ~/fzf-git.sh/fzf-git.sh ]; then
-    git clone https://github.com/junegunn/fzf-git.sh.git ~/fzf-git.sh
+    git clone https://github.com/junegunn/fzf-git.sh.git ~/fzf-git.sh 2>/dev/null
 fi
-source ~/fzf-git.sh/fzf-git.sh
+[ -f ~/fzf-git.sh/fzf-git.sh ] && source ~/fzf-git.sh/fzf-git.sh
 
 export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always --line-range :500 {}'"
 export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
@@ -638,11 +813,18 @@ else
 fi
 
 kitty_config_dir="$HOME/.dotfiles/Config/.config/kitty"
+kitty_dynamic_conf="$kitty_config_dir/dynamic.conf"
+new_kitty_config="font_size $FONT_SIZE
+background_opacity $BACKGROUND_OPACITY
+macos_option_as_alt $MACOS_OPTION_AS_ALT"
+
 if [ ! -d "$kitty_config_dir" ]; then
     mkdir -p "$kitty_config_dir"
 fi
 
-printf "font_size %s\nbackground_opacity %s\nmacos_option_as_alt %s" "$FONT_SIZE" "$BACKGROUND_OPACITY" "$MACOS_OPTION_AS_ALT" > "$kitty_config_dir/dynamic.conf"
+if [ ! -f "$kitty_dynamic_conf" ] || [ "$(cat "$kitty_dynamic_conf" 2>/dev/null)" != "$new_kitty_config" ]; then
+    printf "%s\n" "$new_kitty_config" > "$kitty_dynamic_conf"
+fi
 
 JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/Java-Jars/javaClasspath"
 
