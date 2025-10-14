@@ -1,22 +1,21 @@
 {
-    "env": {
-        "DISABLE_TELEMETRY": "1",
-        "DISABLE_AUTOUPDATER": "1"
-    },
-    "includeCoAuthoredBy": false,
-    "hooks": {
-        "PostToolUse": [
-            {
-                "matcher": "Edit|MultiEdit|Write",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "jq -r '.tool_input.file_path' | { read f; case \"$f\" in *.ts|*.tsx|*.js|*.jsx|*.css|*.json|*.yml|*.yaml|*.md|*.html|*.vue|*.svelte) npx prettier --config \"$HOME/.prettierrc.json\" --write \"$f\" ;; *.c|*.cc|*.cpp|*.h|*.hpp) clang-format -i -style=file \"$f\" ;; *.lua) stylua --config-path \"$HOME/.config/nvim/stylua.toml\" \"$f\" ;; esac; }"
-                    }
-                ]
-            }
+  "env": {
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_AUTOUPDATER": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | { read f; case \"$f\" in *.ts|*.tsx|*.js|*.jsx|*.css|*.json|*.yml|*.yaml|*.md|*.html|*.vue|*.svelte) npx prettier --config \"$HOME/.prettierrc.json\" --write \"$f\" ;; *.c|*.cc|*.cpp|*.h|*.hpp) clang-format -i -style=file \"$f\" ;; *.lua) stylua --config-path \"$HOME/.config/nvim/stylua.toml\" \"$f\" ;; esac; }"
+          }
         ]
-    },
-    "alwaysThinkingEnabled": false
+      }
+    ]
+  },
+  "alwaysThinkingEnabled": false
 }
-
