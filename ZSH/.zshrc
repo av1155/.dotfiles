@@ -772,6 +772,8 @@ else
     BACKGROUND_OPACITY="0.7"
 fi
 
+# ---
+
 kitty_config_dir="$HOME/.dotfiles/Config/.config/kitty"
 kitty_dynamic_conf="$kitty_config_dir/dynamic.conf"
 new_kitty_config="font_size $FONT_SIZE
@@ -785,6 +787,22 @@ fi
 if [ ! -f "$kitty_dynamic_conf" ] || [ "$(cat "$kitty_dynamic_conf" 2>/dev/null)" != "$new_kitty_config" ]; then
     printf "%s\n" "$new_kitty_config" > "$kitty_dynamic_conf"
 fi
+
+ghostty_config_dir="$HOME/.dotfiles/Config/.config/ghostty"
+ghostty_dynamic_conf="$ghostty_config_dir/dynamic.conf"
+new_ghostty_config="font-size = $FONT_SIZE
+background-opacity = $BACKGROUND_OPACITY
+macos-option-as-alt = $MACOS_OPTION_AS_ALT"
+
+if [ ! -d "$ghostty_config_dir" ]; then
+    mkdir -p "$ghostty_config_dir"
+fi
+
+if [ ! -f "$ghostty_dynamic_conf" ] || [ "$(cat "$ghostty_dynamic_conf" 2>/dev/null)" != "$new_ghostty_config" ]; then
+    printf "%s\n" "$new_ghostty_config" > "$ghostty_dynamic_conf"
+fi
+
+# ---
 
 JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/Java-Jars/javaClasspath"
 

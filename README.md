@@ -290,6 +290,7 @@ Consistent Catppuccin theming:
 - **Bat**: Catppuccin Macchiato syntax highlighting
 - **Tmux**: Catppuccin Frappe theme
 - **Kitty**: Dynamic font size and opacity per OS
+- **Ghostty**: Dynamic font size and opacity per OS
 - **Fonts**: JetBrains Mono Nerd Font (all variants included)
 
 ### macOS Bootstrap

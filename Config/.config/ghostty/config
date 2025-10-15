@@ -1,0 +1,55 @@
+# --- keep config split like Kitty's include ---
+config-file = ?dynamic.conf
+theme = Catppuccin Mocha
+
+# --- fonts ---
+font-family = "JetBrainsMono Nerd Font Mono"
+font-style = "Regular"
+font-style-bold = "Bold"
+font-style-italic = "Italic"
+font-style-bold-italic = "Bold Italic"
+adjust-cursor-thickness = 2
+
+# --- window padding ---
+window-padding-x = 10
+window-padding-y = 10
+
+# --- transparency + blur ---
+background-blur = 64
+# background-opacity-cells = true
+
+# --- decorations ---
+macos-titlebar-style = hidden
+macos-window-shadow = true
+confirm-close-surface = false
+
+# --- settings ---
+window-show-tab-bar = never
+resize-overlay = never
+macos-icon = custom
+
+# --- hyperlinks ---
+link-url = true
+link-previews = true
+
+# --- keybindings ---
+# tab navigation
+keybind = alt+1=previous_tab
+keybind = alt+2=next_tab
+
+# word/line navigation
+keybind = alt+left=esc:b
+keybind = alt+right=esc:f
+keybind = alt+backspace=text:\x1b\x7f
+keybind = alt+up=csi:F
+keybind = alt+down=csi:H
+
+# tmux-friendly cursor keys
+keybind = ctrl+left=csi:1;5D
+keybind = ctrl+right=csi:1;5C
+keybind = ctrl+up=csi:1;5A
+keybind = ctrl+down=csi:1;5B
+keybind = ctrl+shift+left=csi:1;6D
+keybind = ctrl+shift+right=csi:1;6C
+keybind = ctrl+shift+up=csi:1;6A
+keybind = ctrl+shift+down=csi:1;6B
