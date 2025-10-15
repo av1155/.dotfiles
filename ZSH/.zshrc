@@ -183,6 +183,13 @@ if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
 fi
 
 
+# <------------------ TMUX SESSION VARIABLE ------------------>
+
+if [ -n "$TMUX" ]; then
+    export TMUX_SESSION=$(tmux display-message -p '#S')
+fi
+
+
 # <------------------- OH-MY-ZSH AND PLUGINS ------------------->
 
 zstyle ':omz:update' mode auto
