@@ -1,54 +1,90 @@
-# --- keep config split like Kitty's include ---
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                     GHOSTTY CONFIGURATION                    ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+# ┌──────────────────────────────────────────────────────────────┐
+# │ DYNAMIC CONFIG (device-specific via .zshrc)                  │
+# └──────────────────────────────────────────────────────────────┘
 config-file = ?dynamic.conf
+
+# ┌──────────────────────────────────────────────────────────────┐
+# │ THEME & APPEARANCE                                           │
+# └──────────────────────────────────────────────────────────────┘
 theme = Catppuccin Mocha
 
-# --- fonts ---
+# ┌──────────────────────────────────────────────────────────────┐
+# │ FONT CONFIGURATION                                           │
+# └──────────────────────────────────────────────────────────────┘
 font-family = "JetBrainsMono Nerd Font Mono"
 font-style = "Regular"
 font-style-bold = "Bold"
 font-style-italic = "Italic"
 font-style-bold-italic = "Bold Italic"
+
+# ┌──────────────────────────────────────────────────────────────┐
+# │ CURSOR                                                       │
+# └──────────────────────────────────────────────────────────────┘
 adjust-cursor-thickness = 2
 
-# --- window padding ---
+# ┌──────────────────────────────────────────────────────────────┐
+# │ WINDOW LAYOUT                                                │
+# └──────────────────────────────────────────────────────────────┘
 window-padding-x = 10
 window-padding-y = 10
+window-width = 120
+window-height = 40
+window-save-state = always
 
-# --- transparency + blur ---
+# ┌──────────────────────────────────────────────────────────────┐
+# │ TRANSPARENCY & BLUR                                          │
+# └──────────────────────────────────────────────────────────────┘
 background-blur = 64
-# background-opacity-cells = true
 
-# --- decorations ---
+# ┌──────────────────────────────────────────────────────────────┐
+# │ WINDOW DECORATIONS                                           │
+# └──────────────────────────────────────────────────────────────┘
 macos-titlebar-style = hidden
 macos-window-shadow = true
-confirm-close-surface = false
-
-# --- settings ---
-window-show-tab-bar = never
-resize-overlay = never
 macos-icon = custom
 
-# --- hyperlinks ---
+# ┌──────────────────────────────────────────────────────────────┐
+# │ INTERFACE BEHAVIOR                                           │
+# └──────────────────────────────────────────────────────────────┘
+window-show-tab-bar = never
+resize-overlay = never
+confirm-close-surface = false
+
+# ┌──────────────────────────────────────────────────────────────┐
+# │ HYPERLINKS                                                   │
+# └──────────────────────────────────────────────────────────────┘
 link-url = true
 link-previews = true
 
-# --- keybindings ---
-# tab navigation
-keybind = alt+1=previous_tab
-keybind = alt+2=next_tab
+# ┌──────────────────────────────────────────────────────────────┐
+# │ KEYBINDINGS                                                  │
+# └──────────────────────────────────────────────────────────────┘
 
-# word/line navigation
+# Tmux Window Management
+keybind = cmd+t=text:\x01c
+keybind = cmd+o=text:\x01o
+keybind = cmd+x=text:\x01x
+keybind = cmd+minus=text:\x01-
+keybind = cmd+backslash=text:\x01\\
+
+# Word/Line Navigation (Alt)
 keybind = alt+left=esc:b
 keybind = alt+right=esc:f
 keybind = alt+backspace=text:\x1b\x7f
 keybind = alt+up=csi:F
 keybind = alt+down=csi:H
 
-# tmux-friendly cursor keys
+# Tmux-Friendly Cursor Keys (Ctrl)
 keybind = ctrl+left=csi:1;5D
 keybind = ctrl+right=csi:1;5C
 keybind = ctrl+up=csi:1;5A
 keybind = ctrl+down=csi:1;5B
+
+# Tmux-Friendly Cursor Keys (Ctrl+Shift)
 keybind = ctrl+shift+left=csi:1;6D
 keybind = ctrl+shift+right=csi:1;6C
 keybind = ctrl+shift+up=csi:1;6A
