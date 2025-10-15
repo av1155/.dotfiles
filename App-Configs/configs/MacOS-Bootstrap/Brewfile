@@ -258,6 +258,8 @@ cask "flutter"
 cask "flycut"
 # Tool to measure the computer system's performance
 cask "geekbench"
+# Terminal emulator that uses platform-native UI and GPU acceleration
+cask "ghostty"
 # Web browser
 cask "google-chrome"
 # OpenPGP/GnuPG crypto, sign and key management tool
@@ -280,6 +282,8 @@ cask "lm-studio"
 cask "mac-mouse-fix"
 # Full TeX Live distribution with GUI applications
 cask "mactex"
+# Speech recognition tool
+cask "macwhisper"
 # Scanner app for math and science
 cask "mathpix-snipping-tool"
 # Provides updates to various Microsoft products
@@ -292,6 +296,8 @@ cask "microsoft-office"
 cask "microsoft-teams"
 # Minimal installer for conda specific to conda-forge
 cask "miniforge"
+# Online collaborative whiteboard platform
+cask "miro"
 # Game launcher with the ability to run Windows games
 cask "mythic"
 # App to write, plan, collaborate, and get organised
@@ -320,6 +326,8 @@ cask "slack"
 cask "sony-ps-remote-play"
 # Music streaming service
 cask "spotify"
+# Spotify and iTunes in the menu bar
+cask "spotmenu"
 # System monitor for the menu bar
 cask "stats"
 # Video game digital distribution service
@@ -439,3 +447,4 @@ vscode "wallabyjs.console-ninja"
 vscode "wayou.vscode-todo-highlight"
 vscode "wholroyd.jinja"
 vscode "xaver.clang-format"
+go "github.com/koron/iferr"
