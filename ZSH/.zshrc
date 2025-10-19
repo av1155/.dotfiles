@@ -162,22 +162,30 @@ if [ -z "$INTELLIJ_ENVIRONMENT_READER" ]; then
         exec tmux new-session -s main
       else
         if tmux has-session -t main &>/dev/null; then
-          if ! tmux list-clients -t main | grep -q .; then
+          attached_clients=$(tmux list-clients -t main 2>/dev/null | wc -l | tr -d ' ')
+
+          if [ "$attached_clients" -eq 0 ]; then
             exec tmux attach-session -t main
+          else
+            detached_session=$(tmux list-sessions -F '#{session_name}:#{session_attached}' 2>/dev/null | grep ':0$' | grep -E '^(main|session[0-9]+):0$' | head -1 | cut -d: -f1)
+
+            if [ -n "$detached_session" ]; then
+              exec tmux attach-session -t "$detached_session"
+            else
+              new_session_name=$(tmux list-sessions -F "#S" | grep -E 'session[0-9]+$' | awk -F 'session' '{print $2}' | sort -n | tail -n1)
+
+              if [ -z "$new_session_name" ]; then
+                new_session_name=1
+              else
+                new_session_name=$((new_session_name + 1))
+              fi
+
+              exec tmux new-session -s "session$new_session_name"
+            fi
           fi
         else
           exec tmux new-session -s main
         fi
-
-        new_session_name=$(tmux list-sessions -F "#S" | grep -E 'session[0-9]*' | awk -F 'session' '{print $2}' | sort -n | tail -n1)
-
-        if [ -z "$new_session_name" ]; then
-          new_session_name=1
-        else
-          new_session_name=$((new_session_name + 1))
-        fi
-
-        exec tmux new-session -s "session$new_session_name"
       fi
     fi
 fi

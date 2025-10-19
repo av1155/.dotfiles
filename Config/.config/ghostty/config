@@ -89,3 +89,6 @@ keybind = ctrl+shift+left=csi:1;6D
 keybind = ctrl+shift+right=csi:1;6C
 keybind = ctrl+shift+up=csi:1;6A
 keybind = ctrl+shift+down=csi:1;6B
+
+# Ghostty Quick Terminal
+keybind = global:cmd+grave_accent=toggle_quick_terminal
