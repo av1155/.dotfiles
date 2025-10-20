@@ -104,6 +104,8 @@ brew "imagemagick"
 brew "jq"
 # Fast, Dynamic Programming Language
 brew "julia"
+# Statically typed programming language for the JVM
+brew "kotlin"
 # Lazier way to manage everything docker
 brew "lazydocker"
 # Simple terminal UI for git commands
@@ -200,6 +202,8 @@ brew "wget"
 brew "yazi"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
+# Programming language designed for robustness, optimality, and clarity
+brew "zig"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
 # Easily compile and run Java files, manage cleanup, and view syntax-highlighted errors through a user-friendly fuzzy-finding menu.
