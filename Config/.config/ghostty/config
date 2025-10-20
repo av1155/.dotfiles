@@ -30,7 +30,7 @@ adjust-cursor-thickness = 2
 # │ WINDOW LAYOUT                                                │
 # └──────────────────────────────────────────────────────────────┘
 window-padding-x = 10
-window-padding-y = 10
+window-padding-y = 5,0
 window-width = 120
 window-height = 40
 window-save-state = always
