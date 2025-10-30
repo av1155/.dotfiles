@@ -1,0 +1,27 @@
+\usepackage{unicode-math}   % loads fontspec; good for math symbols
+\usepackage{amssymb}        % for \checkmark macro
+\usepackage{newunicodechar} % maps Unicode → LaTeX
+\usepackage{pifont}         % robust dingbats (✓ etc.)
+\usepackage{needspace}      % prevents awkward page breaks before headings
+\usepackage{etoolbox}       % provides \pretocmd for patching macros
+
+% Map common math/text symbols you use:
+\newunicodechar{≡}{\ensuremath{\equiv}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{ℝ}{\ensuremath{\mathbb{R}}}
+\newunicodechar{𝒪}{\ensuremath{\mathcal{O}}}
+\newunicodechar{∛}{\ensuremath{\sqrt[3]{}}}
+
+% Subscripts:
+\newunicodechar{₀}{\textsubscript{0}}
+\newunicodechar{₁}{\textsubscript{1}}
+\newunicodechar{₂}{\textsubscript{2}}
+\newunicodechar{₃}{\textsubscript{3}}
+
+% Check mark — use pifont’s glyph so it prints even if main font lacks U+2713
+\newunicodechar{✓}{\ding{51}}
+
+% Reserve generous space before starting a heading.
+\pretocmd{\section}{\Needspace{12\baselineskip}}{}{}
+\pretocmd{\subsection}{\Needspace{8\baselineskip}}{}{}
+\pretocmd{\subsubsection}{\Needspace{6\baselineskip}}{}{}

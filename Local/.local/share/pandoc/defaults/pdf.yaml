@@ -1,0 +1,23 @@
+pdf-engine: xelatex
+from: markdown+tex_math_dollars+raw_tex+hard_line_breaks
+
+variables:
+    mainfont: texgyretermes
+    mainfontoptions:
+        - Extension=.otf
+        - UprightFont=*-regular
+        - BoldFont=*-bold
+        - ItalicFont=*-italic
+        - BoldItalicFont=*-bolditalic
+    mathfont: texgyretermes-math.otf
+    monofont: Menlo
+    geometry: margin=1in
+    documentclass: article
+    fontsize: 12pt
+    linestretch: 1.15
+
+toc: true
+number-sections: true
+
+include-in-header:
+    - ${.}/header.tex
