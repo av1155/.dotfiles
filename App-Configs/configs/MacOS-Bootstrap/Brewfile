@@ -262,6 +262,8 @@ cask "firefox"
 cask "flutter"
 # Clipboard manager for developers
 cask "flycut"
+cask "font-noto-emoji"
+cask "font-noto-sans-symbols-2"
 # Tool to measure the computer system's performance
 cask "geekbench"
 # Terminal emulator that uses platform-native UI and GPU acceleration
