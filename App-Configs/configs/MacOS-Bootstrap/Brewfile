@@ -306,8 +306,6 @@ cask "microsoft-teams"
 cask "miniforge"
 # Online collaborative whiteboard platform
 cask "miro"
-# Game launcher with the ability to run Windows games
-cask "mythic"
 # App to write, plan, collaborate, and get organised
 cask "notion"
 # Verify system files structure, run miscellaneous maintenance and more
