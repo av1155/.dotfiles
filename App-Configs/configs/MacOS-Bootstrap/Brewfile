@@ -342,8 +342,8 @@ cask "steam"
 cask "termius"
 # Unpacks archive files
 cask "the-unarchiver"
-# To-do & task list manager
-cask "ticktick"
+# To-do list
+cask "todoist-app"
 # AI image upscaler
 cask "upscayl"
 # Virtual machines UI using QEMU
