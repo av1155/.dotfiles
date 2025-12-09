@@ -111,8 +111,8 @@
 
     "keybinds": {
         "leader": "ctrl+b",
-        "tool_details": "<leader>d",
-        "thinking_blocks": "<leader>b",
+        // "tool_details": "<leader>d",
+        // "thinking_blocks": "<leader>b",
         "session_share": "<leader>s",
         "session_unshare": "none",
         "session_interrupt": "esc",

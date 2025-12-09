@@ -547,10 +547,6 @@ if command -v zoxide &>/dev/null; then
     alias cd="z"
 fi
 
-if command -v gh &>/dev/null; then
-    eval "$(gh copilot alias -- zsh)"
-fi
-
 alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first'
 alias  l='eza -A -lh --git --icons=auto --sort=name --group-directories-first'
 alias la='eza -lha --git --icons=auto --sort=name --group-directories-first'
