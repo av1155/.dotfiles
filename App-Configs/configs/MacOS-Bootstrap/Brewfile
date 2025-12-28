@@ -226,6 +226,8 @@ cask "adobe-creative-cloud"
 cask "aldente"
 # Enable Windows-like alt-tab
 cask "alt-tab"
+# Transfer files from and to an Android smartphone
+cask "android-file-transfer"
 # Memory training application
 cask "anki"
 # Application uninstaller
