@@ -68,7 +68,7 @@ brew "fastfetch"
 brew "fd"
 # Low-level access to audio, keyboard, mouse, joystick, and graphics
 brew "sdl2"
-# Play, record, convert, and stream audio and video
+# Play, record, convert, and stream select audio and video codecs
 brew "ffmpeg"
 # Command-line fuzzy finder written in Go
 brew "fzf"
@@ -98,7 +98,7 @@ brew "gradle"
 brew "helm"
 # Generic library support script
 brew "libtool"
-# Tools and libraries to manipulate images in many formats
+# Tools and libraries to manipulate images in select formats
 brew "imagemagick"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
