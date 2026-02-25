@@ -1,7 +1,7 @@
 ---
 description: Automates the Quick Visual Check (navigate, screenshots, console logs, breakpoints)
 mode: subagent
-model: github-copilot/gpt-5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.1
 
 tools:
@@ -43,10 +43,10 @@ You are a **visual checker** subagent that runs the rapid smoke test described i
 **Output (emit, do not write files):**
 
 - A concise checklist-style report intended for `.opencode/reports/visual-check.md`:
-  - Per-view pass/fail results with short notes
-  - Theme parity notes
-  - Breakpoint issues found
-  - Console warnings/errors summary
-  - Screenshot references
+    - Per-view pass/fail results with short notes
+    - Theme parity notes
+    - Breakpoint issues found
+    - Console warnings/errors summary
+    - Screenshot references
 
 STATUS::visual-checker::{"ok":true|false,"summary":"views=<n>,issues=<m>","metrics":{"views":0,"screenshots":0,"console_errors":0}}

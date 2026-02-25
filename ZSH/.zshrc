@@ -848,7 +848,7 @@ export_from_file "OPENAI_API_KEY" "$HOME/.config/openai/api_key"
 export_from_file "FIRECRAWL_API_KEY" "$HOME/.config/firecrawl/api_key"
 export_from_file "CONTEXT7_API_KEY" "$HOME/.config/context7/api_key"
 export_from_file "BRAVE_API_KEY" "$HOME/.config/brave_search/api_key"
-export_from_file "MAGIC_MCP_API_KEY" "$HOME/.config/magic_mcp/api_key"
+export_from_file "GITHUB_PERSONAL_ACCESS_TOKEN" "$HOME/.config/github/token"
 
 export OLLAMA_API_BASE="http://127.0.0.1:11434"
 

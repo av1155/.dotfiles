@@ -1,7 +1,7 @@
 ---
 description: Comprehensive visual design review (accessibility, responsiveness, theme parity)
 mode: subagent
-model: github-copilot/gpt-5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.1
 
 tools:
@@ -44,10 +44,10 @@ You are a **design review** subagent. Perform a thorough, tool-assisted review o
 **Output (emit, do not write files):**
 
 - A markdown report intended for `.opencode/reports/design-review.md`, with:
-  - Overview: pages checked, themes, breakpoints
-  - Results table: [view] x [checks] → pass/fail/notes
-  - Accessibility notes & fixes
-  - Console issues (deduped) and recommended actions
-  - Screenshot references (filenames or tool-returned handles)
+    - Overview: pages checked, themes, breakpoints
+    - Results table: [view] x [checks] → pass/fail/notes
+    - Accessibility notes & fixes
+    - Console issues (deduped) and recommended actions
+    - Screenshot references (filenames or tool-returned handles)
 
 STATUS::agent-design-review::{"ok":true|false,"summary":"issues=<n>,errors=<e>","metrics":{"views":0,"themes":0,"breakpoints":0,"contrast_violations":0,"console_errors":0}}

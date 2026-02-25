@@ -1,7 +1,7 @@
 ---
 description: Repository investigator & flow-mapper (scopes relevant files and relationships)
 mode: subagent
-model: github-copilot/gpt-5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.1
 
 tools:
@@ -49,9 +49,9 @@ Given a natural-language problem or change request, identify all files likely in
 **Outputs (write only these files)**
 
 - `.opencode/research/investigation_report.md`
-  - Scope summary, candidate file list with rationale, quick relevance scoring table
+    - Scope summary, candidate file list with rationale, quick relevance scoring table
 - `.opencode/research/flow_report.md`
-  - High-level module/flow diagram (textual), per-file role notes, interfaces to touch, suggested probes/tests
+    - High-level module/flow diagram (textual), per-file role notes, interfaces to touch, suggested probes/tests
 
 **Return (SubagentSummary)**
 

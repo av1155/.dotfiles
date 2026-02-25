@@ -1,7 +1,7 @@
 ---
 description: Diagnoses failures from logs/traces; proposes minimal fix
 mode: subagent
-model: github-copilot/gpt-5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.1
 
 tools:

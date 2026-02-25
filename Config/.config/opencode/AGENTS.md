@@ -16,10 +16,10 @@
 **Delegation Policy:**
 
 - **Development flow:** Use read-only checks first (code review, security audit, research). For code changes, hand off to `@refactorer` → then `@linter` (auto-fix ≤2 passes) → then `@test-runner` → then `@code-reviewer`.
-  - If tests fail: `@debugger` diagnoses, then back to `@refactorer` for a fix.
-  - Documentation or changelog updates: `@docs-writer`.
-  - Dependency upgrades: `@dependency-updater`.
-  - Unsure which agent to use? Call `@router` (max 3 attempts) to decide or ask for help.
+    - If tests fail: `@debugger` diagnoses, then back to `@refactorer` for a fix.
+    - Documentation or changelog updates: `@docs-writer`.
+    - Dependency upgrades: `@dependency-updater`.
+    - Unsure which agent to use? Call `@router` (max 3 attempts) to decide or ask for help.
 - **Automatic invocation:** The primary agent should automatically call these subagents based on task type (you can also manually `@mention` them).
 
 **Quick Reference – Subagents & Permissions:**
@@ -30,7 +30,7 @@
 - **@design-review** – _Full UX audit_ (tools: read/grep/glob, **`playwright*` enabled**, **`webfetch` allowed**; **edits denied**) → emits report to `.opencode/reports/design-review.md`.
 - **@security-auditor** – _Secrets & CVE scan_ (tools: read/grep/glob, `bash` limited to `mkdir/ls`; **`webfetch` allowed**; **edits denied**) → emits `.opencode/reports/security.md`.
 - **@research** – _External info with citations_ (tools: read/write; **`brave-search*`/`duckduckgo*`/`firecrawl*`/`fetch*`/`context7*` enabled**, **`webfetch` allowed**; **edits ask**) → writes `.opencode/research/notes.md`, `.opencode/research/citations.json`.
-- **@refactorer** – _Implement/refactor code_ (tools: write/edit/patch; **`magic*` enabled**; **`webfetch` denied**; `bash` on ask) → writes changes (≤3 files/batch) + `.opencode/refactor/changes.md`.
+- **@refactorer** – _Implement/refactor code_ (tools: write/edit/patch; **`webfetch` denied**; `bash` on ask) → writes changes (≤3 files/batch) + `.opencode/refactor/changes.md`.
 - **@linter** – _Format & lint_ (tools: write/edit/patch; `bash` allows configured linters; **`webfetch` denied**) → `.opencode/lint/report.json` (max 2 autofix rounds).
 - **@test-runner** – _Run tests_ (`bash` allows common test commands; **`webfetch` denied**; **edits denied**) → emits summary intended for `.opencode/test/summary.json`.
 - **@debugger** – _Diagnose test failures_ (tools: read/grep/glob; **`webfetch` allowed**; `bash` limited to `mkdir/ls`; **edits denied**) → emits `.opencode/debug/hypothesis.md`.
@@ -52,7 +52,7 @@
 **Design Principles & Sources:**
 
 - Treat the project’s `design-principles.md` and `style-guide.md` in `./context/` as the truth for UI/UX decisions.
-  - _If those files don’t exist, assume no significant UI work is needed; skip visual checks entirely (do NOT create them)._
+    - _If those files don’t exist, assume no significant UI work is needed; skip visual checks entirely (do NOT create them)._
 - Prioritize clarity, consistency, and accessibility. Make incremental UI changes that preserve the intended hierarchy and user flow.
 - Never override the documented design principles or style guide without explicit instruction.
 
@@ -108,7 +108,7 @@ The design review will check against all principles and the style guide, test ac
 
 - **Top-level:** Include `README.md` (overview & setup), `LICENSE`, `CONTRIBUTING.md` (contribution guidelines), typical config files (`.gitignore`, `.editorconfig`), and an auto-generated `CHANGELOG.md`.
 - **Project docs:** Use `.github/` for community health files:
-  - Issue templates (e.g. bug_report.yml, feature_request.yml), a Pull Request template (with checklist), and GitHub Actions workflows for CI/CD and releases.
+    - Issue templates (e.g. bug_report.yml, feature_request.yml), a Pull Request template (with checklist), and GitHub Actions workflows for CI/CD and releases.
 - **Issues vs. Discussions:** Use **Discussions** for open-ended questions, ideas, or broad design topics. Promote to **Issues** only when there is a concrete, actionable task or bug to track.
 - **Releases & Tags:** Tag releases as `vX.Y.Z` in line with SemVer. Automate release notes and changelog updates whenever possible, summarizing features and fixes.
 
@@ -126,7 +126,6 @@ The design review will check against all principles and the style guide, test ac
 | **firecrawl**    | Crawl & scrape sites  | Crawl/scrape/search/extract full sites    |
 | **context7**     | Library documentation | Fetch up-to-date official docs by package |
 | **playwright**   | Browser automation    | Headless UI interaction, screenshots, PDF |
-| **magic**        | UI component gen      | Generate TS/React UI from prompts         |
 
 ---
 
@@ -287,20 +286,6 @@ The agent should:
 
 ---
 
-### 🪄 magic (UI Component Generation Server)
-
-**Purpose:** Generate **production-ready React/TypeScript UI components** from natural-language prompts using the Magic MCP server.
-
-**When to Use:** Front-end scaffolding, layout refactors, or component rewrites. Best paired with the `@refactorer` subagent
-
-**How to Use:**
-
-- Primary routes UI requests to `@refactorer` with `magic*`. Provide a prompt describing layout, breakpoints, states, data, and target paths.
-- Magic returns generated component files (and types/styles) plus a summary of modified paths.
-- Be explicit about layout and states to reduce regeneration.
-
----
-
 ## Subagent Tool Access Overview
 
 The following **MCP tool namespaces are globally disabled** and then **enabled per-agent**:
@@ -315,7 +300,6 @@ The following **MCP tool namespaces are globally disabled** and then **enabled p
   "duckduckgo*": false,
   "context7*": false,
   "playwright*": false,
-  "magic*": false
 }
 ```
 
@@ -324,7 +308,7 @@ The following **MCP tool namespaces are globally disabled** and then **enabled p
 - **@research:** `brave-search*`, `duckduckgo*`, `firecrawl*`, `fetch*`, `context7*`, and built-ins
 - **@visual-checker:** `playwright*`, and built-ins
 - **@design-review:** `playwright*`, and built-ins
-- **@refactorer:** `magic*`, and built-ins
+- **@refactorer:** (no MCP namespace; uses built-ins)
 - **@code-reviewer:** - (no MCP namespace; uses built-ins)
 - **@security-auditor:** - (no MCP namespace; uses built-ins)
 - **@debugger:** - (no MCP namespace; uses built-ins)

@@ -1,7 +1,7 @@
 ---
 description: Applies safe code changes per plan/review; small/medium edits
 mode: subagent
-model: github-copilot/gpt-5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.15
 
 tools:
@@ -13,7 +13,6 @@ tools:
     patch: true
     bash: true
     webfetch: false
-    magic*: true
 
 permission:
     edit: allow

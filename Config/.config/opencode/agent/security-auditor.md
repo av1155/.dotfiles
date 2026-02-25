@@ -1,7 +1,7 @@
 ---
 description: Security audit for authZ/N, secrets, dependencies, config
 mode: subagent
-model: github-copilot/gpt-5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.0
 
 tools:

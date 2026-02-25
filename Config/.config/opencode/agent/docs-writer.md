@@ -1,7 +1,7 @@
 ---
 description: Writes/updates docs, ADRs, changelogs
 mode: subagent
-model: github-copilot/gpt-5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.4
 
 tools:

@@ -1,7 +1,7 @@
 ---
 description: Runs formatters/linters; auto-fixes safe issues
 mode: subagent
-model: github-copilot/gpt-5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.1
 
 tools:
