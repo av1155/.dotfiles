@@ -1,7 +1,7 @@
 ---
 description: Repository investigator & flow-mapper (scopes relevant files and relationships)
 mode: subagent
-model: github-copilot/claude-sonnet-4.6
+model: openai/gpt-5-codex
 temperature: 0.1
 
 tools:

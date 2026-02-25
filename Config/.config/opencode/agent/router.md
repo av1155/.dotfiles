@@ -1,7 +1,7 @@
 ---
 description: Supervisor router; selects subagents and enforces stop conditions
 mode: subagent
-model: github-copilot/claude-sonnet-4.6
+model: openai/gpt-5-codex
 temperature: 0.1
 
 tools:

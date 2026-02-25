@@ -1,7 +1,7 @@
 ---
 description: Applies safe code changes per plan/review; small/medium edits
 mode: subagent
-model: github-copilot/claude-sonnet-4.6
+model: openai/gpt-5-codex
 temperature: 0.15
 
 tools:
