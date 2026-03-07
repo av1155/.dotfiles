@@ -6,6 +6,8 @@ tap "oven-sh/bun"
 tap "samtay/tui"
 tap "sst/tap"
 tap "supabase/tap"
+# Static checker for GitHub Actions workflow files
+brew "actionlint"
 # Extremely Fast Compression algorithm
 brew "lz4"
 # Zstandard is a real-time compression algorithm
