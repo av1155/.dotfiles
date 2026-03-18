@@ -1,6 +1,7 @@
 # Instructions
 
 ```markdown
-cd ~/.config/opencode/ollama-opencode
-ollama create qwen3-coder-next-opencode -f Modelfile
+cd ~/.dotfiles/Config/.config/opencode/ollama-opencode
+ollama create glm-4.7-flash-98k -f glm-4.7-flash/Modelfile
+ollama create devstral-small-2-128k -f devstral-small-2/Modelfile
 ```

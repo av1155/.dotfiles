@@ -16,7 +16,7 @@ exec zsh
 - **Portable**: Works across macOS (Intel/Apple Silicon), Arch Linux, Debian, WSL, and Raspberry Pi
 - **Safe & Idempotent**: Automatically backs up conflicts, can be run multiple times safely
 - **Zero Configuration**: Automated detection and installation of tools based on your platform
-- **Modular**: Managed with GNU Stow—easy to add, remove, or customize individual packages
+- **Modular**: Managed with GNU Stow—easy to add, remove, or customize individual packages while only version-controlling the paths you choose
 - **Fast**: Optimized shell startup with lazy-loading and caching (1-2s faster than default configs)
 - **Robust**: Error-resistant with network checks, retry protection, and graceful degradation
 
@@ -25,28 +25,30 @@ exec zsh
 <!--toc:start-->
 
 - [.dotfiles](#dotfiles)
-  - [Quick Start](#quick-start)
-  - [Why These Dotfiles?](#why-these-dotfiles)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Installation](#installation)
-    - [Prerequisites](#prerequisites)
-    - [Automated Installation](#automated-installation)
-    - [Manual Installation (Advanced)](#manual-installation-advanced)
-  - [Repository Structure](#repository-structure)
-  - [Configuration Details](#configuration-details)
-    - [Universal Zsh Configuration](#universal-zsh-configuration)
-    - [Terminal Multiplexing (tmux)](#terminal-multiplexing-tmux)
-    - [Package Management](#package-management)
-    - [Development Tools](#development-tools)
-    - [Theming & Appearance](#theming--appearance)
-    - [macOS Bootstrap](#macos-bootstrap)
-  - [Customization](#customization)
-  - [Updating](#updating)
-  - [Uninstalling](#uninstalling)
-  - [Troubleshooting](#troubleshooting)
-    - [tmux Configuration Not Loading](#tmux-configuration-not-loading)
-    - [Stow Conflicts](#stow-conflicts)
+    - [Quick Start](#quick-start)
+    - [Why These Dotfiles?](#why-these-dotfiles)
+    - [Table of Contents](#table-of-contents)
+    - [Features](#features)
+    - [Installation](#installation)
+        - [Prerequisites](#prerequisites)
+        - [Automated Installation](#automated-installation)
+        - [Manual Installation (Advanced)](#manual-installation-advanced)
+        - [Installer Modes](#installer-modes)
+        - [Source of Truth](#source-of-truth)
+    - [Repository Structure](#repository-structure)
+    - [Configuration Details](#configuration-details)
+        - [Universal Zsh Configuration](#universal-zsh-configuration)
+        - [Terminal Multiplexing (tmux)](#terminal-multiplexing-tmux)
+        - [Package Management](#package-management)
+        - [Development Tools](#development-tools)
+        - [Theming & Appearance](#theming--appearance)
+        - [macOS Bootstrap](#macos-bootstrap)
+    - [Customization](#customization)
+    - [Updating](#updating)
+    - [Uninstalling](#uninstalling)
+    - [Troubleshooting](#troubleshooting)
+        - [tmux Configuration Not Loading](#tmux-configuration-not-loading)
+        - [Stow Conflicts](#stow-conflicts)
 
 ## Features
 
@@ -108,14 +110,17 @@ The installation script handles everything automatically:
     ./install.sh
     ```
 
+    By default, the installer will ask whether you want to run a dry run first or apply changes immediately.
+
     **What the script does:**
-    - ✅ Auto-detects required base directories (`.config`, `.ssh`, `.fonts`, `Library`)
-    - ✅ Creates missing directories
-    - ✅ Detects conflicts with existing files
-    - ✅ Backs up conflicting files to `filename.bak` (with notification)
-    - ✅ Runs `stow --restow */` safely
-    - ✅ Idempotent—safe to run multiple times
-    - ✅ Offers optional troubleshooting menu for fixing common issues
+    - Auto-detects required base directories (such as `.config`, `.local`, `.ssh`, `.fonts`, `.claude`, and `Library` when present in package roots)
+    - Creates only required base directories for Stow (such as `~/.config`, `~/.local`, `~/.ssh`, `~/.fonts`, `~/.claude`, and `~/Library`)
+    - Avoids relying on pre-created nested managed paths, so Stow can link managed entries cleanly
+    - Detects conflicts with existing files
+    - Backs up conflicting files to `filename.bak` (with notification)
+    - Runs Stow safely using the detected package set
+    - Idempotent—safe to run multiple times
+    - Offers optional troubleshooting menu for fixing common issues
 
 1. Restart your shell:
 
@@ -130,10 +135,17 @@ The installation script handles everything automatically:
 
 If you prefer manual control:
 
-1. Pre-create base directories:
+1. Pre-create only base directories:
 
     ```bash
-    mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts ~/Library
+    mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts ~/.claude ~/Library
+    ```
+
+    Do **not** pre-create nested managed paths such as:
+
+    ```bash
+    ~/.config/opencode
+    ~/.config/opencode/ollama-opencode
     ```
 
 1. Back up any conflicting files:
@@ -160,6 +172,86 @@ If you prefer manual control:
 **Note**: Run `man stow` to understand how symlink management works.
 
 </details>
+
+### Installer Modes
+
+The installer supports interactive and explicit modes.
+
+Interactive mode:
+
+```bash
+cd ~/.dotfiles
+./install.sh
+```
+
+This will prompt you to choose:
+
+1. Dry run (show what would happen)
+2. Apply changes
+
+Explicit dry run:
+
+```bash
+cd ~/.dotfiles
+./install.sh --dry-run
+# or
+./install.sh -n
+```
+
+Apply mode without the initial dry-run prompt:
+
+```bash
+cd ~/.dotfiles
+./install.sh --yes
+# or
+./install.sh -y
+```
+
+Help:
+
+```bash
+cd ~/.dotfiles
+./install.sh --help
+```
+
+Dry run mode shows exactly what the installer would do without making filesystem changes, including:
+
+- base directories it would create
+- conflicting files it would back up
+- the Stow command it would run
+- troubleshooting actions it would take
+
+## Source of Truth
+
+This repository is the canonical source of truth for all Stow-managed paths.
+
+GNU Stow is not a background sync tool. It creates symlinks from `$HOME` into `.dotfiles`.
+
+In practice, some target directories may be:
+
+- symlinked directly to entries in `.dotfiles`
+- real directories containing a mix of:
+    - symlinked entries managed by Stow
+    - local unmanaged files
+
+This is intentional for places like `~/.config`, where only selected application configs should be version-controlled.
+
+Implications:
+
+- Changes to existing symlinked files or directories are reflected immediately.
+- New files added inside an already-symlinked directory are reflected immediately.
+- New top-level files or directories added to a Stow package may require re-running Stow:
+
+    ```bash
+    cd ~/.dotfiles
+    stow --restow Config
+    ```
+
+Example:
+
+- `~/.config` remains a normal directory
+- `~/.config/opencode` may be a mixed directory
+- `.dotfiles` is the source of truth only for the symlinked entries inside that managed path
 
 ## Repository Structure
 
@@ -207,6 +299,9 @@ If you prefer manual control:
 ├── Java-Jars/                  # Java development libraries
 │   └── javaClasspath/          # JUnit, jsoup, etc.
 │
+├── Local/                      # XDG local data
+│   └── .local/
+│
 ├── macOS-Library/              # macOS Application Support
 │   └── Library/
 │       └── Application Support/
@@ -245,12 +340,12 @@ Auto-configured tmux with plugin management:
 - **Auto-Start**: Automatically starts or attaches to tmux sessions
 - **Plugin Manager**: TPM (Tmux Plugin Manager) can be set up via the troubleshooting menu
 - **Plugins Included**:
-  - `tmux-sensible`: Sensible defaults
-  - `vim-tmux-navigator`: Seamless vim/tmux navigation
-  - `catppuccin/tmux`: Beautiful theme
-  - `tmux-cpu`: CPU usage display
-  - `tmux-yank`: System clipboard integration
-  - `tmux-sessionx`: Advanced session switcher
+    - `tmux-sensible`: Sensible defaults
+    - `vim-tmux-navigator`: Seamless vim/tmux navigation
+    - `catppuccin/tmux`: Beautiful theme
+    - `tmux-cpu`: CPU usage display
+    - `tmux-yank`: System clipboard integration
+    - `tmux-sessionx`: Advanced session switcher
 - **Custom Keybindings**: `Ctrl+A` prefix, intuitive pane navigation
 - **Status Bar**: Custom top status with directory, session, and system info
 
@@ -270,18 +365,18 @@ Pre-configured for modern development:
 - **Neovim**: Python provider auto-configured with conda environments
 - **Git**: Enhanced with FZF integration and custom aliases
 - **AI Tools**:
-  - OpenCode with specialized agents (code-reviewer, debugger, refactorer, etc.)
-  - Claude MCP servers (git, time, fetch, brave-search, playwright, magic)
+    - OpenCode with specialized agents (code-reviewer, debugger, refactorer, etc.)
+    - Claude MCP servers (git, time, fetch, brave-search, playwright, magic)
 - **File Navigation**:
-  - FZF: Fuzzy finder with custom keybindings
-  - Bat: Syntax-highlighted file viewer
-  - Eza: Modern `ls` replacement
-  - Yazi: Terminal file manager
-  - Zoxide: Smart directory jumping
+    - FZF: Fuzzy finder with custom keybindings
+    - Bat: Syntax-highlighted file viewer
+    - Eza: Modern `ls` replacement
+    - Yazi: Terminal file manager
+    - Zoxide: Smart directory jumping
 - **Terminal Tools**:
-  - Lazygit: Git TUI
-  - Thefuck: Command correction
-  - Ripgrep: Fast text search
+    - Lazygit: Git TUI
+    - Thefuck: Command correction
+    - Ripgrep: Fast text search
 
 ### Theming & Appearance
 
@@ -312,6 +407,13 @@ cd ~/.dotfiles
 mkdir -p MyCustom/.config/myapp
 # Add your configs
 stow MyCustom
+```
+
+If you later add new top-level files or directories to an existing package, re-run Stow for that package:
+
+```bash
+cd ~/.dotfiles
+stow --restow MyCustom
 ```
 
 ### Overriding Defaults
@@ -345,7 +447,7 @@ git pull --rebase
 exec zsh
 ```
 
-**Note**: The installer will skip existing installations and only update changed files.
+**Note**: The installer safely re-stows managed packages. Existing symlinked content updates immediately, while newly added top-level package paths may require a restow.
 
 ## Uninstalling
 
@@ -398,6 +500,8 @@ When prompted, choose `y` to access the troubleshooting menu with these options:
 3. **Reset Tmux configuration completely**: Nuclear option—completely removes and reinstalls everything tmux-related
 4. **Exit**: Return to normal operation
 
+Dry run also applies to the troubleshooting menu, so you can preview those actions safely before making changes.
+
 ### tmux Configuration Not Loading
 
 If tmux plugins aren't working, use the troubleshooting menu above, or manually:
@@ -438,6 +542,26 @@ mv ~/.conflicting-file ~/.conflicting-file.bak
 
 # Re-run stow
 ./install.sh
+```
+
+Common causes:
+
+- A managed target path already exists as a real file or directory
+- A nested managed path was created manually before Stow ran
+- A target directory contains local unmanaged files, so Stow cannot replace it with a single symlink
+
+Example:
+
+- `~/.config` is expected to remain a normal directory
+- `~/.config/opencode` may remain a mixed directory containing both symlinked entries and local unmanaged files
+
+In mixed directories, `.dotfiles` is the source of truth only for the symlinked entries.
+
+If you add a new sibling path in a Stow package and it does not appear in the target directory, re-run Stow for that package:
+
+```bash
+cd ~/.dotfiles
+stow --restow Config
 ```
 
 ### Other Issues

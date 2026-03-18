@@ -18,8 +18,11 @@
                 "baseURL": "http://localhost:11434/v1",
             },
             "models": {
-                "qwen3-coder-next-opencode": {
-                    "name": "Qwen3 Coder Next (OpenCode)",
+                "glm-4.7-flash-98k": {
+                    "name": "GLM 4.7 Flash",
+                },
+                "devstral-small-2-128k": {
+                    "name": "Devstral Small 2",
                 },
             },
         },
