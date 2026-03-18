@@ -11,6 +11,18 @@
                 "projectId": "opencode-490217",
             },
         },
+        "ollama": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "Ollama (local)",
+            "options": {
+                "baseURL": "http://localhost:11434/v1",
+            },
+            "models": {
+                "qwen3-coder-next-opencode": {
+                    "name": "Qwen3 Coder Next (OpenCode)",
+                },
+            },
+        },
     },
 
     "permission": {
