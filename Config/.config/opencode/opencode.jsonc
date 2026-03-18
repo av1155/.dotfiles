@@ -3,6 +3,16 @@
 
     "model": "anthropic/claude-sonnet-4-6",
 
+    "plugin": ["opencode-gemini-auth@latest"],
+
+    "provider": {
+        "google": {
+            "options": {
+                "projectId": "opencode-490217",
+            },
+        },
+    },
+
     "permission": {
         "bash": "ask",
         "edit": "ask",
@@ -100,20 +110,5 @@
                 "webfetch": true,
             },
         },
-    },
-
-    "keybinds": {
-        "leader": "ctrl+b",
-        // "tool_details": "<leader>d",
-        // "thinking_blocks": "<leader>b",
-        "session_share": "<leader>s",
-        "session_unshare": "none",
-        "session_interrupt": "esc",
-        "session_compact": "<leader>c",
-        "session_child_cycle_reverse": "alt+3",
-        "session_child_cycle": "alt+4",
-        "messages_first": "ctrl+g",
-        "messages_last": "ctrl+alt+g",
-        "input_newline": "shift+enter,alt+j",
     },
 }
