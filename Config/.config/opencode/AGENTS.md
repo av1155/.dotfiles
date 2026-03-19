@@ -2,12 +2,44 @@
 
 ## Overview & Operating Principles
 
-- **Primary vs Subagents:** The primary agent orchestrates tasks and can call specialized subagents for specific needs. Subagents run in isolated sessions with limited permissions.
+- **Primary vs Subagents:** The primary agent orchestrates tasks and can call subagents for specific needs. OpenCode includes two built-in subagents — `@general` and `@explore` — and this repo also defines additional specialized subagents. Subagents run in isolated sessions with limited permissions.
 - **Read-only first:** Default to non-destructive actions (review, audit, research) before making changes.
 - **Safe actions & idempotence:** Never create/modify files unless authorized by policy. Use tools in read-only mode whenever possible. Always prefer the smallest viable change.
 - **Routing limits:** The `@router` subagent may delegate tasks up to 3 times, then must halt (no infinite loops).
 - **Audit trail:** Subagents should write outputs to `.opencode/` (review reports, test results, etc.) for traceability. Keep diffs minimal and reproducible.
 - **PR early, CI often:** Open draft PRs early, run CI tests frequently, and let automated checks verify correctness.
+
+---
+
+## Built-in Tools (Quick Reference)
+
+These are the standard built-in tools the agent environment may provide.  
+Use the smallest sufficient tool for the task, and prefer read-only investigation first.
+
+- `read` — read file contents, including targeted line ranges
+- `list` — list files/directories
+- `glob` — find files by glob pattern
+- `grep` — search code/content by pattern
+- `bash` — run shell commands in the repo environment
+- `edit` — modify existing files by exact replacement
+- `write` — create or overwrite files
+- `patch` — apply diff/patch-style file edits
+- `todoread` — read the current todo list
+- `todowrite` — create/update the todo list
+- `webfetch` — fetch and read a known web page
+- `websearch` — search the web
+- `question` — ask the user a clarifying question when necessary
+- `skill` — load a `SKILL.md` file when a specialized workflow is requested
+- `lsp` — language-server code intelligence (definitions, references, symbols, etc.)
+- `custom tools` — repo/user-defined callable tools if configured
+- `MCP servers` — external tool namespaces enabled per config/subagent
+
+### Tool-use guidance
+
+- Prefer `read`/`grep`/`glob`/`list` before `bash`.
+- Prefer `edit`/`patch` for narrow changes; use `write` only when creating/replacing files intentionally.
+- Use `question` only if clarification is genuinely needed; otherwise proceed with the safest reasonable assumption.
+- Tool availability may differ by subagent and config. If a needed tool is unavailable, say so explicitly and continue with the safest minimal path.
 
 ---
 
@@ -24,6 +56,8 @@
 
 **Quick Reference – Subagents & Permissions:**
 
+- **@general** – _Built-in general-purpose execution subagent_ (full tool access except todo; may modify files) → use for multi-step execution, parallelizable units of work, or narrowly scoped implementation when a write-capable helper is needed.
+- **@explore** – _Built-in fast read-only exploration subagent_ (read-only; cannot modify files) → use for quick codebase discovery, file finding, keyword/symbol search, and answering repo questions without making changes.
 - **@code-reviewer** – _Performs static code/diff review_ (reads changed files and diffs; **read-only git via bash allow-list**: `git status`, `git diff`/`--staged`, `git show`, `git log -n`; `bash` otherwise limited to `mkdir -p .opencode*`/`ls`; **webfetch allowed** for spec lookups; **edits denied**) → returns review markdown; a write-capable agent (e.g., `@docs-writer`) may persist it to `.opencode/reports/review.md`.
 - **@investigator** – _Scopes the work & maps flows_ (finds relevant files with read/grep/glob + read-only git via bash allow-list; **no edits**, **no webfetch**) → writes `.opencode/research/investigation_report.md` and `.opencode/research/flow_report.md`.
 - **@visual-checker** – _UI smoke test_ (tools: read/glob, **`playwright*` enabled**, **`webfetch` on ask**; **edits denied**) → emits checklist + screenshots to `.opencode/reports/visual-check.md`.
