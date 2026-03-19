@@ -490,6 +490,11 @@ Use Conventional Commits when repository policy allows or requires them:
 
 `<type>(<scope>)!: <description>`
 
+Always follow the 50/72 rule for commit messages:
+
+- limit the title (subject line) to 50 characters
+- wrap the body text at 72 characters
+
 Common types:
 
 - `feat`
