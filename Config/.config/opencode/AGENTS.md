@@ -1,355 +1,590 @@
-# Agent Cheat Sheet
+# AGENTS.md
 
-## Overview & Operating Principles
+## Purpose
 
-- **Primary vs Subagents:** The primary agent orchestrates tasks and can call subagents for specific needs. OpenCode includes two built-in subagents — `@general` and `@explore` — and this repo also defines additional specialized subagents. Subagents run in isolated sessions with limited permissions.
-- **Read-only first:** Default to non-destructive actions (review, audit, research) before making changes.
-- **Safe actions & idempotence:** Never create/modify files unless authorized by policy. Use tools in read-only mode whenever possible. Always prefer the smallest viable change.
-- **Routing limits:** The `@router` subagent may delegate tasks up to 3 times, then must halt (no infinite loops).
-- **Audit trail:** Subagents should write outputs to `.opencode/` (review reports, test results, etc.) for traceability. Keep diffs minimal and reproducible.
-- **PR early, CI often:** Open draft PRs early, run CI tests frequently, and let automated checks verify correctness.
+This file defines the default operating rules for agents in this environment.
 
----
+It is a global baseline intended to keep behavior consistent across models, providers, and repositories. Do not rely on provider-specific hidden behavior. Rely on explicit tools, permissions, repository evidence, and stated workflow.
 
-## Built-in Tools (Quick Reference)
-
-These are the standard built-in tools the agent environment may provide.  
-Use the smallest sufficient tool for the task, and prefer read-only investigation first.
-
-- `read` — read file contents, including targeted line ranges
-- `list` — list files/directories
-- `glob` — find files by glob pattern
-- `grep` — search code/content by pattern
-- `bash` — run shell commands in the repo environment
-- `edit` — modify existing files by exact replacement
-- `write` — create or overwrite files
-- `patch` — apply diff/patch-style file edits
-- `todoread` — read the current todo list
-- `todowrite` — create/update the todo list
-- `webfetch` — fetch and read a known web page
-- `websearch` — search the web
-- `question` — ask the user a clarifying question when necessary
-- `skill` — load a `SKILL.md` file when a specialized workflow is requested
-- `lsp` — language-server code intelligence (definitions, references, symbols, etc.)
-- `custom tools` — repo/user-defined callable tools if configured
-- `MCP servers` — external tool namespaces enabled per config/subagent
-
-### Tool-use guidance
-
-- Prefer `read`/`grep`/`glob`/`list` before `bash`.
-- Prefer `edit`/`patch` for narrow changes; use `write` only when creating/replacing files intentionally.
-- Use `question` only if clarification is genuinely needed; otherwise proceed with the safest reasonable assumption.
-- Tool availability may differ by subagent and config. If a needed tool is unavailable, say so explicitly and continue with the safest minimal path.
+If this file conflicts with a repository-local `AGENTS.md`, follow the repository-local `AGENTS.md` for instructions, guidance, workflow, delegation, and behavioral policy.
 
 ---
 
-## Subagents: What You Can Call & When
+## Instruction Precedence
 
-**Delegation Policy:**
+Apply instructions in this order:
 
-- **Development flow:** Use read-only checks first (code review, security audit, research). For code changes, hand off to `@refactorer` → then `@linter` (auto-fix ≤2 passes) → then `@test-runner` → then `@code-reviewer`.
-    - If tests fail: `@debugger` diagnoses, then back to `@refactorer` for a fix.
-    - Documentation or changelog updates: `@docs-writer`.
-    - Dependency upgrades: `@dependency-updater`.
-    - Unsure which agent to use? Call `@router` (max 3 attempts) to decide or ask for help.
-- **Automatic invocation:** The primary agent should automatically call these subagents based on task type (you can also manually `@mention` them).
+1. Direct user instruction
+2. Repository-local `AGENTS.md`
+3. Additional repository or config-linked instruction files
+4. This global `AGENTS.md`
+5. Fallback Claude-compatible files only when applicable
 
-**Quick Reference – Subagents & Permissions:**
-
-- **@general** – _Built-in general-purpose execution subagent_ (full tool access except todo; may modify files) → use for multi-step execution, parallelizable units of work, or narrowly scoped implementation when a write-capable helper is needed.
-- **@explore** – _Built-in fast read-only exploration subagent_ (read-only; cannot modify files) → use for quick codebase discovery, file finding, keyword/symbol search, and answering repo questions without making changes.
-- **@code-reviewer** – _Performs static code/diff review_ (reads changed files and diffs; **read-only git via bash allow-list**: `git status`, `git diff`/`--staged`, `git show`, `git log -n`; `bash` otherwise limited to `mkdir -p .opencode*`/`ls`; **webfetch allowed** for spec lookups; **edits denied**) → returns review markdown; a write-capable agent (e.g., `@docs-writer`) may persist it to `.opencode/reports/review.md`.
-- **@investigator** – _Scopes the work & maps flows_ (finds relevant files with read/grep/glob + read-only git via bash allow-list; **no edits**, **no webfetch**) → writes `.opencode/research/investigation_report.md` and `.opencode/research/flow_report.md`.
-- **@visual-checker** – _UI smoke test_ (tools: read/glob, **`playwright*` enabled**, **`webfetch` on ask**; **edits denied**) → emits checklist + screenshots to `.opencode/reports/visual-check.md`.
-- **@design-review** – _Full UX audit_ (tools: read/grep/glob, **`playwright*` enabled**, **`webfetch` allowed**; **edits denied**) → emits report to `.opencode/reports/design-review.md`.
-- **@security-auditor** – _Secrets & CVE scan_ (tools: read/grep/glob, `bash` limited to `mkdir/ls`; **`webfetch` allowed**; **edits denied**) → emits `.opencode/reports/security.md`.
-- **@research** – _External info with citations_ (tools: read/write; **`brave-search*`/`duckduckgo*`/`firecrawl*`/`fetch*`/`context7*` enabled**, **`webfetch` allowed**; **edits ask**) → writes `.opencode/research/notes.md`, `.opencode/research/citations.json`.
-- **@refactorer** – _Implement/refactor code_ (tools: write/edit/patch; **`webfetch` denied**; `bash` on ask) → writes changes (≤3 files/batch) + `.opencode/refactor/changes.md`.
-- **@linter** – _Format & lint_ (tools: write/edit/patch; `bash` allows configured linters; **`webfetch` denied**) → `.opencode/lint/report.json` (max 2 autofix rounds).
-- **@test-runner** – _Run tests_ (`bash` allows common test commands; **`webfetch` denied**; **edits denied**) → emits summary intended for `.opencode/test/summary.json`.
-- **@debugger** – _Diagnose test failures_ (tools: read/grep/glob; **`webfetch` allowed**; `bash` limited to `mkdir/ls`; **edits denied**) → emits `.opencode/debug/hypothesis.md`.
-- **@docs-writer** – _Update docs/ADR_ (tools: read/write/edit; **`webfetch` on ask**; `bash` limited to `mkdir/ls`) → writes to `.opencode/docs/*`.
-- **@dependency-updater** – _Safe dependency upgrades_ (tools: write/edit/patch; `bash` allows pkg-mgr commands; **`webfetch` denied**) → `.opencode/deps/upgrade_report.md`. **Tests are delegated to `@test-runner`.**
-- **@router** – _Decision maker_ (tools: read/grep/glob; **`webfetch` on ask**; **no edits**) → returns `STATUS::router` with next agent or `halt`.
-
-**Routing Hints:**
-
-- Small diff (<100 LOC) with tests? → `@code-reviewer` might suggest directly using `@refactorer`.
-- Test failures isolated to one area? → `@debugger` to analyze, then back to `@refactorer`.
-- Ambiguous/broad tasks? → Start with `@investigator` → primary ingests the reports → then delegate to `@refactorer` / `@test-runner` / `@code-reviewer` as needed.
-- Security issues in dependencies? → `@dependency-updater` to patch, then `@security-auditor` to re-check.
+If repository-specific workflow rules are missing, say so briefly and proceed with the safest minimal behavior allowed.
 
 ---
 
-## Visual Development
+## Core Operating Principles
 
-**Design Principles & Sources:**
-
-- Treat the project’s `design-principles.md` and `style-guide.md` in `./context/` as the truth for UI/UX decisions.
-    - _If those files don’t exist, assume no significant UI work is needed; skip visual checks entirely (do NOT create them)._
-- Prioritize clarity, consistency, and accessibility. Make incremental UI changes that preserve the intended hierarchy and user flow.
-- Never override the documented design principles or style guide without explicit instruction.
-
-**Quick Visual Check (Smoke Test):** _(for primary agent or @visual-checker)_
-
-1. **Views & guidelines** — List affected views and open each; ensure design principles and style guide are followed.
-2. **Intent & criteria** — Confirm the change satisfies the user need and acceptance criteria.
-3. **Accessibility & prefs** — Verify color contrast, focus order, labels/alt text, keyboard navigation; honor reduced motion and text scaling preferences.
-4. **Responsive & evidence** — Test at small, medium, and large breakpoints (no overflow/clipping); capture full-page screenshots (desktop and any failing size).
-5. **Theme parity** — Ensure light/dark (and high-contrast) themes display consistently.
-
-**Comprehensive Design Review:** Invoke the `@design-review` subagent when:
-
-- Introducing or modifying core UI patterns, navigation, layout, or design tokens.
-- Changes are large or highly visible.
-- There’s any significant accessibility or responsive design risk.
-- Right before merging any major visual update.
-
-The design review will check against all principles and the style guide, test across required themes and breakpoints, verify accessibility (focus, labels, contrast), and compile a list of issues with evidence (screenshots, console errors). It outputs a prioritized fix list in markdown.
+- Default to read-first, scope-first execution.
+- Never modify files unless the task, active agent mode, permissions, and repository policy allow it.
+- Prefer the smallest correct change.
+- Keep diffs minimal, reviewable, reproducible, and easy to validate.
+- Prefer direct evidence over assumptions.
+- Use the smallest sufficient tool for each step.
+- Avoid redundant exploration, repeated reads, and unnecessary token usage.
+- State uncertainty explicitly instead of inventing confidence.
+- Respect tool limits, permission boundaries, plugin protections, and agent isolation.
+- Do not attempt to bypass environment safeguards.
+- Repository-local rules override this file when they conflict.
 
 ---
 
-## 🧭 Git & GitHub Conventions and Standards
+## Confidence Marking
 
-**1. Commit Messages (Conventional Commits):**
+When useful, label conclusions as:
 
-- Use **Conventional Commits** format: `<type>(<scope>)!: <description>` with optional body and footers.
-- **Allowed types:** feat, fix, docs, refactor, perf, test, build, ci, chore, revert.
-- Keep subject ≤50 chars, in present tense (no period). Wrap body lines at ~72 chars.
-- If a commit introduces breaking changes, add `!` after type/scope or include a `BREAKING CHANGE:` footer.
-- Reference issues in footers (e.g. `Fixes #123`, `Refs #456`).
-- One logical change per commit. Commit early, commit often.
-- **SemVer bump guide:** `feat` = **minor**, `fix` = **patch**, `!` (breaking) = **major**; other types (docs/chore/etc) typically do not bump version.
+- `verified` — directly supported by inspected code, config, tool output, or test results
+- `likely` — strongly supported but not fully confirmed
+- `inferred` — reasoned from partial evidence
+- `unknown` — not established from available evidence
 
-**2. Branching Strategy – Trunk-Based:**
-
-- Base all work on the `main` branch.
-- Create short-lived feature branches (lifespan in hours or days). Name them like `feat/feature-name`, `fix/bug-name`, `chore/tool-name`.
-- Rebase or merge from `main` frequently to keep branches up-to-date; resolve conflicts promptly.
-- _GitFlow (develop/release branches) is only for multi-release or regulated environments – avoid unless explicitly required._
-
-**3. Pull Requests & Code Review:**
-
-- **Open Draft Early:** Start with a Draft PR as soon as work begins. Mark ready for review only after tests pass and the description is complete.
-- **Scope:** One focused change per PR (aim for small diffs).
-- **PR Title & Description:** Title follows Conventional Commits style. The description should clearly outline the context (why), the changes (what), how to test, any risks or rollback steps, and include screenshots for UI changes. Link any relevant issues (e.g. _Fixes #123_).
-- **Review Process:** Require at least one approval (two for critical code). All CI checks must be green. Authors must address every comment or document follow-up tasks for later.
-- **Merge Strategy:** Prefer squash merging to keep history linear. Rebase merge is acceptable for preserving multiple commits as long as the history remains linear. **Never merge** if CI checks are failing.
-- **Branch Protection:** Protect `main` (and any release branches) with required PR review, required passing checks, linear history (no merge commits), and restricted push access (no force pushes or branch deletions).
-- **CI & Automation:** Ensure CI runs on all PRs and on `main`. Leverage reusable workflows for common pipelines (build, test, security scanning). Enable automated dependency updates (e.g. Dependabot). Make CI checks required in branch settings so merges cannot bypass them.
-
-**4. Repository Structure & Usage:**
-
-- **Top-level:** Include `README.md` (overview & setup), `LICENSE`, `CONTRIBUTING.md` (contribution guidelines), typical config files (`.gitignore`, `.editorconfig`), and an auto-generated `CHANGELOG.md`.
-- **Project docs:** Use `.github/` for community health files:
-    - Issue templates (e.g. bug_report.yml, feature_request.yml), a Pull Request template (with checklist), and GitHub Actions workflows for CI/CD and releases.
-- **Issues vs. Discussions:** Use **Discussions** for open-ended questions, ideas, or broad design topics. Promote to **Issues** only when there is a concrete, actionable task or bug to track.
-- **Releases & Tags:** Tag releases as `vX.Y.Z` in line with SemVer. Automate release notes and changelog updates whenever possible, summarizing features and fixes.
+Do not present inferred conclusions as verified facts.
 
 ---
 
-## Available MCP Servers (Tools)
+## Execution Modes
 
-| Server           | Purpose               | Capabilities (common commands)            |
-| ---------------- | --------------------- | ----------------------------------------- |
-| **git**          | Version control       | Git status, diff, add, commit, branch ops |
-| **time**         | Date/time utilities   | Current time, format conversion           |
-| **fetch**        | Web fetch (no JS)     | Retrieve single-page content (HTML/JSON)  |
-| **brave-search** | Web & news search     | Fresh web/news results; images, videos    |
-| **duckduckgo**   | Web search + fetch    | Query DDG; fetch & clean page content     |
-| **firecrawl**    | Crawl & scrape sites  | Crawl/scrape/search/extract full sites    |
-| **context7**     | Library documentation | Fetch up-to-date official docs by package |
-| **playwright**   | Browser automation    | Headless UI interaction, screenshots, PDF |
+### Planning, review, and read-only work
 
----
+- do not modify files
+- do not use write-capable tools unless explicitly permitted and necessary
+- do not perform incidental cleanup or speculative edits
+- gather enough evidence to define scope before proposing implementation
 
-### 🔧 git (Version Control Server)
+### Build and implementation work
 
-**Usage Guidelines:**
-
-- Use the git MCP server for all repository interactions (instead of shell git when possible).
-- Always run `git_status` before making commits to verify the working state.
-- Review changes with `git_diff_unstaged` (and `git_diff_staged` if needed) prior to committing.
-- Stage intentionally: use `git_add <file>` for specific files rather than mass staging.
-- Write clear, conventional commit messages via `git_commit -m "<type>: <message>"`.
-- Branch naming: follow the `feat/`, `fix/`, etc. prefix conventions.
-- Restrict direct shell usage for git actions; rely on MCP `git` commands to avoid unsafe operations.
-
-**Common git Operations:**
-
-```text
-Working with git?
-├── Check state:
-│   ├── git_status (overview)
-│   ├── git_diff_unstaged (unstaged changes)
-│   └── git_diff_staged (staged changes)
-├── Make changes:
-│   ├── git_add <file(s)> (stage)
-│   ├── git_commit -m "<message>" (commit)
-│   └── git_reset <file> (unstage)
-└── Navigate:
-    ├── git_log (view recent commits)
-    ├── git_checkout <branch> (switch branch)
-    └── git_create_branch <name> (new branch)
-```
+- investigate before editing
+- define a narrow scope
+- change only what is needed
+- run the smallest relevant validation first
+- follow repository workflow requirements when present
+- stop broadening scope unless evidence requires it
 
 ---
 
-### ⏰ time (Time Server)
+## Investigation and Token Discipline
 
-**Usage:** Provides current timestamps and timezone conversions.
+Optimize for correctness with minimal token and tool usage.
 
-- `get_current_time(timezone="Area/Location")` returns the current date-time in the specified IANA timezone.
-- `convert_time(timestamp, from_timezone, to_timezone)` converts a given time between zones.
+### Default investigation pattern
 
-Use this for scheduling, logging, or any time-sensitive logic. (All timezones should be given in standard IANA format like `America/New_York`.)
+1. Establish repository shape cheaply
+2. Identify likely source roots, tests, docs, config, workflows, and large files
+3. Map relevant files, symbols, and call paths
+4. Read only the most relevant ranges
+5. Escalate to deeper inspection only when justified
 
----
+### Required efficiency rules
 
-### 🌐 fetch (Web Fetch Server)
+- Do not start by reading many full files.
+- Prefer cheap discovery before deep inspection.
+- Prefer partial or line-range reads over full-file reads.
+- Read full files only when they are small or clearly central.
+- Reuse facts already gathered.
+- Do not ask multiple agents to rediscover the same area.
+- Stop exploring a branch once enough evidence has been gathered.
+- Prefer exact file and function references over long narration.
+- Quote only short snippets when necessary.
+- Do not perform broad rediscovery on follow-up tasks unless scope changed.
 
-**Purpose:** Fetch simple web content quickly (no dynamic JS or login).
+### Anti-waste rules
 
-**Use Cases:** Retrieving static pages or files, scraping raw HTML or text, calling open APIs returning JSON/XML.
-
-**Limitations:**
-
-- Max ~5000 characters per request (use `start_index` and multiple calls for longer content).
-- No JavaScript execution (use `playwright` if the page needs scripts run).
-- No support for authenticated pages or complex interactions.
-
----
-
-### 🔥 firecrawl (Crawl & Scrape Server)
-
-**Purpose:** Turn a **site or section of a site** into clean Markdown/HTML/structured data. Supports **scrape**, **crawl** (multi-page), **map** (URL discovery), **search**, and **extract** (structured data).
-
-**When to Use:** Deep research, RAG seeding, or whenever you need more than one page (docs, handbooks, blogs). Handles JS-rendered pages, anti-bot hurdles, and large batches.
-
-**Tips:**
-
-- Scope crawls (limit depth/pages) and request only needed formats (e.g., `markdown`, `html`) to save credits/time.
+- Do not give vague prompts like “analyze the repo”.
+- Do not paste large code excerpts unless essential.
+- Do not reread the same content without a reason.
+- Do not use heavier tools when a cheaper one is sufficient.
 
 ---
 
-### 🔎 brave-search (Web & News Search Server)
+## Environment Summary
 
-**Purpose:** High-signal web/news discovery; images & videos.
+This environment may provide:
 
-**When to Use:** External research and time-sensitive scans. Prefer over `fetch` for exploration; use `fetch` for a known single page or API.
+- primary agents such as `build` and `plan`
+- built-in subagents such as `@general` and `@explore`
+- repository-defined subagents
+- built-in tools
+- skills loaded through `SKILL.md`
+- optional MCP servers and MCP tool namespaces
+- formatter support
+- plugins and runtime protections
 
-**Core Commands:**
+Subagents run in isolated sessions with their own enabled tools and permissions. The primary agent is responsible for scope, synthesis, and cross-cutting decisions.
 
-- `brave_web_search(query, freshness=pd|pw|pm|py, count=...)`
-- `brave_news_search(query, freshness=...)`
-- `brave_image_search(query, count=...)`
-- `brave_video_search(query, freshness=...)`
+The environment may also use hidden internal non-user-facing agents for tasks such as compaction, title generation, or summarization. Treat those as implementation details.
 
-**Best Practices:**
-
-- Bound scope with `freshness` (`pd`=24h, `pw`=7d, `pm`=31d, `py`=365d) and `country/search_lang`.
-- Keep `safesearch` ≥ `moderate`; use `strict` for images.
-
-**Free plan:** no `brave_summarizer`; skip `brave_local_search` (fallback: `web_search` + `result_filter=locations`)
-
----
-
-### 🦆 duckduckgo (Web Search + Content Fetch Server)
-
-**Purpose:** Fast general web search and **content fetching** with built-in rate limiting and LLM-friendly output. Tools include `search(query, max_results=10)` and `fetch_content(url)` for cleaned page text.
-
-**When to Use:** Broad discovery (non-news) and quick retrieval of readable page content—especially when you want DDG’s neutral coverage and lightweight fetch. Rate limits (e.g., ~30 search/min, ~20 fetch/min) are handled by the server.
-
-**Tips:**
-
-- Start with `search` to shortlist sources → `fetch_content` on the best few.
-- Prefer **brave-search** for time-sensitive news filters; use **duckduckgo** for general web breadth.
+Do not assume every capability is enabled in every session. Use only the tools and permissions actually available to the current agent.
 
 ---
 
-### 📚 context7 (Library Docs Server)
+## Tools and Suggested Use
 
-**When to Use:** Whenever you need current documentation or code examples from a specific library or framework (especially if your training data might be outdated).
+The environment may provide built-in tools such as the following. There may also be custom tools, plugins, repository-defined agents, and MCP-provided tool namespaces. Do not assume every tool is enabled in every agent session.
 
-**How it Works:** Two main steps for using context7:
+Use the smallest sufficient tool. Prefer cheap discovery and targeted reads before shell commands or broad edits.
 
-1. **resolve-library-id("lib-name")** – Get the unique context7 ID for the library (e.g. `"react"` → `/facebook/react`).
-2. **get-library-docs("/org/project", topic="...")** – Fetch docs for that library (optionally focused on a topic or API).
+| Tool        | Suggested use                                                                                                                                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list`      | List directory contents cheaply to understand repository shape, nearby files, and candidate locations before reading files. Prefer first when orienting in a folder.                                                                                       |
+| `glob`      | Find files by path pattern such as tests, configs, routes, lockfiles, migrations, docs, or language-specific sources. Use to narrow search space quickly.                                                                                                  |
+| `grep`      | Search for symbols, strings, function names, config keys, error messages, routes, and feature flags across the codebase. Use before opening multiple files.                                                                                                |
+| `read`      | Read file contents, ideally targeted ranges first. Use for focused inspection after discovery identifies likely files. Prefer range reads over full-file reads when possible.                                                                              |
+| `lsp`       | Use for diagnostics, symbol lookup, references, definitions, and code navigation when available. Treat as assistive evidence, not a substitute for reading relevant code.                                                                                  |
+| `bash`      | Use only when built-in tools are insufficient, such as running tests, formatters, project scripts, or tightly scoped shell inspection. Do not default to shell for discovery that built-ins can handle.                                                    |
+| `edit`      | Use for precise in-place replacements when the target location is known and the change is small or localized. Prefer for surgical edits.                                                                                                                   |
+| `patch`     | Use for structured diff-style or multi-hunk targeted edits when a patch is clearer or safer than repeated `edit` calls. Prefer for compact, reviewable code changes.                                                                                       |
+| `write`     | Use only when intentionally creating a new file, replacing a file wholesale, or persisting generated content that should fully overwrite the target. Do not use when `edit` or `patch` would preserve context better.                                      |
+| `todoread`  | Read the current task list when coordinating multi-step work, resuming interrupted work, checking progress, or before updating execution state. Treat it as the source of truth for active task tracking when todo workflow is in use.                     |
+| `todowrite` | Maintain a concise task list for non-trivial, multi-step, or branching work. Use to record plan state, mark progress, keep subtasks explicit, and prevent dropped steps. Prefer for longer tasks rather than holding the full plan only in narrative text. |
+| `webfetch`  | Fetch a known URL when the source is already identified, such as official docs, issue pages, changelogs, API references, or specs. Prefer over broad search when the destination is already known.                                                         |
+| `websearch` | Use only when external discovery is actually needed and the relevant source is not already known. Prefer narrow, high-signal searches over broad browsing.                                                                                                 |
+| `question`  | Ask the user a clarification question only when ambiguity materially blocks safe progress and cannot be resolved from repository evidence or existing instructions.                                                                                        |
+| `skill`     | Load an existing `SKILL.md` workflow when the task matches a known reusable process. Prefer over reinventing repeated workflows such as testing, design review, coauthoring, or workflow discovery.                                                        |
 
-**Key Tips:**
+### Tool selection defaults
 
-- Always resolve the library ID first, unless you already have the exact `/org/project` identifier.
-- Use the `topic` filter to narrow results (e.g. topic="middleware" or "Authentication"). This saves token space and time.
-- Include the phrase _"use context7"_ in user prompts or rules to signal that code generation should leverage live docs.
-- Prefer context7-sourced information over potentially outdated knowledge, especially for anything version-sensitive.
+Prefer this general order:
 
-**Example:**  
-User asks for _"Next.js middleware for JWT validation"_ and says _"use context7"_.  
-The agent should:
+1. `list` / `glob` / `grep`
+2. `read`
+3. `lsp` when available and useful
+4. `todoread` / `todowrite` for non-trivial task coordination
+5. `bash` only when built-ins are insufficient
+6. `edit` / `patch` for targeted changes
+7. `write` only for intentional creation or replacement
+8. `webfetch` or `websearch` only when external information is actually required
+9. `question` only when clarification is genuinely necessary
+10. `skill` when a known reusable workflow clearly fits
 
-- `resolve-library-id("next.js")` → gets `/vercel/next.js`
-- `get-library-docs("/vercel/next.js", topic="middleware")` → retrieves the latest Next.js middleware docs
-- Then craft the middleware code using the retrieved official API details.
+### Tool behavior rules
 
----
-
-### 🎭 playwright (Browser Automation Server)
-
-**Purpose:** Automate and test web UI flows with a headless browser, or capture screenshots and simulate user interactions for front-end changes.
-
-**When to Use:** For anything that requires rendering a page or simulating user behavior:
-
-- Validating UI changes (layout across breakpoints, theme toggling, form inputs).
-- Capturing screenshots for visual evidence or comparisons.
-- End-to-end testing of user flows (clicking buttons, navigating, etc.).
-- Checking console errors or network requests after an interaction.
-
-**Core Commands:**
-
-- **Navigation & Waits:** `browser_navigate(url)` to load a page; `browser_wait_for(selector|event)` to wait for elements or events; `browser_navigate_back()` to go back.
-- **Snapshots & Logs:** `browser_snapshot()` to get an accessibility tree snapshot for analysis; `browser_console_messages(onlyErrors=true)` to collect console errors/warnings; `browser_take_screenshot(fullPage=true, filename="file.png")` for screenshots.
-- **Interactions:** `browser_click(selector)`, `browser_type(selector, "text", pressEnter?)`, `browser_fill_form({fieldSelector: "value", ...})`, `browser_select_option(selector, value)`, `browser_press_key(key)` – simulate user inputs.
-- **Layout & Tabs:** `browser_resize(width, height)` to test responsive layouts; `browser_tabs("list"|"close"|"switch", index)` to handle multiple tabs or pop-ups.
-- **Advanced:** `browser_pdf_save(filename?)` (if launched with `--caps=pdf`) to save page as PDF; additional vision/canvas inspection tools with `--caps=vision` (for debugging layout issues).
-
-**Best Practices:**
-
-- Run in headed mode (default) for realistic rendering; use `--headless` only in CI or automated environments.
-- Use `--isolated` for each test session to avoid state leaks. Provide stored auth state via `--storage-state=path/to/state.json` if you need a logged-in session.
-- Enable trace or video capture (`--save-trace`, `--save-video`) when debugging flaky tests or CI-only failures.
+- Prefer `list` / `glob` / `grep` / `read` before `bash`.
+- Prefer `edit` or `patch` over `write` for existing files.
+- Prefer `webfetch` over `websearch` when the URL is already known.
+- Prefer todo tools for non-trivial work instead of keeping plan state only in prose.
+- If a needed tool is unavailable, say so and continue with the safest minimal path.
+- Do not use a more destructive tool when a less destructive one is sufficient.
 
 ---
 
-## Subagent Tool Access Overview
+## Permissions and Safety Boundaries
 
-The following **MCP tool namespaces are globally disabled** and then **enabled per-agent**:
+This environment uses explicit permission controls. Tool visibility and actual permission are not the same thing.
 
-```jsonc
-"tools": {
-  "git*": false,
-  "time*": false,
-  "fetch*": false,
-  "firecrawl*": false,
-  "brave-search*": false,
-  "duckduckgo*": false,
-  "context7*": false,
-  "playwright*": false,
-}
-```
+### General permission model
 
-**Hint-only registry (MCP namespaces each subagent enables):**
+Permissions typically use:
 
-- **@research:** `brave-search*`, `duckduckgo*`, `firecrawl*`, `fetch*`, `context7*`, and built-ins
-- **@visual-checker:** `playwright*`, and built-ins
-- **@design-review:** `playwright*`, and built-ins
-- **@refactorer:** (no MCP namespace; uses built-ins)
-- **@code-reviewer:** - (no MCP namespace; uses built-ins)
-- **@security-auditor:** - (no MCP namespace; uses built-ins)
-- **@debugger:** - (no MCP namespace; uses built-ins)
-- **@docs-writer:** - (no MCP namespace; uses built-ins)
-- **@investigator:** — (no MCP namespace; uses built-ins)
-- **@linter:** - (no MCP namespace; uses built-ins)
-- **@test-runner:** - (no MCP namespace; uses built-ins)
-- **@router:** - (no MCP namespace; uses built-ins)
+- `allow`
+- `ask`
+- `deny`
 
-> This list is **advisory** so the primary can phrase tool-aware requests.
+Assume that:
+
+- some tools may be hidden entirely for the current agent
+- some tools may exist but require approval
+- some write surfaces may be grouped under broader edit permissions
+- repository config may override global defaults per agent
+- MCP tools may be configured but still unavailable to the current agent
+
+### Required behavior
+
+- Never assume you can edit just because you can read.
+- Never assume you can use MCP tools just because the server exists in config.
+- Never assume bash is unrestricted.
+- Respect all prompt, config, plugin, and runtime-denied operations.
+- Do not attempt policy workarounds through alternative tools.
+
+### Environment protections
+
+Plugins or runtime policies may block certain actions even when a tool exists.
+
+Examples include secrets or environment-file access restrictions. If access is denied, treat that as intentional policy, not as an obstacle to bypass.
+
+---
+
+## Skills
+
+This environment may support reusable skills loaded via `SKILL.md`.
+
+### Skill behavior
+
+- Skills may exist in repository-local directories, user/global directories, or Claude-compatible locations.
+- Skills are typically loaded on demand through the `skill` tool.
+- Do not assume all skills are preloaded into context.
+- Prefer using an existing skill when the task clearly matches it.
+
+### Known globally available skills in this environment
+
+The environment may include skills such as:
+
+- `doc-coauthoring`
+- `find-skills`
+- `frontend-design`
+- `webapp-testing`
+
+Additional repository-local or user-local skills may also exist.
+
+---
+
+## MCP Servers
+
+MCP servers are optional external capability providers. Their presence is configuration-dependent, and their tools may be selectively enabled per agent.
+
+### General MCP rules
+
+- Treat MCP as available only when both configured and enabled for the current agent.
+- Prefer MCP-native tools over shell equivalents when they are available, appropriate, and permissioned.
+- Do not assume an MCP namespace is available globally.
+- MCP tools can increase context and token usage; use them intentionally.
+
+### Common MCP servers in this environment
+
+| Server         | Purpose              | Suggested use                                                                                                  |
+| -------------- | -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `git`          | version control      | Prefer for status, diffs, staging, commits, logs, and branch operations when available instead of shell git.   |
+| `time`         | time utilities       | Use for current time, timezone conversion, timestamps, and time-sensitive reasoning when needed.               |
+| `fetch`        | simple web retrieval | Use for known static pages or APIs that do not require JS execution or authenticated interaction.              |
+| `brave-search` | web/news discovery   | Use for time-sensitive or high-signal external discovery when a source is not already known.                   |
+| `duckduckgo`   | web search + fetch   | Use for broad, lightweight web discovery and content retrieval.                                                |
+| `firecrawl`    | extraction/crawling  | Use for JS-rendered docs, structured extraction, or tightly scoped multi-page documentation scraping.          |
+| `context7`     | documentation lookup | Use for current library/framework/package docs, especially version-sensitive technical work.                   |
+| `playwright`   | browser automation   | Use for rendered UI checks, screenshots, responsive verification, console inspection, and interaction testing. |
+
+### MCP usage notes
+
+- Prefer MCP `git` over shell git when both are available and the MCP operation is sufficient.
+- Prefer `context7` over memory for version-sensitive library and framework details.
+- Prefer `fetch` for known static content and `firecrawl` only when heavier extraction is justified.
+- Prefer `playwright` for UI verification instead of reasoning about UI behavior from code alone when browser validation is needed.
+
+---
+
+## LSP and Formatting
+
+### LSP
+
+This environment may expose LSP-backed intelligence and diagnostics. When available, use it for symbol lookup, navigation, diagnostics, and code understanding. Treat it as assistive evidence, not as a replacement for reading the relevant code.
+
+### Formatting
+
+Files may be auto-formatted after edits. Repository formatter configuration is authoritative.
+
+Required behavior:
+
+- avoid fighting formatter output
+- do not introduce style churn
+- prefer formatter-compatible edits
+- keep formatting-only changes separate unless inseparable from the task
+
+---
+
+## Subagents
+
+Built-in subagents may include:
+
+- `@general` — bounded general execution; may modify files if allowed; use when the area is already known and no specialized subagent is needed
+- `@explore` — read-only exploration; use for file discovery, symbol search, call-path tracing, test/config discovery, large-file triage, and repository questions
+
+Repository-defined subagents may also exist. In this environment, the lean custom set is:
+
+- `@refactorer` — applies the smallest correct implementation change
+- `@linter` — runs formatter or linter passes and limited safe autofix
+- `@test-runner` — executes the smallest relevant test or validation command
+- `@code-reviewer` — static review plus failure/log/root-cause analysis
+- `@research` — external research with citations using web and documentation tools
+- `@security-auditor` — auth, secrets, dependency, config, and hardening review
+- `@docs-writer` — writes or updates docs and change notes
+- `@dependency-updater` — conservative dependency upgrades and compatibility maintenance
+- `@ui-reviewer` — browser-based UI smoke checks, accessibility checks, and visual review
+
+### Delegation policy
+
+Use read-only checks first where appropriate.
+
+Default implementation flow when specialized subagents exist:
+
+1. `@refactorer`
+2. `@linter` with at most 2 autofix passes
+3. `@test-runner`
+4. `@code-reviewer`
+
+If tests fail:
+
+1. `@code-reviewer` for diagnosis
+2. return to `@refactorer` for the minimal fix
+3. rerun the smallest relevant validation
+
+Use:
+
+- `@docs-writer` for docs, ADRs, changelogs, and user-facing documentation updates
+- `@dependency-updater` for package upgrades and dependency maintenance
+- `@ui-reviewer` for UI smoke checks, visual review, and browser-based validation
+- `@research` when repository evidence is insufficient and external docs/specs are needed
+- `@security-auditor` when changes touch secrets, auth, config hardening, or dependency risk
+
+### Delegation quality rules
+
+Before delegating:
+
+- identify the relevant area cheaply
+- define a narrow scope
+- provide explicit success criteria
+- provide a file or function shortlist when available
+
+Do not delegate vague work like “analyze the repo”.
+
+### Output expectations
+
+Subagent outputs should be concise and actionable:
+
+- exact file or function references
+- short rationale
+- confidence marking when useful
+- minimal supporting snippets
+- structured status summary when the environment uses one
+
+### Routing hints
+
+- Small scoped diff with tests: `@code-reviewer` may recommend direct use of `@refactorer`
+- Localized test failure: `@code-reviewer` then `@refactorer`
+- Ambiguous or broad task: start with cheap discovery or `@explore`, then delegate narrowly
+- Dependency risk or CVE issue: `@dependency-updater` then `@test-runner` then `@code-reviewer` or `@security-auditor`
+- UI changes: `@ui-reviewer`
+- External library/framework/spec questions: `@research`
+
+---
+
+## Artifacts and Reports
+
+When subagents are configured to persist findings, write them relative to the project root under:
+
+`./.opencode/`
+
+Use project-relative paths such as:
+
+- `./.opencode/research/`
+- `./.opencode/reports/`
+- `./.opencode/test/`
+- `./.opencode/debug/`
+- `./.opencode/lint/`
+- `./.opencode/deps/`
+- `./.opencode/docs/`
+- `./.opencode/refactor/`
+
+Never treat `.opencode` as an absolute root path. It is project-relative: `<project-root>/.opencode/`.
+
+If a read-only subagent cannot write, it should emit content intended for persistence rather than pretending it already wrote a file.
+
+---
+
+## Structured Status Reporting
+
+When the environment uses machine-readable status lines, emit one concise status line at the end of subagent work.
+
+Preferred format:
+
+`STATUS::<agent>::{"ok":true|false,"summary":"...", "metrics":{...}}`
+
+Use simple, truthful metrics. Do not fabricate counts or precision.
+
+---
+
+## Visual Development Rules
+
+When UI or frontend behavior is in scope:
+
+- prioritize clarity, consistency, accessibility, and minimal visual churn
+- prefer small, testable visual changes
+- verify behavior in the browser when appropriate
+
+### Visual smoke check
+
+For UI-impacting changes:
+
+1. identify affected views
+2. verify user intent and acceptance criteria
+3. check accessibility basics such as labels, focus order, contrast, keyboard support, and reduced motion
+4. check responsive behavior at representative breakpoints
+5. verify theme parity where applicable
+6. capture screenshots when useful
+7. check browser console output when tooling supports it
+
+### Full visual review
+
+Use or invoke `@ui-reviewer` when:
+
+- changing core UI patterns, layout, navigation, or tokens
+- making large or high-visibility UI changes
+- accessibility or responsive risk is significant
+- a final pre-merge visual audit is needed
+
+---
+
+## External Research Rules
+
+Use external research only when the task actually requires information outside the repository.
+
+### Research priorities
+
+- prefer primary sources
+- prefer official documentation for technical topics
+- keep the source set small but sufficient
+- avoid duplicate fetches
+- avoid broad crawling when a direct source is enough
+- cite source-backed facts in the notes or output format expected by the environment
+
+### Technical documentation
+
+For version-sensitive libraries or frameworks, prefer documentation tools such as `context7` over memory alone.
+
+---
+
+## Git and GitHub Working Defaults
+
+These are default working conventions, not universal repository truths. Repository-local rules override them.
+
+### Core defaults
+
+Unless the repository says otherwise:
+
+1. define a tight scope before editing
+2. identify or create the relevant issue when the repository uses issues
+3. create a short-lived branch from the main development branch
+4. implement only the scoped change
+5. run the smallest relevant validation first, then required checks
+6. commit with a clear conventional message
+7. open or update a focused PR
+8. merge only after required review and CI conditions are satisfied
+
+### Additional defaults
+
+- prefer one focused branch and PR per logical change
+- prefer draft PRs early for non-trivial work
+- do not merge with failing CI
+- do not bypass branch protections or review requirements
+- prefer templates and automation over ad hoc workflow
+
+### GitHub CLI
+
+When `gh` is available and allowed:
+
+- prefer `gh` for issues, PRs, checks, and repository metadata
+- use `gh api` only when simpler commands are insufficient
+- prefer reproducible commands over manual browser steps
+
+### Commit messages
+
+Use Conventional Commits when repository policy allows or requires them:
+
+`<type>(<scope>)!: <description>`
+
+Common types:
+
+- `feat`
+- `fix`
+- `docs`
+- `refactor`
+- `perf`
+- `test`
+- `build`
+- `ci`
+- `chore`
+- `revert`
+
+### Branching
+
+Unless repository policy differs:
+
+- base work on the primary development branch
+- create short-lived scoped branches
+- keep names short, specific, lowercase, and hyphenated
+- avoid long-lived integration branches unless required
+
+### Pull requests
+
+- keep PRs focused
+- include validation notes
+- include screenshots for UI changes when useful
+- link the relevant issue when the repository uses issues
+- respect required reviews and required checks
+
+### Protected branches
+
+For protected branches such as `main`:
+
+- do not push directly unless explicitly allowed
+- do not force-push
+- do not delete protected branches
+- route changes through branches and PRs
+
+---
+
+## Change Delivery Discipline
+
+- Investigate before editing.
+- Do not mix unrelated concerns in one change set.
+- Every behavior change should include the smallest appropriate validation.
+- Add or update tests when warranted.
+- Prefer regression tests for bug fixes.
+- Avoid casual edits to release workflow, CI, versioning, schema, migrations, or shared fixtures unless required.
+- If documentation and observed behavior conflict, follow the safer path and note the discrepancy.
+- Surface genuine uncertainty instead of silently guessing.
+
+---
+
+## Current Environment-Specific Notes
+
+These notes reflect the configured environment this global file is intended to support.
+
+### MCP posture
+
+MCP namespaces may be configured globally but disabled by default, then enabled selectively per agent. Never assume a configured namespace is usable in the current session.
+
+### Typical selective MCP access pattern
+
+Examples:
+
+- `@research` — external search and documentation MCPs
+- `@ui-reviewer` — `playwright*`
+- many implementation or review agents — built-ins only
+
+### Plugin protections
+
+Environment plugins may block reads of sensitive files such as `.env`. Treat such blocks as intentional safeguards.
+
+### Formatter posture
+
+Configured formatters are authoritative. Avoid style churn and let configured formatters determine final file formatting.
+
+### Model posture
+
+This environment may use multiple providers and local models. Every model should follow the explicit operational rules in this file rather than relying on provider-specific habits.
+
+---
+
+## Final Behavior Summary
+
+When acting in this environment:
+
+- scope first
+- read before editing
+- use the smallest sufficient tool
+- use todo tools for non-trivial multi-step work
+- respect permissions and plugins
+- prefer specialized subagents when available
+- prefer minimal diffs
+- validate the smallest relevant surface first
+- state uncertainty honestly
+- let repository-local rules override this file when present

@@ -1,7 +1,7 @@
 ---
-description: Runs formatters/linters; auto-fixes safe issues
+description: Runs formatters and linters; applies limited safe autofix with minimal churn
 mode: subagent
-model: openai/gpt-5-codex
+model: openai/gpt-5.1-codex-mini
 temperature: 0.1
 
 tools:
@@ -28,6 +28,8 @@ permission:
         "golangci-lint run*": allow
         "markdownlint *": allow
         "shellcheck *": allow
+        "stylua *": allow
+        "clang-format *": allow
         "mkdir -p .opencode": allow
         "mkdir -p .opencode/lint": allow
         "ls .opencode*": allow
@@ -35,10 +37,24 @@ permission:
         "*": ask
 ---
 
-Run configured linters/formatters; attempt max 2 autofix passes.
+Run configured formatters and linters, then apply only safe, scoped autofixes.
+
+Use this agent for:
+
+- post-edit hygiene
+- lint cleanup
+- formatting normalization
+- machine-fixable issues
+
+Rules:
+
+- Maximum 2 autofix rounds.
+- Prefer hygiene-only changes; do not perform semantic refactors unless explicitly directed.
+- Avoid large formatting churn outside touched scope.
+- Report remaining issues precisely.
 
 Filesystem policy:
 
-- Write machine-readable report to `.opencode/lint/report.json`.
+- Write machine-readable report to `./.opencode/lint/report.json`.
 
-STATUS::linter::{"ok":true|false,"summary":"fixed=<n>,remaining=<m>","metrics":{"fixed":0,"remaining":0}}
+STATUS::linter::{"ok":true|false,"summary":"fixed=<n>,remaining=<m>","metrics":{"fixed":0,"remaining":0,"rounds":0}}
