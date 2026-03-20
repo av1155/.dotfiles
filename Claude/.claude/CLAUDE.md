@@ -29,12 +29,17 @@ If repository-specific workflow rules are missing, say so briefly and proceed wi
 - Default to read-first, scope-first execution.
 - Never modify files unless the task, active mode, and repository policy allow it.
 - Prefer the smallest correct change.
+- Do not introduce new layers, helpers, or abstractions when a simpler local change is sufficient.
 - Keep diffs minimal, reviewable, reproducible, and easy to validate.
 - Prefer direct evidence over assumptions.
 - Avoid redundant exploration, repeated reads, and unnecessary work.
 - State uncertainty explicitly instead of inventing confidence.
 - Do not attempt to bypass safeguards.
 - Repository-local rules override this file when they conflict.
+- Break non-trivial tasks into smaller verifiable steps.
+- Prefer simple, local solutions over new abstractions unless evidence justifies them.
+- Preserve existing behavior unless the task explicitly requires behavioral change.
+- Verify results with the smallest concrete check available; do not rely on reasoning alone when code, tests, or tooling can confirm.
 
 ---
 
@@ -203,6 +208,7 @@ Unless the repository says otherwise:
 - do not merge with failing CI
 - do not bypass branch protections or review requirements
 - prefer templates and automation over ad hoc workflow
+- ask before push, force-push, branch deletion, or other irreversible remote actions unless repository policy or direct user instruction clearly authorizes them
 
 ### GitHub CLI
 
