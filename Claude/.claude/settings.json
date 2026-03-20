@@ -1,28 +1,19 @@
 {
-  "env": {
-    "DISABLE_TELEMETRY": "1",
-    "DISABLE_AUTOUPDATER": "1"
-  },
-  "includeCoAuthoredBy": false,
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|MultiEdit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '.tool_input.file_path' | { read f; case \"$f\" in *.ts|*.tsx|*.js|*.jsx|*.css|*.json|*.yml|*.yaml|*.md|*.html|*.vue|*.svelte) npx prettier --config \"$HOME/.prettierrc.json\" --write \"$f\" ;; *.c|*.cc|*.cpp|*.h|*.hpp) clang-format -i -style=file \"$f\" ;; *.lua) stylua --config-path \"$HOME/.config/nvim/stylua.toml\" \"$f\" ;; esac; }"
-          }
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "cleanupPeriodDays": 30,
+    "respectGitignore": false,
+    "outputStyle": "Explanatory",
+    "effortLevel": "medium",
+    "attribution": {
+        "commit": "",
+        "pr": ""
+    },
+    "permissions": {
+        "deny": [
+            "Read(./.env)",
+            "Read(./.env.*)",
+            "Read(./secrets/**)",
+            "Read(./config/credentials.json)"
         ]
-      }
-    ]
-  },
-  "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true,
-    "github@claude-plugins-official": true
-  },
-  "alwaysThinkingEnabled": false
+    }
 }
