@@ -14,7 +14,7 @@ tools:
     webfetch: true
 
 permission:
-    edit: allow
+    edit: ask
     webfetch: ask
     bash:
         "mkdir -p .opencode": allow

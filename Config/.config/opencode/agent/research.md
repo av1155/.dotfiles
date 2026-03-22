@@ -19,7 +19,10 @@ tools:
     context7*: true
 
 permission:
-    edit: deny
+    edit:
+        "*": deny
+        ".opencode/research/**": ask
+        "./.opencode/research/**": ask
     webfetch: allow
     bash:
         "mkdir -p .opencode": allow
