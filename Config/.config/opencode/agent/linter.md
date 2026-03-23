@@ -1,7 +1,7 @@
 ---
 description: Runs formatters and linters; applies limited safe autofix with minimal churn
 mode: subagent
-model: openai/gpt-5.1-codex-mini
+model: openai/gpt-5.4-mini
 temperature: 0.1
 
 tools:

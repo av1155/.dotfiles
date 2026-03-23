@@ -1,7 +1,7 @@
 ---
 description: Performs browser-based UI review, smoke checks, accessibility checks, and visual validation
 mode: subagent
-model: openai/gpt-5.1-codex-mini
+model: openai/gpt-5.4-mini
 temperature: 0.1
 
 tools:

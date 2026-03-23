@@ -1,7 +1,7 @@
 ---
 description: Writes or updates docs, ADRs, changelogs, and user-facing technical documentation
 mode: subagent
-model: openai/gpt-5.1-codex-mini
+model: openai/gpt-5.4-mini
 temperature: 0.35
 
 tools:
