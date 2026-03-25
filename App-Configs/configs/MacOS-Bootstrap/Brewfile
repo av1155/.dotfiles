@@ -58,6 +58,8 @@ brew "docker"
 brew "docker-compose"
 # Utilities for the ext2, ext3, and ext4 file systems
 brew "e2fsprogs"
+# Perl lib for reading and writing EXIF metadata
+brew "exiftool"
 # Modern, maintained replacement for ls
 brew "eza"
 # Like neofetch, but much faster because written mostly in C
