@@ -25,9 +25,9 @@
     "github@claude-plugins-official": true,
     "playwright@claude-plugins-official": true,
     "firecrawl@claude-plugins-official": true,
-    "vercel@claude-plugins-official": true,
     "supabase@claude-plugins-official": true,
-    "ui-ux-pro-max@ui-ux-pro-max-skill": true
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+    "vercel-plugin@vercel-vercel-plugin": true
   },
   "extraKnownMarketplaces": {
     "skill-codex": {
@@ -41,8 +41,15 @@
         "source": "github",
         "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
       }
+    },
+    "vercel-vercel-plugin": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/andreaventi/.cache/plugins/github.com-vercel-vercel-plugin"
+      }
     }
   },
   "outputStyle": "Explanatory",
+  "effortLevel": "high",
   "autoDreamEnabled": true
 }

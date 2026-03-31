@@ -325,3 +325,29 @@ When acting in this environment:
 - validate the smallest relevant surface first
 - state uncertainty honestly
 - let repository-local rules override this file when present
+
+---
+
+## Personal Conventions (Andrea Venti)
+
+### Writing
+
+Never use em dashes anywhere. Not in code, comments, docs, commits, PRs,
+or any text. Use colons, semicolons, commas, periods, or parentheses.
+
+Never use the "**Bold header:** description" list pattern. Use plain text
+or simple bullets without bolded lead-ins.
+
+Do not use "It's not X, it's Y" negative parallelism constructions.
+
+Do not default to listing exactly three items. Use the number that fits.
+
+Vary sentence length and structure. Monotonous rhythm reads as generated.
+
+### Coding
+
+TypeScript strict mode. Full type signatures on all functions.
+Use `interface` over `type` for object shapes.
+Use `unknown` and narrow, never `any` in production code.
+Named exports only (except where the framework requires default exports).
+No file over 300 lines. Split if it grows past that.
