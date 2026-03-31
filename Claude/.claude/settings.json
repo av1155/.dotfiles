@@ -11,9 +11,38 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**)",
-      "Read(./config/credentials.json)"
+      "Read(./config/credentials.json)",
+      "Read(**/*.pem)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.docker/config.json)",
+      "Read(~/.npmrc)",
+      "Read(~/.config/gh/**)",
+      "Bash(sudo *)",
+      "Bash(chmod 777 *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(curl *| sh)",
+      "Bash(wget *| sh)",
+      "Bash(dd *)",
+      "Bash(mkfs *)"
     ],
     "defaultMode": "plan"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE 'rm\\s+-(rf|fr)\\s+/(\\s|\\*|$|;)|rm\\s+-(rf|fr)\\s+\\*|rm\\s+-(rf|fr)\\s+\\.|rm\\s+-(rf|fr)\\s+~'; then echo '❌ BLOCKED: rm -rf with dangerous target.' >&2; exit 2; fi; exit 0"
+          }
+        ]
+      }
+    ]
   },
   "enabledPlugins": {
     "skill-codex@skill-codex": true,
