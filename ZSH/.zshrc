@@ -542,11 +542,6 @@ if command -v thefuck &>/dev/null; then
     eval "$(thefuck --alias fk)"
 fi
 
-if command -v zoxide &>/dev/null; then
-    eval "$(zoxide init zsh)"
-    alias cd="z"
-fi
-
 alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first'
 alias  l='eza -A -lh --git --icons=auto --sort=name --group-directories-first'
 alias la='eza -lha --git --icons=auto --sort=name --group-directories-first'
@@ -871,4 +866,9 @@ export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 if grep -qi microsoft /proc/version 2>/dev/null; then
   export GALLIUM_DRIVER=d3d12
   export LIBVA_DRIVER_NAME=d3d12
+fi
+
+if command -v zoxide &>/dev/null; then
+    eval "$(zoxide init zsh)"
+    alias cd="z"
 fi
