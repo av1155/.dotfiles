@@ -44,6 +44,8 @@ brew "ruby"
 brew "cocoapods"
 # Container runtimes on MacOS (and Linux) with minimal setup
 brew "colima", restart_service: :changed
+# GNU File, Shell, and Text utilities
+brew "coreutils"
 # Pure Scala Artifact Fetching
 brew "coursier"
 # Get, unpack, build, and install modules from CPAN
