@@ -66,9 +66,9 @@ Spawn **Explore** subagents to parallelize the investigation:
 
 - **Agent 3: External context (if needed).** If the problem involves external APIs, upstream behavior, or library quirks:
   1. Check project-local docs first (README, docs/, vendored API specs, CLAUDE.md)
-  2. Use context7 MCP if available to pull current library docs
-  3. Use WebSearch + WebFetch for changelogs, known issues, or prior discussions
-  4. Use Firecrawl as a fallback for JS-heavy docs that standard fetching can't render
+  2. Use Context7 MCP if available: call `resolve-library-id` with the library name, then `query-docs` with the resolved ID focused on the specific API or behavior in question. This pulls current, version-specific documentation.
+  3. Use WebSearch + WebFetch for changelogs, known issues, GitHub discussions, or community-reported workarounds not covered in official docs.
+  4. Use Firecrawl CLI as a fallback for JS-heavy doc sites that WebFetch can't render (`firecrawl scrape <url>`).
 
 Collect all subagent reports before proceeding.
 
@@ -110,6 +110,8 @@ Exit plan mode. Write the fix.
 ### 3a. Write the fix
 
 Follow the plan from 2c. Make minimal, surgical changes — do not refactor unrelated code in the same PR. If the fix reveals other problems, note them for separate issues.
+
+**Verify external library APIs before using them.** If the fix involves calling external library functions (Next.js, Supabase, shadcn/ui, Tailwind CSS, Anthropic SDK, Dwolla, etc.), confirm the current API signature before writing the call. Use Context7 `query-docs` for a quick lookup, or WebFetch the relevant doc page. Do not rely on training data for libraries that release frequently.
 
 ### 3b. Write tests
 
@@ -172,4 +174,4 @@ Do it manually:
 3. **Minimal diffs.** Fix the bug, nothing else. Refactoring and cleanup go in separate PRs.
 4. **Cite evidence.** When explaining the root cause, reference specific files, line numbers, and code paths.
 5. **Respect the project's conventions.** Read CLAUDE.md, look at recent commit messages, check the PR template. Match the style.
-6. **Degrade gracefully.** If `gh`, GitHub MCP, Linear MCP, context7, or web tools are unavailable, continue with what you have. The core workflow (investigate → plan → implement → test) works with just git and code.
+6. **Degrade gracefully.** If `gh`, GitHub MCP, Linear MCP, Context7, or web tools are unavailable, continue with what you have. The core workflow (investigate → plan → implement → test) works with just git and code.
