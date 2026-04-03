@@ -169,7 +169,19 @@ If the plugin is unavailable, Dimension 7 runs entirely from the hand-written ch
 
 Using reconnaissance data and build verification results, construct a detailed plan organized by the ten audit dimensions. Each item must be a concrete, specific check against actual code — never generic advice.
 
-Enter plan mode if not already in it. Present the full plan to the user for review before executing.
+Enter plan mode if not already in it. Present the plan to the user for review before executing.
+
+**If the plan has more than 15 checklist items,** lead with a scannable summary table before the full detail. This lets the user see the entire scope at a glance and decide whether to approve, adjust, or skip dimensions before reading every finding:
+
+```
+| ID     | Dimension              | File / Location         | Concern (one line)                        |
+|--------|------------------------|-------------------------|-------------------------------------------|
+| D1-01  | Discarded Data         | lib/client.ts:53        | getUser() response fields unused           |
+| D2-01  | Cross-Field Validation | migration.sql:129       | max_shares not checked >= min_shares       |
+| ...    | ...                    | ...                     | ...                                        |
+```
+
+Then present the full detail by dimension below the table. For audits with 15 or fewer items, skip the summary table and go straight to the full detail.
 
 **Read `references/audit-dimensions.md`** for the detailed specification of all ten dimensions with examples and detection strategies.
 
@@ -206,6 +218,18 @@ For each dimension, generate specific checklist items derived from the actual co
 - An ID (e.g., D1-03 for Dimension 1, item 3; T-02 for Test Coverage, item 2; S-01 for Schema Consistency, item 1)
 - A concrete description of what to check
 - The file(s) and line(s) involved
+
+**Presentation order for the plan:** If the total checklist exceeds 15 items, present a condensed summary table first so the user can scan the full scope before reading detail:
+
+```
+| ID | File(s) | Check | Likely Severity |
+|----|---------|-------|-----------------|
+| D1-01 | retriever.ts | similarity score usage | WARN |
+| D2-01 | migration 1, L129 | min/max shares constraint | FAIL |
+| ... | ... | ... | ... |
+```
+
+Then present the full detail per dimension below the table. This prevents a 28-item wall of text where the user cannot see the forest for the trees.
 
 ---
 
@@ -264,6 +288,51 @@ or "all changed files lack corresponding test files">
 
 ---
 
+### Step 6: Create tracking issues (requires approval)
+
+If the report contains any FAIL or WARN findings, offer to create tracking issues in the project's issue tracker. **Do not create issues without explicit user approval.** Present the proposed issues first and wait for confirmation.
+
+Detect which tracker to use (same discovery as Step 1b):
+
+1. **Linear MCP** — if connected and the project uses Linear, create issues with:
+   - Title: finding ID + short description (e.g., "S7-01: Change CASCADE to RESTRICT on financial table FKs")
+   - Description: file paths, line numbers, problem explanation, and recommended fix from the audit report
+   - Priority: high for FAIL findings in the Priority 1 tier, medium for everything else
+   - Labels: match the project's existing label conventions (check what labels exist before creating)
+   - Set dependency relationships between issues where one fix must precede another (e.g., tests blocked by the code changes they test)
+
+2. **GitHub Issues via `gh` CLI** — if `gh` is available and the remote is GitHub:
+   ```bash
+   gh issue create --title "<ID>: <description>" --body "<details from report>"
+   ```
+   Apply labels matching project conventions. If no conventions exist, use `bug` for FAILs and `enhancement` for WARNs.
+
+3. **GitHub MCP** — if connected, use its issue creation tools as a fallback.
+
+4. **None available** — list the proposed issues in the chat so the user can create them manually.
+
+**Presentation before approval:**
+
+```
+I found N FAIL and M WARN findings. Want me to create tracking issues?
+
+Priority 1 (FAIL — high):
+- S7-01: Change CASCADE to RESTRICT on financial table FKs
+- D5-01: Add CHECK constraint on investors.withholding_rate [0, 1]
+
+Priority 2 (FAIL/WARN — medium):
+- D2-01: Add cross-field CHECKs on distribution_tiers
+- T-01: Write tests for Supabase client factories
+
+Tracker: Linear (detected) | Labels: type:bug for FAILs, Improvement for WARNs
+
+Create these issues? [wait for user confirmation]
+```
+
+Only proceed after the user confirms. If the user modifies the list (removes items, changes priorities, adjusts grouping), apply their changes. Skip Priority 3 findings by default — only include them if the user asks.
+
+---
+
 ## Rules
 
 1. **Never abbreviate.** Run every dimension against every changed file where it applies.
@@ -275,3 +344,4 @@ or "all changed files lack corresponding test files">
 7. **If the diff is very large (100+ files),** focus on non-test source files first, then audit test files for coverage gaps.
 8. **Adapt to the project.** Use whatever quality gates, slash commands, test runners, linters, and issue trackers exist in the current project. Never hardcode tool names — discover them dynamically from config files and available resources.
 9. **Degrade gracefully.** Every optional tool (context7, WebSearch, Firecrawl, Linear, GitHub, Playwright, security-guidance) enhances the audit when present but must not block it when absent. If a tool is unavailable, note what was skipped and continue.
+10. **PASS means PASS.** If code correctly handles something, mark it PASS and move on. Do not manufacture concerns about correct code, do not hedge PASSes with "but you could also...", and do not invent hypothetical scenarios that require ignoring the code's actual behavior. The audit is a quality gate, not a wishlist. A clean audit should produce mostly PASSes with zero FAILs — that is the goal, not a sign that the audit wasn't thorough enough.

@@ -152,6 +152,18 @@ When running a deep audit, actively hunt for each of these patterns in the chang
 
 ---
 
+## AP-13: The Parallel Array Drift
+
+**Shape:** Two arrays stored side-by-side are intended to be index-aligned, but nothing enforces equal length.
+
+**Detection:** Find paired array/list columns or fields. Check whether any constraint, validation, or assertion enforces equal length.
+
+**Example:** `retrieved_chunk_ids uuid[]` and `retrieved_chunk_scores numeric[]` in a chatbot audit table. If one array has 5 elements and the other has 4, the fifth chunk ID has no corresponding score, silently corrupting the audit record.
+
+**Fix:** Add a CHECK constraint (`array_length(a, 1) = array_length(b, 1)`) or restructure into a normalized junction table.
+
+---
+
 ## Adding new patterns
 
 When a deep audit discovers a FAIL that doesn't fit any of the above, add it here using this template:
