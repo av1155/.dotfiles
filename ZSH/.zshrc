@@ -772,6 +772,10 @@ fi
 
 export PRETTIERD_DEFAULT_CONFIG="$HOME/.dotfiles/Formatting-Files/.prettierrc.json"
 
+if [[ "$OS" == "Darwin" ]]; then
+    export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+fi
+
 if [[ "$OS" == "Darwin" && "$ARCHITECTURE" == "arm64" ]]; then
     FONT_SIZE="17"
     BACKGROUND_OPACITY="0.7"
