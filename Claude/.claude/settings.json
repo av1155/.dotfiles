@@ -84,7 +84,9 @@
     "firecrawl@claude-plugins-official": true,
     "supabase@claude-plugins-official": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "vercel-plugin@vercel-vercel-plugin": true
+    "vercel-plugin@vercel-vercel-plugin": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "lua-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "skill-codex": {
