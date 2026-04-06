@@ -848,8 +848,8 @@ export_from_file() {
   fi
 }
 
-export_from_file "ANTHROPIC_API_KEY" "$HOME/.config/anthropic/api_key"
-export_from_file "OPENAI_API_KEY" "$HOME/.config/openai/api_key"
+# export_from_file "ANTHROPIC_API_KEY" "$HOME/.config/anthropic/api_key"
+# export_from_file "OPENAI_API_KEY" "$HOME/.config/openai/api_key"
 export_from_file "FIRECRAWL_API_KEY" "$HOME/.config/firecrawl/api_key"
 export_from_file "CONTEXT7_API_KEY" "$HOME/.config/context7/api_key"
 export_from_file "BRAVE_API_KEY" "$HOME/.config/brave_search/api_key"
