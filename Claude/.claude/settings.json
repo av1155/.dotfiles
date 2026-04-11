@@ -71,17 +71,11 @@
                     }
                 ]
             }
-        ],
-        "Notification": [
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "~/.claude/hooks/tmux-notify.sh"
-                    }
-                ]
-            }
         ]
+    },
+    "statusLine": {
+        "type": "command",
+        "command": "~/.claude/statusline.sh"
     },
     "enabledPlugins": {
         "skill-codex@skill-codex": true,
@@ -97,7 +91,8 @@
         "ui-ux-pro-max@ui-ux-pro-max-skill": true,
         "typescript-lsp@claude-plugins-official": true,
         "lua-lsp@claude-plugins-official": true,
-        "vercel-plugin@vercel-vercel-plugin": true
+        "vercel-plugin@vercel-vercel-plugin": true,
+        "claude-notifications-go@claude-notifications-go": true
     },
     "extraKnownMarketplaces": {
         "skill-codex": {
@@ -117,13 +112,15 @@
                 "source": "directory",
                 "path": "/Users/andreaventi/.cache/plugins/github.com-vercel-vercel-plugin"
             }
+        },
+        "claude-notifications-go": {
+            "source": {
+                "source": "github",
+                "repo": "777genius/claude-notifications-go"
+            }
         }
     },
     "outputStyle": "Explanatory",
     "effortLevel": "high",
-    "autoDreamEnabled": true,
-    "statusLine": {
-        "type": "command",
-        "command": "~/.claude/statusline.sh"
-    }
+    "autoDreamEnabled": true
 }
