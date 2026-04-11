@@ -184,6 +184,58 @@ Delegated outputs should be concise and actionable:
 
 ---
 
+## Parallel Sessions via the agent CLI
+
+A zsh command `agent` manages isolated git worktrees and optional tmux
+sessions for parallel Claude Code or Codex work. The tool has two halves:
+worktree management (which you can drive directly) and interactive AI
+sessions in tmux (which require the user).
+
+Source: `~/.dotfiles/AgentWorktrees/.config/agent-worktrees/agent-worktrees.zsh`,
+sourced from `.zshrc`. Run `agent help` for full help.
+
+### Commands you can drive directly
+
+- `spin <name> --bare`: creates worktree at `~/.agent-worktrees/<repo>/<name>` and branch `agent/<name>` without launching any session. Edit files inside via absolute paths. rc=1 on name conflict or outside a git repo.
+- `list`, `ls`: colored table on a TTY, plain text when piped. State glyphs: `●` running, `⟳` reviewing, `⠿` installing, `○` idle. Trailing `+N` is commits ahead of main, `*` means the tree is dirty.
+- `diff <name>`, `d`: git diffstat against the merge-base with `main` or `master`. rc=1 if the worktree is missing.
+- `merge <name>`, `m`: merges `agent/<name>` into the current branch with `--no-ff`. rc=1 on conflicts or uncommitted changes.
+- `clean <name>`: kills any tmux session, stops any background install, removes the worktree, deletes the branch. rc=1 if nothing to clean.
+- `clean-all`: same for every agent worktree in the current repo.
+- `help`, `version`: docs.
+
+### Commands that need the user (suggest, do not run)
+
+These spawn or attach to interactive tmux sessions that cannot be reached from inside a Claude Code session:
+
+- `spin <name>` without `--bare`: launches a second Claude Code in a tmux session; it waits for prompts you cannot send.
+- `spin <name> --codex`: same for OpenAI Codex.
+- `attach <name>`, `a`: blocks on a TTY.
+- `review <name>`, `r`: opens a fresh Claude Code session for adversarial review; the user runs `/review` inside it.
+
+When one of these would help, tell the user the exact command and what to do inside the session.
+
+### When to reach for it autonomously
+
+Use `spin --bare` followed by edit, `diff`, `merge`, `clean` when:
+
+- a risky refactor should not touch main yet
+- two approaches need to be compared before committing to one
+- the work is multi-step and might need to be thrown away
+
+Skip it for single-file tweaks, pure read tasks, or when not inside a git repository.
+
+### Key behaviors worth relying on
+
+- worktrees always live at `~/.agent-worktrees/<repo-name>/<agent-name>`
+- branches are always named `agent/<name>`
+- `agent list` output is stable and pipe-safe; colors appear only on a TTY, and `NO_COLOR` or `AGENT_NO_COLOR` force plain text
+- `.agent-install.pid` and `.agent-install.status` inside a worktree are CLI-managed metadata; do not edit them, and do not mistake them for uncommitted changes (the dirty marker filters them out)
+- `agent spin` runs `pnpm install` / `npm ci` / `yarn install` in the background when a lockfile is present; `agent clean` kills it before removing the worktree
+- if a background script needs to `cd <worktree>`, use `builtin cd` to bypass the zoxide `cd` alias
+
+---
+
 ## Git and GitHub Working Defaults
 
 These are default working conventions, not universal repository truths. Repository-local rules override them.
