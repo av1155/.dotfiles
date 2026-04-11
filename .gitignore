@@ -1,3 +1,6 @@
 !*/javaClasspath/*
 Config/.config/kitty/dynamic.conf
 Config/.config/ghostty/dynamic.conf
+
+# Claude Code session-local permission state (per-machine, per-session)
+**/settings.local.json
