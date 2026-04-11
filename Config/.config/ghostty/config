@@ -92,3 +92,6 @@ keybind = ctrl+shift+down=csi:1;6B
 
 # Ghostty Quick Terminal
 keybind = global:cmd+grave_accent=toggle_quick_terminal
+
+# Claude Code (tmux workaround)
+keybind = shift+enter=text:\x1b\r
