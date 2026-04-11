@@ -30,9 +30,21 @@ printf -v FILL "%${FILLED}s"
 printf -v PAD "%${EMPTY}s"
 BAR="${FILL// /█}${PAD// /░}"
 
-# Duration
-MINS=$((DURATION_MS / 60000))
-SECS=$(((DURATION_MS % 60000) / 1000))
+# Duration: show the two most significant units (e.g. 45s, 5m21s, 2h5m, 3d2h)
+TOTAL_SEC=$((DURATION_MS / 1000))
+D=$((TOTAL_SEC / 86400))
+H=$(((TOTAL_SEC % 86400) / 3600))
+M=$(((TOTAL_SEC % 3600) / 60))
+S=$((TOTAL_SEC % 60))
+if [ "$D" -gt 0 ]; then
+    DURATION_FMT="${D}d${H}h"
+elif [ "$H" -gt 0 ]; then
+    DURATION_FMT="${H}h${M}m"
+elif [ "$M" -gt 0 ]; then
+    DURATION_FMT="${M}m${S}s"
+else
+    DURATION_FMT="${S}s"
+fi
 
 # Rate limits with color coding
 rate_color() {
@@ -48,12 +60,12 @@ rate_color() {
 LIMITS=""
 if [ -n "$FIVE_H" ]; then
     FC=$(rate_color "$FIVE_H")
-    LIMITS="${FC}$(printf '%.0f' "$FIVE_H")%%${RESET} 5h"
+    LIMITS="${FC}$(printf '%.0f' "$FIVE_H")%${RESET} 5h"
 fi
 if [ -n "$SEVEN_D" ]; then
     SC=$(rate_color "$SEVEN_D")
     [ -n "$LIMITS" ] && LIMITS="${LIMITS} ${DIM}│${RESET} "
-    LIMITS="${LIMITS}${SC}$(printf '%.0f' "$SEVEN_D")%%${RESET} 7d"
+    LIMITS="${LIMITS}${SC}$(printf '%.0f' "$SEVEN_D")%${RESET} 7d"
 fi
 
 # Git (cached 5s)
@@ -63,23 +75,32 @@ if [ ! -f "$CACHE_FILE" ] || [ $(($(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/de
         BRANCH=$(git branch --show-current 2>/dev/null)
         STAGED=$(git diff --cached --numstat 2>/dev/null | wc -l | tr -d ' ')
         MODIFIED=$(git diff --numstat 2>/dev/null | wc -l | tr -d ' ')
-        echo "$BRANCH|$STAGED|$MODIFIED" >"$CACHE_FILE"
+        REMOTE=$(git remote get-url origin 2>/dev/null \
+            | sed -e 's|^git@\([^:]*\):|https://\1/|' -e 's|\.git$||')
+        echo "$BRANCH|$STAGED|$MODIFIED|$REMOTE" >"$CACHE_FILE"
     else
-        echo "||" >"$CACHE_FILE"
+        echo "|||" >"$CACHE_FILE"
     fi
 fi
-IFS='|' read -r BRANCH STAGED MODIFIED <"$CACHE_FILE"
+IFS='|' read -r BRANCH STAGED MODIFIED REMOTE <"$CACHE_FILE"
 
 GIT_INFO=""
 if [ -n "$BRANCH" ]; then
-    GIT_INFO=" ${DIM}│${RESET} 🌿 ${BRANCH}"
+    GIT_INFO=" ${DIM}·${RESET} 🌿 ${BRANCH}"
     [ "$STAGED" -gt 0 ] && GIT_INFO="${GIT_INFO} ${GREEN}+${STAGED}${RESET}"
     [ "$MODIFIED" -gt 0 ] && GIT_INFO="${GIT_INFO} ${YELLOW}~${MODIFIED}${RESET}"
 fi
 
-# Line 1: model, dir, git
-echo -e "${CYAN}${MODEL}${RESET} ${DIM}·${RESET} ${DIR##*/}${GIT_INFO}"
+# Label: "org/repo" when a remote exists, else dir basename
+if [ -n "$REMOTE" ]; then
+    LABEL="${REMOTE#*://*/}"
+else
+    LABEL="${DIR##*/}"
+fi
+
+# Line 1: model, repo or dir, git
+echo -e "${CYAN}${MODEL}${RESET} ${DIM}·${RESET} ${LABEL}${GIT_INFO}"
 # Line 2: context bar, rate limits, time
 RATE_SEG=""
 [ -n "$LIMITS" ] && RATE_SEG=" ${DIM}│${RESET} ${LIMITS}"
-echo -e "${BAR_COLOR}${BAR}${RESET} ${PCT}%${RATE_SEG} ${DIM}│${RESET} ${MINS}m${SECS}s"
+echo -e "${BAR_COLOR}${BAR}${RESET} ${PCT}%${RATE_SEG} ${DIM}│${RESET} ${DURATION_FMT}"
