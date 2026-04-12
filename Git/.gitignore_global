@@ -30,6 +30,10 @@ codebase_context.txt
 *.tmp
 *.temp
 
+# Claude Code
+# ###########
+settings.local.json
+
 # Node #
 ########
 node_modules/

@@ -52,26 +52,7 @@
         "defaultMode": "plan"
     },
     "hooks": {
-        "PreToolUse": [
-            {
-                "matcher": "Bash",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE 'rm\\s+-(rf|fr)\\s+/(\\s|\\*|$|;)|rm\\s+-(rf|fr)\\s+\\*|rm\\s+-(rf|fr)\\s+\\.|rm\\s+-(rf|fr)\\s+~'; then echo '❌ BLOCKED: rm -rf with dangerous target.' >&2; exit 2; fi; exit 0"
-                    }
-                ]
-            },
-            {
-                "matcher": "Bash",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE 'git\\s+push\\s+(--force|-f)|git\\s+push\\s+origin\\s+(main|master)'; then echo '❌ BLOCKED: Direct push to main/master or force push. Create a feature branch and PR instead.' >&2; exit 2; fi; exit 0"
-                    }
-                ]
-            }
-        ]
+        "PreToolUse": []
     },
     "statusLine": {
         "type": "command",
