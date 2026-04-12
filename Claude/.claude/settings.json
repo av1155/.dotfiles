@@ -1,13 +1,110 @@
 {
     "$schema": "https://json.schemastore.org/claude-code-settings.json",
-    "respectGitignore": false,
-    "cleanupPeriodDays": 30,
     "attribution": {
         "commit": "",
         "pr": ""
     },
+    "autoDreamEnabled": true,
+    "cleanupPeriodDays": 30,
+    "effortLevel": "high",
+    "enabledPlugins": {
+        "claude-notifications-go@claude-notifications-go": true,
+        "code-review@claude-plugins-official": true,
+        "context7@claude-plugins-official": true,
+        "firecrawl@claude-plugins-official": true,
+        "frontend-design@claude-plugins-official": true,
+        "github@claude-plugins-official": true,
+        "lua-lsp@claude-plugins-official": true,
+        "playwright@claude-plugins-official": true,
+        "pyright-lsp@claude-plugins-official": true,
+        "security-guidance@claude-plugins-official": true,
+        "skill-codex@skill-codex": true,
+        "supabase@claude-plugins-official": true,
+        "typescript-lsp@claude-plugins-official": true,
+        "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+        "vercel-plugin@vercel-vercel-plugin": true
+    },
+    "extraKnownMarketplaces": {
+        "claude-notifications-go": {
+            "source": {
+                "repo": "777genius/claude-notifications-go",
+                "source": "github"
+            }
+        },
+        "skill-codex": {
+            "source": {
+                "repo": "skills-directory/skill-codex",
+                "source": "github"
+            }
+        },
+        "ui-ux-pro-max-skill": {
+            "source": {
+                "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+                "source": "github"
+            }
+        },
+        "vercel-vercel-plugin": {
+            "source": {
+                "path": "/Users/andreaventi/.cache/plugins/github.com-vercel-vercel-plugin",
+                "source": "directory"
+            }
+        }
+    },
+    "hooks": {
+        "Notification": [
+            {
+                "hooks": [
+                    {
+                        "command": "workmux set-window-status waiting",
+                        "type": "command"
+                    }
+                ],
+                "matcher": "permission_prompt|elicitation_dialog"
+            }
+        ],
+        "PostToolUse": [
+            {
+                "hooks": [
+                    {
+                        "command": "workmux set-window-status working",
+                        "type": "command"
+                    }
+                ]
+            }
+        ],
+        "PreToolUse": [],
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "command": "workmux set-window-status done",
+                        "type": "command"
+                    }
+                ]
+            }
+        ],
+        "UserPromptSubmit": [
+            {
+                "hooks": [
+                    {
+                        "command": "workmux set-window-status working",
+                        "type": "command"
+                    }
+                ]
+            }
+        ]
+    },
+    "outputStyle": "Explanatory",
     "permissions": {
         "allow": [],
+        "ask": [
+            "Bash(git push *)",
+            "Bash(git merge *)",
+            "Bash(pnpm install *)",
+            "Bash(pnpm add *)",
+            "Bash(pnpm remove *)"
+        ],
+        "defaultMode": "plan",
         "deny": [
             "Read(./.env)",
             "Read(./.env.local)",
@@ -41,67 +138,11 @@
             "Bash(DROP TABLE*)",
             "Bash(dd *)",
             "Bash(mkfs *)"
-        ],
-        "ask": [
-            "Bash(git push *)",
-            "Bash(git merge *)",
-            "Bash(pnpm install *)",
-            "Bash(pnpm add *)",
-            "Bash(pnpm remove *)"
-        ],
-        "defaultMode": "plan"
+        ]
     },
-    "hooks": {
-        "PreToolUse": []
-    },
+    "respectGitignore": false,
     "statusLine": {
-        "type": "command",
-        "command": "~/.claude/statusline.sh"
-    },
-    "enabledPlugins": {
-        "skill-codex@skill-codex": true,
-        "frontend-design@claude-plugins-official": true,
-        "code-review@claude-plugins-official": true,
-        "security-guidance@claude-plugins-official": true,
-        "pyright-lsp@claude-plugins-official": true,
-        "context7@claude-plugins-official": true,
-        "github@claude-plugins-official": true,
-        "playwright@claude-plugins-official": true,
-        "firecrawl@claude-plugins-official": true,
-        "supabase@claude-plugins-official": true,
-        "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-        "typescript-lsp@claude-plugins-official": true,
-        "lua-lsp@claude-plugins-official": true,
-        "vercel-plugin@vercel-vercel-plugin": true,
-        "claude-notifications-go@claude-notifications-go": true
-    },
-    "extraKnownMarketplaces": {
-        "skill-codex": {
-            "source": {
-                "source": "github",
-                "repo": "skills-directory/skill-codex"
-            }
-        },
-        "ui-ux-pro-max-skill": {
-            "source": {
-                "source": "github",
-                "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
-            }
-        },
-        "vercel-vercel-plugin": {
-            "source": {
-                "source": "directory",
-                "path": "/Users/andreaventi/.cache/plugins/github.com-vercel-vercel-plugin"
-            }
-        },
-        "claude-notifications-go": {
-            "source": {
-                "source": "github",
-                "repo": "777genius/claude-notifications-go"
-            }
-        }
-    },
-    "outputStyle": "Explanatory",
-    "effortLevel": "high",
-    "autoDreamEnabled": true
+        "command": "~/.claude/statusline.sh",
+        "type": "command"
+    }
 }

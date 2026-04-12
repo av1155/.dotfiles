@@ -238,7 +238,7 @@ fi
 
 # <---------------------- INITIALIZATION ----------------------->
 
-if command -v fastfetch &>/dev/null && [ -z "$FASTFETCH_SHOWN" ]; then
+if command -v fastfetch &>/dev/null && [ -z "$FASTFETCH_SHOWN" ] && [[ "$PWD" != *"__worktrees"* ]]; then
     export FASTFETCH_SHOWN=1
     fastfetch --logo small --logo-padding-top 1 &
 fi
@@ -343,6 +343,7 @@ alias lzd='lazydocker'
 alias zen-browser='io.github.zen_browser.zen'
 alias h="history"
 alias pn="pnpm"
+alias wm='workmux'
 alias gcopylog='git log --pretty=format:"%ad | %an%n%s%n%b%n" --date=short | pbcopy'
 alias gt='git --no-pager log --graph --abbrev-commit --decorate --all --format="%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white) - %an%C(reset)%C(auto) %d%C(reset)"'
 
@@ -767,8 +768,11 @@ fi
 
 [ -f "$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh" ] && alias macOS-bootstrap="$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh"
 
-[ -f "$HOME/.config/agent-worktrees/agent-worktrees.zsh" ] && \
-    source "$HOME/.config/agent-worktrees/agent-worktrees.zsh"
+# [ -f "$HOME/.config/agent-worktrees/agent-worktrees.zsh" ] && \
+#     source "$HOME/.config/agent-worktrees/agent-worktrees.zsh"
+
+command -v workmux &>/dev/null && eval "$(workmux completions zsh)"
+
 
 # <------------------- ENVIROMENT VARIABLES ------------------->
 
