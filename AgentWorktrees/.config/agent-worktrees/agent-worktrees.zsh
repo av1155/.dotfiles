@@ -26,7 +26,16 @@
 
 AGENT_WORKTREE_DIR="${AGENT_WORKTREE_DIR:-$HOME/.agent-worktrees}"
 
-__AGENT_VERSION="1.0.0"
+__AGENT_VERSION="1.1.0"
+
+__agent_tmux_join() {
+  local target="$1"
+  if [ -n "$TMUX" ]; then
+    tmux switch-client -t "$target"
+  else
+    tmux attach-session -t "$target"
+  fi
+}
 
 # =============================================================================
 # Output helpers (color + path)
@@ -457,7 +466,7 @@ __agent_spin() {
 
   if tmux has-session -t "$session_name" 2>/dev/null; then
     print -r -- "  ${c_yellow}·${c_reset} session   ${c_dim}${session_name} already exists, attaching${c_reset}"
-    tmux attach-session -t "$session_name"
+    __agent_tmux_join "$session_name"
   else
     tmux new-session -d -s "$session_name" -c "$worktree_path" "$launch_cmd"
     print -r -- "  ${c_green}✓${c_reset} session   ${c_dim}${session_name} (${launch_cmd})${c_reset}"
@@ -625,7 +634,7 @@ __agent_attach() {
 
   for prefix in "agent" "codex" "review"; do
     if tmux has-session -t "${prefix}-${name}" 2>/dev/null; then
-      tmux attach-session -t "${prefix}-${name}"
+      __agent_tmux_join "${prefix}-${name}"
       return 0
     fi
   done
@@ -704,7 +713,7 @@ __agent_review() {
 
   if tmux has-session -t "$session_name" 2>/dev/null; then
     print -r -- "  ${c_yellow}·${c_reset} session ${c_dim}${session_name}${c_reset} already exists, attaching"
-    tmux attach-session -t "$session_name"
+    __agent_tmux_join "$session_name"
     return 0
   fi
 
