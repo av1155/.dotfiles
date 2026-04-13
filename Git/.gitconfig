@@ -1,13 +1,7 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# Identity
-# ─────────────────────────────────────────────────────────────────────────────
 [user]
     name = av1155
     email = 117413846+av1155@users.noreply.github.com
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Core & defaults
-# ─────────────────────────────────────────────────────────────────────────────
 [core]
     editor = code --wait
     autocrlf = input
@@ -17,40 +11,19 @@
 [init]
     defaultBranch = main
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Colors
-# ─────────────────────────────────────────────────────────────────────────────
-[color]
-    ui = auto
-    status = auto
-    branch = auto
-    diff = auto
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Aliases
-# ─────────────────────────────────────────────────────────────────────────────
 [alias]
     count = !git ls-remote --heads origin | wc -l
     lg = log --graph --oneline --decorate --all
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Workflow prefs
-# ─────────────────────────────────────────────────────────────────────────────
 [push]
     default = current
-
-[pull]
-    rebase = false
 
 [rebase]
     autosquash = true
 
 [merge]
-    conflictStyle = diff3
+    conflictStyle = zdiff3
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Diff / Delta
-# ─────────────────────────────────────────────────────────────────────────────
 [diff]
     algorithm = histogram
     colorMoved = default
@@ -60,24 +33,4 @@
 
 [delta]
     navigate = true
-    side-by-side = true
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Git LFS
-# ─────────────────────────────────────────────────────────────────────────────
-[filter "lfs"]
-    clean = git-lfs clean -- %f
-    smudge = git-lfs smudge -- %f
-    process = git-lfs filter-process
-    required = true
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Credentials (GitHub CLI)
-# ─────────────────────────────────────────────────────────────────────────────
-[credential "https://github.com"]
-    helper =
-    helper = !/opt/homebrew/bin/gh auth git-credential
-
-[credential "https://gist.github.com"]
-    helper =
-    helper = !/opt/homebrew/bin/gh auth git-credential
+    line-numbers = true

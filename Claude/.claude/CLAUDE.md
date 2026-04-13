@@ -184,55 +184,83 @@ Delegated outputs should be concise and actionable:
 
 ---
 
-## Parallel Sessions via the agent CLI
+## Parallel Sessions via workmux
 
-A zsh command `agent` manages isolated git worktrees and optional tmux
-sessions for parallel Claude Code or Codex work. The tool has two halves:
-worktree management (which you can drive directly) and interactive AI
-sessions in tmux (which require the user).
+`workmux` (`wm`) manages isolated git worktrees with integrated tmux
+windows for parallel Claude Code and Codex work. Each worktree gets its
+own tmux window with the agent in the left pane and a shell in the right
+pane. Install via `wm update`. Run `wm docs` for full documentation.
 
-Source: `~/.dotfiles/AgentWorktrees/.config/agent-worktrees/agent-worktrees.zsh`,
-sourced from `.zshrc`. Run `agent help` for full help.
+Named agents configured in `.workmux.yaml`:
+
+- `cc-yolo`: `claude --dangerously-skip-permissions`
+- `cod-yolo`: `codex --yolo`
+
+Installed agent skills (available inside agent panes):
+
+- `/merge`: commit, rebase, and merge (respects `merge_strategy` from `.workmux.yaml`)
+- `/rebase`: rebase onto main with smart conflict resolution
+- `/open-pr`: push and open a PR with conversation-aware description
+- `/worktree <task>`: delegate a task to a new parallel worktree agent
+- `/worktree --fork <task>`: delegate with full conversation context (CC only)
+- `/coordinator <tasks>`: orchestrate multiple agents with full lifecycle
+- `/review`: adversarial review (run from a fresh Claude session only)
 
 ### Commands you can drive directly
 
-- `spin <name> --bare`: creates worktree at `~/.agent-worktrees/<repo>/<name>` and branch `agent/<name>` without launching any session. Edit files inside via absolute paths. rc=1 on name conflict or outside a git repo.
-- `list`, `ls`: colored table on a TTY, plain text when piped. State glyphs: `●` running, `⟳` reviewing, `⠿` installing, `○` idle. Trailing `+N` is commits ahead of main, `*` means the tree is dirty.
-- `diff <name>`, `d`: git diffstat against the merge-base with `main` or `master`. rc=1 if the worktree is missing.
-- `merge <name>`, `m`: merges `agent/<name>` into the current branch with `--no-ff`. rc=1 on conflicts or uncommitted changes.
-- `clean <name>`: kills any tmux session, stops any background install, removes the worktree, deletes the branch. rc=1 if nothing to clean.
-- `clean-all`: same for every agent worktree in the current repo.
-- `help`, `version`: docs.
+These do not require interactive tmux access. Safe to run from inside a
+Claude Code session or a script.
+
+- `wm list` / `wm ls`: show all worktrees with agent status glyphs (working, waiting, done). Add `--pr` for GitHub PR status, `--json` for scripting.
+- `wm status <n>`: query agent status for a specific worktree. Add `--git` for staged/unstaged/unmerged info. Supports `project:handle` syntax for cross-project queries.
+- `wm capture <n>`: read terminal output from a running agent. Use `-n <lines>` to control how many lines (default 200).
+- `wm send <n> "msg"`: type text into a running agent's terminal remotely. Also accepts `--file <path>` or stdin.
+- `wm wait <n>`: block until an agent reaches a target status. Default target is `done`. Use `--timeout <seconds>` and `--any` for multi-agent waits.
+- `wm run <n> -- <cmd>`: run a shell command inside a worktree's directory. Add `--background` to run without blocking.
+- `wm merge <n>`: merge branch into main (using `merge_strategy` from config), then remove worktree, window, and branch. Add `--keep` to verify before cleanup. Add `--rebase` or `--squash` to override the strategy.
+- `wm rm <n>`: remove worktree and window without merging. `--gone` cleans up worktrees whose remote PRs already merged. `--all` removes everything except main.
+- `wm path <n>`: print the filesystem path of a worktree.
+- `wm sync-files`: re-apply file copy/symlink operations to existing worktrees. Use `--all` for all worktrees.
+- `wm claude prune`: remove stale entries from `~/.claude.json` for deleted worktrees.
 
 ### Commands that need the user (suggest, do not run)
 
-These spawn or attach to interactive tmux sessions that cannot be reached from inside a Claude Code session:
+These create or attach to interactive tmux windows. Suggest the exact
+command and explain what to do inside the session.
 
-- `spin <name>` without `--bare`: launches a second Claude Code in a tmux session; it waits for prompts you cannot send.
-- `spin <name> --codex`: same for OpenAI Codex.
-- `attach <name>`, `a`: blocks on a TTY.
-- `review <name>`, `r`: opens a fresh Claude Code session for adversarial review; the user runs `/review` inside it.
-
-When one of these would help, tell the user the exact command and what to do inside the session.
+- `wm add <n>`: creates a worktree and tmux window, launches Claude Code in the left pane. The user pastes prompts interactively.
+- `wm add <n> -a codex`: same but launches Codex.
+- `wm add <n> -a cc-yolo`: launches the named agent `cc-yolo`.
+- `wm add <n> -p "prompt"`: injects a prompt into the agent on launch. Also accepts `-P <file>` to inject from a file.
+- `wm add <n> -b -p "prompt"`: launches in background without switching windows. The agent starts working immediately.
+- `wm add -A -p "prompt"`: auto-generates the branch name from the prompt using an LLM.
+- `wm add <n> --fork`: forks the most recent Claude Code conversation into a new worktree (CC only). Use `--fork=<session-id>` for a specific session.
+- `wm add <n> --with-changes -u`: moves uncommitted and untracked changes from the current worktree to the new one.
+- `wm open <n>`: reopens a tmux window for an existing worktree. Add `-c` to resume the agent's most recent conversation.
+- `wm dashboard`: opens a TUI dashboard for monitoring all active agents. Also available via `C-a + C-s` tmux binding.
+- `wm sidebar`: live agent status sidebar in tmux. Toggle via `C-a + d`.
+- `wm resurrect`: restores all worktree windows after a tmux or system crash.
 
 ### When to reach for it autonomously
 
-Use `spin --bare` followed by edit, `diff`, `merge`, `clean` when:
+Use `wm add -b -p "prompt"` or `wm send` to coordinate parallel work when:
 
 - a risky refactor should not touch main yet
 - two approaches need to be compared before committing to one
 - the work is multi-step and might need to be thrown away
+- a coordinator agent needs to spawn, monitor, and merge sub-agents
 
 Skip it for single-file tweaks, pure read tasks, or when not inside a git repository.
 
 ### Key behaviors worth relying on
 
-- worktrees always live at `~/.agent-worktrees/<repo-name>/<agent-name>`
-- branches are always named `agent/<name>`
-- `agent list` output is stable and pipe-safe; colors appear only on a TTY, and `NO_COLOR` or `AGENT_NO_COLOR` force plain text
-- `.agent-install.pid` and `.agent-install.status` inside a worktree are CLI-managed metadata; do not edit them, and do not mistake them for uncommitted changes (the dirty marker filters them out)
-- `agent spin` runs `pnpm install` / `npm ci` / `yarn install` in the background when a lockfile is present; `agent clean` kills it before removing the worktree
-- if a background script needs to `cd <worktree>`, use `builtin cd` to bypass the zoxide `cd` alias
+- `wm list --json` and `wm status --json` are stable and pipe-safe for scripting
+- `wm merge` respects the `merge_strategy` setting in `.workmux.yaml` (squash, rebase, or merge)
+- `wm wait` blocks cleanly and supports `--timeout`, making it reliable for coordinator workflows
+- `wm send <n> "/rebase"` and `wm send <n> "/merge"` trigger the agent skills remotely
+- `wm rm --gone` is the standard cleanup after PR-based merges on GitHub
+- cross-project targeting uses `project:handle` syntax in `send`, `capture`, `status`, `wait`, and `run`
+- lifecycle commands (`add`, `open`, `merge`, `remove`, `close`) are always scoped to the current repository
 
 ---
 

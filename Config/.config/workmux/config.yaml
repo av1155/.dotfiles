@@ -1,0 +1,7 @@
+nerdfont: true
+theme: slate-garden
+status_format: false
+
+agents:
+    cc-yolo: "claude --dangerously-skip-permissions"
+    cod-yolo: "codex --yolo"

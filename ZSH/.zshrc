@@ -869,6 +869,8 @@ export OLLAMA_API_BASE="http://127.0.0.1:11434"
 
 # <-------------------- GENERAL CONFIGURATIONS -------------------->
 
+export LESS="-R --mouse"
+
 export PATH="$PATH:$HOME/.cache/lm-studio/bin"
 export PATH="$PATH:$HOME/.pub-cache/bin"
 
