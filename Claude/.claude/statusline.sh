@@ -1,8 +1,6 @@
 #!/bin/bash
 input=$(cat)
 
-MODEL=$(echo "$input" | jq -r '.model.display_name')
-DIR=$(echo "$input" | jq -r '.workspace.current_dir')
 PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
 DURATION_MS=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
 SESSION_ID=$(echo "$input" | jq -r '.session_id')
@@ -10,27 +8,29 @@ FIVE_H=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty'
 SEVEN_D=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
 
 # Colors
-CYAN='\033[36m'
 GREEN='\033[32m'
 YELLOW='\033[33m'
 RED='\033[31m'
 DIM='\033[2m'
 RESET='\033[0m'
 
-# Context bar with threshold colors
+# Terminal width for truncation
+COLS=$(tput cols 2>/dev/null || echo 120)
+
+# Context bar (10 chars) with threshold colors
 if [ "$PCT" -ge 90 ]; then
     BAR_COLOR="$RED"
 elif [ "$PCT" -ge 70 ]; then
     BAR_COLOR="$YELLOW"
 else BAR_COLOR="$GREEN"; fi
 
-FILLED=$((PCT / 5))
-EMPTY=$((20 - FILLED))
+FILLED=$((PCT / 10))
+EMPTY=$((10 - FILLED))
 printf -v FILL "%${FILLED}s"
 printf -v PAD "%${EMPTY}s"
 BAR="${FILL// /█}${PAD// /░}"
 
-# Duration: show the two most significant units (e.g. 45s, 5m21s, 2h5m, 3d2h)
+# Duration: two most significant units
 TOTAL_SEC=$((DURATION_MS / 1000))
 D=$((TOTAL_SEC / 86400))
 H=$(((TOTAL_SEC % 86400) / 3600))
@@ -60,12 +60,11 @@ rate_color() {
 LIMITS=""
 if [ -n "$FIVE_H" ]; then
     FC=$(rate_color "$FIVE_H")
-    LIMITS="${FC}$(printf '%.0f' "$FIVE_H")%${RESET} 5h"
+    LIMITS="${DIM}│${RESET} ${FC}$(printf '%.0f' "$FIVE_H")%${RESET} 5h"
 fi
 if [ -n "$SEVEN_D" ]; then
     SC=$(rate_color "$SEVEN_D")
-    [ -n "$LIMITS" ] && LIMITS="${LIMITS} ${DIM}│${RESET} "
-    LIMITS="${LIMITS}${SC}$(printf '%.0f' "$SEVEN_D")%${RESET} 7d"
+    LIMITS="${LIMITS} ${DIM}│${RESET} ${SC}$(printf '%.0f' "$SEVEN_D")%${RESET} 7d"
 fi
 
 # Git (cached 5s)
@@ -75,32 +74,30 @@ if [ ! -f "$CACHE_FILE" ] || [ $(($(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/de
         BRANCH=$(git branch --show-current 2>/dev/null)
         STAGED=$(git diff --cached --numstat 2>/dev/null | wc -l | tr -d ' ')
         MODIFIED=$(git diff --numstat 2>/dev/null | wc -l | tr -d ' ')
-        REMOTE=$(git remote get-url origin 2>/dev/null \
-            | sed -e 's|^git@\([^:]*\):|https://\1/|' -e 's|\.git$||')
-        echo "$BRANCH|$STAGED|$MODIFIED|$REMOTE" >"$CACHE_FILE"
+        echo "$BRANCH|$STAGED|$MODIFIED" >"$CACHE_FILE"
     else
-        echo "|||" >"$CACHE_FILE"
+        echo "||" >"$CACHE_FILE"
     fi
 fi
-IFS='|' read -r BRANCH STAGED MODIFIED REMOTE <"$CACHE_FILE"
+IFS='|' read -r BRANCH STAGED MODIFIED <"$CACHE_FILE"
 
-GIT_INFO=""
+GIT_SEG=""
 if [ -n "$BRANCH" ]; then
-    GIT_INFO=" ${DIM}·${RESET} 🌿 ${BRANCH}"
-    [ "$STAGED" -gt 0 ] && GIT_INFO="${GIT_INFO} ${GREEN}+${STAGED}${RESET}"
-    [ "$MODIFIED" -gt 0 ] && GIT_INFO="${GIT_INFO} ${YELLOW}~${MODIFIED}${RESET}"
+    GIT_SEG=" ${DIM}│${RESET} 🌿 ${BRANCH}"
+    [ "$STAGED" -gt 0 ] && GIT_SEG="${GIT_SEG} ${GREEN}+${STAGED}${RESET}"
+    [ "$MODIFIED" -gt 0 ] && GIT_SEG="${GIT_SEG} ${YELLOW}~${MODIFIED}${RESET}"
 fi
 
-# Label: "org/repo" when a remote exists, else dir basename
-if [ -n "$REMOTE" ]; then
-    LABEL="${REMOTE#*://*/}"
-else
-    LABEL="${DIR##*/}"
-fi
+# Build single line
+LINE="${BAR_COLOR}${BAR}${RESET} ${PCT}% ${LIMITS} ${DIM}│${RESET} ${DURATION_FMT}${GIT_SEG}"
 
-# Line 1: model, repo or dir, git
-echo -e "${CYAN}${MODEL}${RESET} ${DIM}·${RESET} ${LABEL}${GIT_INFO}"
-# Line 2: context bar, rate limits, time
-RATE_SEG=""
-[ -n "$LIMITS" ] && RATE_SEG=" ${DIM}│${RESET} ${LIMITS}"
-echo -e "${BAR_COLOR}${BAR}${RESET} ${PCT}%${RATE_SEG} ${DIM}│${RESET} ${DURATION_FMT}"
+# Truncate to terminal width (ANSI-aware)
+printf '%b' "$LINE" | perl -CS -e '
+    $max = shift; $_ = <STDIN>; chomp;
+    $vis = 0; $pos = 0;
+    while ($pos < length && $vis < $max) {
+        if (substr($_, $pos) =~ /^(\e\[[0-9;]*m)/) { $pos += length($1); }
+        else { $pos++; $vis++; }
+    }
+    print substr($_, 0, $pos), "\e[0m\n";
+' "$COLS"
