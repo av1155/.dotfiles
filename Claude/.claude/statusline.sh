@@ -18,9 +18,9 @@ RESET='\033[0m'
 COLS=$(tput cols 2>/dev/null || echo 120)
 
 # Context bar (10 chars) with threshold colors
-if [ "$PCT" -ge 90 ]; then
+if [ "$PCT" -ge 70 ]; then
     BAR_COLOR="$RED"
-elif [ "$PCT" -ge 70 ]; then
+elif [ "$PCT" -ge 40 ]; then
     BAR_COLOR="$YELLOW"
 else BAR_COLOR="$GREEN"; fi
 
