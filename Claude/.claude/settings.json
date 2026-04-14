@@ -7,6 +7,9 @@
     "autoDreamEnabled": true,
     "cleanupPeriodDays": 30,
     "effortLevel": "high",
+    "env": {
+        "CLAUDE_CODE_NO_FLICKER": "1"
+    },
     "enabledPlugins": {
         "claude-notifications-go@claude-notifications-go": true,
         "code-review@claude-plugins-official": true,
