@@ -91,13 +91,4 @@ fi
 # Build single line
 LINE="${BAR_COLOR}${BAR}${RESET} ${PCT}% ${LIMITS} ${DIM}│${RESET} ${DURATION_FMT}${GIT_SEG}"
 
-# Truncate to terminal width (ANSI-aware)
-printf '%b' "$LINE" | perl -CS -e '
-    $max = shift; $_ = <STDIN>; chomp;
-    $vis = 0; $pos = 0;
-    while ($pos < length && $vis < $max) {
-        if (substr($_, $pos) =~ /^(\e\[[0-9;]*m)/) { $pos += length($1); }
-        else { $pos++; $vis++; }
-    }
-    print substr($_, 0, $pos), "\e[0m\n";
-' "$COLS"
+printf '%b\n' "$LINE"
