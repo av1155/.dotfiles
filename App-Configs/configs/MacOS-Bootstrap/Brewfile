@@ -1,8 +1,10 @@
 tap "av1155/scripts", "https://github.com/av1155/scripts.git"
+tap "getsentry/tools"
 tap "heroku/brew"
 tap "jesseduffield/lazygit"
 tap "jstkdng/programs"
 tap "oven-sh/bun"
+tap "raine/workmux"
 tap "samtay/tui"
 tap "sst/tap"
 tap "supabase/tap"
@@ -92,6 +94,8 @@ brew "git"
 brew "git-delta"
 # Quickly rewrite git repository history
 brew "git-filter-repo"
+# Audit git repos for secrets
+brew "gitleaks"
 # Render markdown on the CLI
 brew "glow"
 # Library for USB device access
@@ -180,6 +184,8 @@ brew "rom-tools"
 brew "rust"
 # Rust toolchain installer
 brew "rustup"
+# Easily detect and prevent bugs and anti-patterns in your codebase
+brew "semgrep"
 # Command-line interface for https://speedtest.net bandwidth tests
 brew "speedtest-cli"
 # Organize software neatly under a single directory tree (e.g. /usr/local)
@@ -220,10 +226,14 @@ brew "zig"
 brew "zoxide"
 # Easily compile and run Java files, manage cleanup, and view syntax-highlighted errors through a user-friendly fuzzy-finding menu.
 brew "av1155/scripts/javaprojectmanager"
+# Sentry command-line tool for error monitoring and debugging
+brew "getsentry/tools/sentry"
 # Everything you need to get started with Heroku
 brew "heroku/brew/heroku"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
+# Opinionated workflow tool that orchestrates git worktrees and tmux
+brew "raine/workmux/workmux"
 # Tetris in your terminal
 brew "samtay/tui/tetris"
 # The AI coding agent built for the terminal.
@@ -326,6 +336,8 @@ cask "miniforge"
 cask "miro"
 # App to write, plan, collaborate, and get organised
 cask "notion"
+# Knowledge base that works on top of a local folder of plain text Markdown files
+cask "obsidian"
 # Verify system files structure, run miscellaneous maintenance and more
 cask "onyx"
 # Home media player
