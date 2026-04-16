@@ -5,33 +5,47 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-  - Bash(git diff:*)
-  - Bash(git log:*)
-  - Bash(git show:*)
-  - Bash(git merge-base:*)
-  - Bash(pnpm lint:*)
-  - Bash(pnpm typecheck:*)
-  - Bash(pnpm test:*)
-  - Bash(npm run lint:*)
-  - Bash(npm run typecheck:*)
-  - Bash(npm test:*)
-  - Bash(yarn lint:*)
-  - Bash(yarn typecheck:*)
-  - Bash(yarn test:*)
-  - Bash(cargo clippy:*)
-  - Bash(cargo test:*)
-  - Bash(go vet:*)
-  - Bash(go test:*)
-  - Bash(python -m pytest:*)
-  - Bash(python -m mypy:*)
-  - Bash(npm view:*)
-  - Bash(npm outdated:*)
-  - Bash(pnpm outdated:*)
-  - Bash(yarn info:*)
-  - Bash(cargo search:*)
-  - Bash(pip index:*)
-  - Bash(go list:*)
-  - Bash(gh api:*)
+  - Bash(git:*)
+  - Bash(pnpm:*)
+  - Bash(npm:*)
+  - Bash(npx:*)
+  - Bash(yarn:*)
+  - Bash(bun:*)
+  - Bash(deno:*)
+  - Bash(cargo:*)
+  - Bash(rustc:*)
+  - Bash(go:*)
+  - Bash(python:*)
+  - Bash(python3:*)
+  - Bash(pip:*)
+  - Bash(pip3:*)
+  - Bash(poetry:*)
+  - Bash(uv:*)
+  - Bash(ruby:*)
+  - Bash(gem:*)
+  - Bash(bundle:*)
+  - Bash(rake:*)
+  - Bash(rails:*)
+  - Bash(mix:*)
+  - Bash(iex:*)
+  - Bash(stack:*)
+  - Bash(cabal:*)
+  - Bash(ghc:*)
+  - Bash(swift:*)
+  - Bash(dotnet:*)
+  - Bash(mvn:*)
+  - Bash(gradle:*)
+  - Bash(java:*)
+  - Bash(kotlin:*)
+  - Bash(php:*)
+  - Bash(composer:*)
+  - Bash(terraform:*)
+  - Bash(ansible:*)
+  - Bash(docker:*)
+  - Bash(kubectl:*)
+  - Bash(make:*)
+  - Bash(just:*)
+  - Bash(gh:*)
   - mcp__context7__resolve-library-id
   - mcp__context7__get-library-docs
   - WebFetch
@@ -58,7 +72,21 @@ You have documented blind spots. Internalize these before reviewing a single lin
 
 Run these commands to see what changed:
 
+**Check for stale base:**
+
+```bash
+git log HEAD..origin/main --oneline 2>/dev/null | head -5
+git log HEAD..main --oneline 2>/dev/null | head -5
 ```
+
+If the branch is significantly behind origin/main or local main, some
+findings you flag may be false positives — code that's "missing" on
+this branch may actually exist on main, and this branch just hasn't
+rebased yet. State this explicitly in the Summary if relevant, and
+lower severity accordingly for any findings that depend on not seeing
+main's state.
+
+```bash
 git log main..HEAD --oneline 2>/dev/null || git log master..HEAD --oneline
 git diff main..HEAD --stat 2>/dev/null || git diff master..HEAD --stat
 ```

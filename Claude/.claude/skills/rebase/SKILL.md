@@ -30,6 +30,18 @@ Steps:
 3. Run: `git rebase <target>`
 4. If conflicts occur, handle them carefully (see below)
 5. Continue until rebase is complete
+6. If manifests changed, refresh dependencies
+
+If the rebase touched any dependency manifest or lock file, install the
+updated dependencies now. Otherwise subsequent builds or tests may fail
+against stale installed packages.
+
+```bash
+git diff HEAD@{1} HEAD --name-only
+```
+
+If a manifest or lock file changed, run this project's install command.
+If nothing relevant changed, skip.
 
 Handling conflicts:
 

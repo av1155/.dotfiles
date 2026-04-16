@@ -28,6 +28,23 @@ context you already have. The worktree agent does all the work.
 - **Agent status**: agents report status via hooks: working, waiting (needs
   input), done (finished)
 
+## Session Startup Protocol
+
+When you start work in a worktree (especially a freshly-created one),
+your FIRST action should be:
+
+```bash
+git fetch origin && git rebase origin/main
+```
+
+This catches any commits that landed on origin/main between when the
+worktree was created and when you started work. Skipping this step
+can cause adversarial reviews to flag "regressions" that are actually
+stale-base false positives.
+
+If the rebase touches any dependency manifest or lock file, run this
+project's install command before proceeding. See `/rebase` for details.
+
 ## Commands
 
 ### Create a worktree
