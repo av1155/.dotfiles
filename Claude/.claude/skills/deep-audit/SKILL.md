@@ -3,7 +3,6 @@ name: deep-audit
 description: Exhaustive post-work audit for any codebase. Run after finishing a feature, sprint, bug fix, or refactoring pass to find overlooked edge cases, discarded response data, missing cross-field validations, misleading success signals, untested failure paths, and implicit assumptions. Invoke with /deep-audit or /deep-audit followed by context. Use this skill whenever the user says audit, review my changes, check my work, what did I miss, post-mortem, sanity check, edge cases, or asks to verify completeness of recent code changes.
 argument-hint: "[description or --range HEAD~N..HEAD or --files path1 path2]"
 disable-model-invocation: true
-effort: high
 allowed-tools: Read Grep Glob Bash(git *) Bash(find *) Bash(wc *) Bash(head *) Bash(tail *) Bash(cat *) Bash(jq *) Agent
 ---
 
