@@ -116,7 +116,6 @@ format_secs() {
         [ "$m" -gt 0 ] && out="${out}${m}m"
     elif [ "$m" -gt 0 ]; then
         out="${m}m"
-        [ "$s" -gt 0 ] && out="${out}${s}s"
     else
         out="${s}s"
     fi
