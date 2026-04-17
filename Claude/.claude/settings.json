@@ -52,7 +52,7 @@
       "Bash(pnpm add *)",
       "Bash(pnpm remove *)"
     ],
-    "defaultMode": "plan"
+    "defaultMode": "auto"
   },
   "hooks": {
     "Notification": [
@@ -100,7 +100,8 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "~/.claude/statusline.sh"
+    "command": "~/.claude/statusline.sh",
+    "refreshInterval": 2
   },
   "enabledPlugins": {
     "claude-notifications-go@claude-notifications-go": true,
@@ -147,10 +148,11 @@
   },
   "outputStyle": "Explanatory",
   "effortLevel": "high",
-  "autoDreamEnabled": true,
-  "voiceEnabled": true,
   "voice": {
     "enabled": true,
     "mode": "hold"
-  }
+  },
+  "autoDreamEnabled": true,
+  "voiceEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
