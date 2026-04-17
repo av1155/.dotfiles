@@ -162,9 +162,6 @@ rate_bar() {
     local filled=$((pct * width / 100)) empty fp ep
     [ "$filled" -gt "$width" ] && filled=$width
     [ "$filled" -lt 0 ] && filled=0
-    # Guarantee at least one cell lit when the value is non-zero, so
-    # the gauge distinguishes "unused" from "just a little used".
-    [ "$filled" -eq 0 ] && [ "$pct" -gt 0 ] && filled=1
     empty=$((width - filled))
     printf -v fp "%${filled}s" ""
     printf -v ep "%${empty}s" ""
