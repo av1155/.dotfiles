@@ -7,11 +7,14 @@ FIVE_H=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty'
 SEVEN_D=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
 FIVE_H_RESET=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 SEVEN_D_RESET=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
+WORKTREE=$(echo "$input" | jq -r '.workspace.git_worktree // empty')
+OUTPUT_STYLE_NAME=$(echo "$input" | jq -r '.output_style.name // "default"')
 
 # Colors
 GREEN='\033[32m'
 YELLOW='\033[33m'
 RED='\033[31m'
+CYAN='\033[36m'
 DIM='\033[2m'
 RESET='\033[0m'
 
@@ -39,19 +42,30 @@ BUDGET=$((COLS - 5))
 if [ "$BUDGET" -lt 50 ]; then
     SHOW_LIMITS=0
     SHOW_COUNTDOWNS=0
+    SHOW_GIT_EXTRAS=0
     MAX_BRANCH=14
+    BAR_WIDTH=8
 elif [ "$BUDGET" -lt 75 ]; then
     SHOW_LIMITS=1
     SHOW_COUNTDOWNS=0
+    SHOW_GIT_EXTRAS=1
     MAX_BRANCH=18
+    BAR_WIDTH=8
 else
     SHOW_LIMITS=1
     SHOW_COUNTDOWNS=1
+    SHOW_GIT_EXTRAS=1
     MAX_BRANCH=22
+    # Scale the bar into extra terminal space: +1 cell per 10 cols past 75,
+    # capped at 14 to avoid a bar that dominates the line.
+    BAR_WIDTH=$((8 + (BUDGET - 75) / 10))
+    [ "$BAR_WIDTH" -gt 14 ] && BAR_WIDTH=14
 fi
+# Output-style badge only when there's plenty of room.
+SHOW_OUTPUT_STYLE=0
+[ "$BUDGET" -ge 90 ] && SHOW_OUTPUT_STYLE=1
 
-# Context bar with threshold colors (tight width for narrow panes)
-BAR_WIDTH=8
+# Context bar with threshold colors (BAR_WIDTH set by the tier block above).
 if [ "$PCT" -ge 70 ]; then
     BAR_COLOR="$RED"
 elif [ "$PCT" -ge 40 ]; then
@@ -115,32 +129,58 @@ if [ "$SHOW_LIMITS" = 1 ]; then
     fi
 fi
 
-# Git (cached 5s)
-CACHE_FILE="/tmp/cc-statusline-git-$SESSION_ID"
+# Git (cached 5s). Cache format is 6 fields separated by "|":
+#   BRANCH|STAGED|MODIFIED|UNTRACKED|AHEAD|BEHIND
+# The v2 prefix forces a fresh cache when the format changes.
+CACHE_FILE="/tmp/cc-statusline-git-v2-$SESSION_ID"
 if [ ! -f "$CACHE_FILE" ] || [ $(($(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/dev/null || stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0))) -gt 5 ]; then
     if git rev-parse --git-dir >/dev/null 2>&1; then
         BRANCH=$(git branch --show-current 2>/dev/null)
         STAGED=$(git diff --cached --numstat 2>/dev/null | wc -l | tr -d ' ')
         MODIFIED=$(git diff --numstat 2>/dev/null | wc -l | tr -d ' ')
-        echo "$BRANCH|$STAGED|$MODIFIED" >"$CACHE_FILE"
+        UNTRACKED=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
+        AHEAD=0
+        BEHIND=0
+        if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+            ab=$(git rev-list --count --left-right '@{u}...HEAD' 2>/dev/null)
+            BEHIND=$(echo "$ab" | awk '{print $1}')
+            AHEAD=$(echo "$ab" | awk '{print $2}')
+        fi
+        echo "$BRANCH|$STAGED|$MODIFIED|$UNTRACKED|$AHEAD|$BEHIND" >"$CACHE_FILE"
     else
-        echo "||" >"$CACHE_FILE"
+        echo "|||||" >"$CACHE_FILE"
     fi
 fi
-IFS='|' read -r BRANCH STAGED MODIFIED <"$CACHE_FILE"
+IFS='|' read -r BRANCH STAGED MODIFIED UNTRACKED AHEAD BEHIND <"$CACHE_FILE"
 
 GIT_SEG=""
 if [ -n "$BRANCH" ]; then
     if [ "${#BRANCH}" -gt "$MAX_BRANCH" ]; then
         BRANCH="${BRANCH:0:$((MAX_BRANCH - 1))}…"
     fi
-    GIT_SEG=" ${DIM}│${RESET} 🌿 ${BRANCH}"
-    [ "$STAGED" -gt 0 ] && GIT_SEG="${GIT_SEG} ${GREEN}+${STAGED}${RESET}"
-    [ "$MODIFIED" -gt 0 ] && GIT_SEG="${GIT_SEG} ${YELLOW}~${MODIFIED}${RESET}"
+    # Swap branch emoji when inside a linked worktree.
+    if [ -n "$WORKTREE" ]; then
+        GIT_SEG=" ${DIM}│${RESET} 🔀 ${BRANCH}"
+    else
+        GIT_SEG=" ${DIM}│${RESET} 🌿 ${BRANCH}"
+    fi
+    [ "${STAGED:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${GREEN}+${STAGED}${RESET}"
+    [ "${MODIFIED:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${YELLOW}~${MODIFIED}${RESET}"
+    if [ "$SHOW_GIT_EXTRAS" = 1 ]; then
+        [ "${UNTRACKED:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${CYAN}?${UNTRACKED}${RESET}"
+        [ "${AHEAD:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${GREEN}↑${AHEAD}${RESET}"
+        [ "${BEHIND:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${RED}↓${BEHIND}${RESET}"
+    fi
 fi
 
-# Build single line. LIMITS and GIT_SEG carry their own leading separators
-# when populated, so there's no literal space between "%" and them.
-LINE="${BAR_COLOR}${BAR}${RESET} ${PCT}%${LIMITS}${GIT_SEG}"
+# Output-style badge (dim) when non-default and room allows.
+STYLE_SEG=""
+if [ "$SHOW_OUTPUT_STYLE" = 1 ] && [ -n "$OUTPUT_STYLE_NAME" ] && [ "$OUTPUT_STYLE_NAME" != "default" ]; then
+    STYLE_SEG=" ${DIM}│ ✎ ${OUTPUT_STYLE_NAME}${RESET}"
+fi
+
+# Build single line. LIMITS, GIT_SEG, and STYLE_SEG carry their own leading
+# separators when populated, so there's no literal space between them.
+LINE="${BAR_COLOR}${BAR}${RESET} ${PCT}%${LIMITS}${GIT_SEG}${STYLE_SEG}"
 
 printf '%b\n' "$LINE"
