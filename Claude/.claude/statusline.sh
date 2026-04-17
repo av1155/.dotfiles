@@ -2,6 +2,7 @@
 input=$(cat)
 
 PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1)
+CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size // 200000')
 SESSION_ID=$(echo "$input" | jq -r '.session_id')
 DURATION_MS=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
 FIVE_H=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
@@ -71,9 +72,20 @@ SHOW_RATE_BARS=0
 [ "$BUDGET" -ge 110 ] && SHOW_RATE_BARS=1
 
 # Context bar with threshold colors (BAR_WIDTH set by the tier block above).
-if [ "$PCT" -ge 70 ]; then
+# Threshold depends on the model's actual context window: on 1M-token models
+# 40%/70% maps to 400k/700k which genuinely warrants caution, but on the
+# standard 200k window those same percentages fire after only 80k/140k
+# tokens — too eager. Use the window size to pick sensible thresholds.
+if [ "$CONTEXT_SIZE" -ge 500000 ]; then
+    CTX_YELLOW=40
+    CTX_RED=70
+else
+    CTX_YELLOW=60
+    CTX_RED=85
+fi
+if [ "$PCT" -ge "$CTX_RED" ]; then
     BAR_COLOR="$RED"
-elif [ "$PCT" -ge 40 ]; then
+elif [ "$PCT" -ge "$CTX_YELLOW" ]; then
     BAR_COLOR="$YELLOW"
 else BAR_COLOR="$GREEN"; fi
 
