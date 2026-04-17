@@ -146,7 +146,7 @@
       }
     }
   },
-  "outputStyle": "Explanatory",
+  "outputStyle": "Default",
   "effortLevel": "high",
   "voice": {
     "enabled": true,
