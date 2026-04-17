@@ -158,13 +158,12 @@ visible_width() {
 # Mini 4-cell gauge for a rate limit. Uses ▰▱ (parallelograms) to stay
 # visually distinct from the main context bar's █░ blocks.
 rate_bar() {
-    local pct=$1 color=$2 width=4
+    local pct=$1 color=$2 width=8
     local filled=$((pct * width / 100)) empty fp ep
     [ "$filled" -gt "$width" ] && filled=$width
     [ "$filled" -lt 0 ] && filled=0
-    # With only 4 cells (25% per step) anything 1-24% would round to 0 and
-    # look identical to 0%. Guarantee at least one cell lit when the value
-    # is non-zero so the gauge always reflects "some usage".
+    # Guarantee at least one cell lit when the value is non-zero, so
+    # the gauge distinguishes "unused" from "just a little used".
     [ "$filled" -eq 0 ] && [ "$pct" -gt 0 ] && filled=1
     empty=$((width - filled))
     printf -v fp "%${filled}s" ""
