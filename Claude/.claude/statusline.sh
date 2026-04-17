@@ -183,7 +183,7 @@ if [ "$SHOW_LIMITS" = 1 ]; then
         FC=$(rate_color "$FIVE_H")
         five_bar=""
         [ "$SHOW_RATE_BARS" = 1 ] && five_bar="$(rate_bar "$five_pct" "$FC")  "
-        LIMITS=" ${DIM}│${RESET} 5h${SEP}${five_bar}${FC}${five_pct}%${RESET}"
+        LIMITS=" ${DIM}│${RESET} 5h ${five_bar}${FC}${five_pct}%${RESET}"
         if [ "$SHOW_COUNTDOWNS" = 1 ] && [ -n "$FIVE_H_RESET" ]; then
             LIMITS="${LIMITS}${SEP}${DIM}↻ $(format_until "$FIVE_H_RESET")${RESET}"
         fi
@@ -193,7 +193,7 @@ if [ "$SHOW_LIMITS" = 1 ]; then
         SC=$(rate_color "$SEVEN_D")
         seven_bar=""
         [ "$SHOW_RATE_BARS" = 1 ] && seven_bar="$(rate_bar "$seven_pct" "$SC")  "
-        LIMITS="${LIMITS} ${DIM}│${RESET} 7d${SEP}${seven_bar}${SC}${seven_pct}%${RESET}"
+        LIMITS="${LIMITS} ${DIM}│${RESET} 7d ${seven_bar}${SC}${seven_pct}%${RESET}"
         if [ "$SHOW_COUNTDOWNS" = 1 ] && [ -n "$SEVEN_D_RESET" ]; then
             LIMITS="${LIMITS}${SEP}${DIM}↻ $(format_until "$SEVEN_D_RESET")${RESET}"
         fi
