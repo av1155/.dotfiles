@@ -39,30 +39,23 @@ COLS=$(get_cols)
 # Reserve a few columns for CC's right-side notifications.
 BUDGET=$((COLS - 5))
 
-# Feature tiers based on available width.
+# Feature tiers based on available width. The branch cap is computed
+# dynamically later based on measured widths of every other segment, so
+# tiers only drive which segments render and the context-bar width.
 if [ "$BUDGET" -lt 50 ]; then
     SHOW_LIMITS=0
     SHOW_COUNTDOWNS=0
     SHOW_GIT_EXTRAS=0
-    MAX_BRANCH=14
     BAR_WIDTH=8
 elif [ "$BUDGET" -lt 75 ]; then
     SHOW_LIMITS=1
     SHOW_COUNTDOWNS=0
     SHOW_GIT_EXTRAS=1
-    MAX_BRANCH=18
     BAR_WIDTH=8
 else
     SHOW_LIMITS=1
     SHOW_COUNTDOWNS=1
     SHOW_GIT_EXTRAS=1
-    # Scale branch cap with available room past BUDGET 90 (base 22, +1 per
-    # 4 cols, hard cap at 60). Below BUDGET 90 we keep the conservative 22
-    # because the other segments (duration, output-style) start appearing
-    # and competing for horizontal space.
-    MAX_BRANCH=22
-    [ "$BUDGET" -ge 90 ] && MAX_BRANCH=$((22 + (BUDGET - 90) / 4))
-    [ "$MAX_BRANCH" -gt 60 ] && MAX_BRANCH=60
     # Scale the bar into extra terminal space: +1 cell per 10 cols past 75,
     # capped at 14 to avoid a bar that dominates the line.
     BAR_WIDTH=$((8 + (BUDGET - 75) / 10))
@@ -131,6 +124,21 @@ rate_color() {
     elif [ "$val" -ge 50 ]; then
         echo "$YELLOW"
     else echo "$GREEN"; fi
+}
+
+# Visible column width of a string (strips ANSI and adjusts for 2-col
+# emojis — bash counts 🌿 as one char but terminals render it as two cols).
+# Note: our color vars hold literal "\033[32m" text rather than real ESC
+# chars, so we must expand via printf '%b' before sed can strip them.
+visible_width() {
+    local s
+    s=$(printf '%b' "$1" | sed $'s/\x1b\\[[0-9;]*m//g')
+    local w=${#s} e rest
+    for e in "🌿" "🔀"; do
+        rest="${s//$e/}"
+        w=$((w + ${#s} - ${#rest}))
+    done
+    echo "$w"
 }
 
 # Mini 4-cell gauge for a rate limit. Uses ▰▱ (parallelograms) to stay
@@ -202,26 +210,6 @@ if [ ! -f "$CACHE_FILE" ] || [ $(($(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/de
 fi
 IFS='|' read -r BRANCH STAGED MODIFIED UNTRACKED AHEAD BEHIND <"$CACHE_FILE"
 
-GIT_SEG=""
-if [ -n "$BRANCH" ]; then
-    if [ "${#BRANCH}" -gt "$MAX_BRANCH" ]; then
-        BRANCH="${BRANCH:0:$((MAX_BRANCH - 1))}…"
-    fi
-    # Swap branch emoji when inside a linked worktree.
-    if [ -n "$WORKTREE" ]; then
-        GIT_SEG=" ${DIM}│${RESET} 🔀 ${BRANCH}"
-    else
-        GIT_SEG=" ${DIM}│${RESET} 🌿 ${BRANCH}"
-    fi
-    [ "${STAGED:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${GREEN}+${STAGED}${RESET}"
-    [ "${MODIFIED:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${YELLOW}~${MODIFIED}${RESET}"
-    if [ "$SHOW_GIT_EXTRAS" = 1 ]; then
-        [ "${UNTRACKED:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${CYAN}?${UNTRACKED}${RESET}"
-        [ "${AHEAD:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${GREEN}↑${AHEAD}${RESET}"
-        [ "${BEHIND:-0}" -gt 0 ] && GIT_SEG="${GIT_SEG} ${RED}↓${BEHIND}${RESET}"
-    fi
-fi
-
 # Session-duration segment (dim) when room allows.
 DURATION_SEG=""
 if [ "$SHOW_DURATION" = 1 ] && [ "${DURATION_MS:-0}" -gt 0 ]; then
@@ -237,6 +225,47 @@ if [ "$SHOW_OUTPUT_STYLE" = 1 ] && [ -n "$OUTPUT_STYLE_NAME" ]; then
         default|Default|DEFAULT) ;;
         *) STYLE_SEG=" ${DIM}│ ✎ ${OUTPUT_STYLE_NAME}${RESET}" ;;
     esac
+fi
+
+# Build the git segment with a truly dynamic branch cap. We pre-build the
+# prefix (pipe + leaf emoji) and the counters (+N ~M ?U ↑A ↓B) as separate
+# pieces, measure every other segment's visible width, and give the branch
+# exactly what's left. This guarantees counters never get clipped off the
+# right edge when a long branch would have pushed the line past the width.
+GIT_SEG=""
+if [ -n "$BRANCH" ]; then
+    # Counters string (may be empty).
+    git_counters=""
+    [ "${STAGED:-0}" -gt 0 ] && git_counters="${git_counters} ${GREEN}+${STAGED}${RESET}"
+    [ "${MODIFIED:-0}" -gt 0 ] && git_counters="${git_counters} ${YELLOW}~${MODIFIED}${RESET}"
+    if [ "$SHOW_GIT_EXTRAS" = 1 ]; then
+        [ "${UNTRACKED:-0}" -gt 0 ] && git_counters="${git_counters} ${CYAN}?${UNTRACKED}${RESET}"
+        [ "${AHEAD:-0}" -gt 0 ] && git_counters="${git_counters} ${GREEN}↑${AHEAD}${RESET}"
+        [ "${BEHIND:-0}" -gt 0 ] && git_counters="${git_counters} ${RED}↓${BEHIND}${RESET}"
+    fi
+    # Branch prefix: swap emoji when inside a linked worktree.
+    if [ -n "$WORKTREE" ]; then
+        git_prefix=" ${DIM}│${RESET} 🔀 "
+    else
+        git_prefix=" ${DIM}│${RESET} 🌿 "
+    fi
+    # Reserve room for every non-branch visible element, then give branch
+    # whatever's left (clamped to [5, 60] for sanity).
+    bar_pct_width=$((BAR_WIDTH + 2 + ${#PCT}))
+    reserved=$((bar_pct_width \
+        + $(visible_width "$LIMITS") \
+        + $(visible_width "$DURATION_SEG") \
+        + $(visible_width "$STYLE_SEG") \
+        + $(visible_width "$git_prefix") \
+        + $(visible_width "$git_counters") \
+        + 2))
+    avail=$((BUDGET - reserved))
+    [ "$avail" -lt 5 ] && avail=5
+    [ "$avail" -gt 60 ] && avail=60
+    if [ "${#BRANCH}" -gt "$avail" ]; then
+        BRANCH="${BRANCH:0:$((avail - 1))}…"
+    fi
+    GIT_SEG="${git_prefix}${BRANCH}${git_counters}"
 fi
 
 # Build single line. LIMITS, GIT_SEG, and STYLE_SEG carry their own leading
