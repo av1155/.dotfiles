@@ -72,13 +72,18 @@ SHOW_RATE_BARS=0
 [ "$BUDGET" -ge 110 ] && SHOW_RATE_BARS=1
 
 # Context bar with threshold colors (BAR_WIDTH set by the tier block above).
-# Threshold depends on the model's actual context window: on 1M-token models
-# 40%/70% maps to 400k/700k which genuinely warrants caution, but on the
-# standard 200k window those same percentages fire after only 80k/140k
-# tokens — too eager. Use the window size to pick sensible thresholds.
+# Thresholds anchored to two documented events:
+#   yellow = "proactive compact" zone (best practice: compact at 60% on
+#            standard windows; earlier on large ones where context rot
+#            starts biting around 500k tokens)
+#   red    = approaching auto-compact or deep degradation
+# Default auto-compact fires at ~83.5% (controlled by
+# CLAUDE_AUTOCOMPACT_PCT_OVERRIDE). On 200k that's ~167k; on 1M it's
+# ~967k, so 1M red is set at 85% = 850k to flag degradation well before
+# auto-compact actually triggers.
 if [ "$CONTEXT_SIZE" -ge 500000 ]; then
-    CTX_YELLOW=40
-    CTX_RED=70
+    CTX_YELLOW=50
+    CTX_RED=85
 else
     CTX_YELLOW=60
     CTX_RED=85
