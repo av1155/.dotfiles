@@ -72,21 +72,19 @@ SHOW_RATE_BARS=0
 [ "$BUDGET" -ge 110 ] && SHOW_RATE_BARS=1
 
 # Context bar with threshold colors (BAR_WIDTH set by the tier block above).
-# Thresholds anchored to two documented events:
-#   yellow = "proactive compact" zone (best practice: compact at 60% on
-#            standard windows; earlier on large ones where context rot
-#            starts biting around 500k tokens)
-#   red    = approaching auto-compact or deep degradation
-# Default auto-compact fires at ~83.5% (controlled by
-# CLAUDE_AUTOCOMPACT_PCT_OVERRIDE). On 200k that's ~167k; on 1M it's
-# ~967k, so 1M red is set at 85% = 850k to flag degradation well before
-# auto-compact actually triggers.
+# Thresholds anchored to two real events so the colors are actionable:
+#   yellow = degraded model quality (context rot is meaningful here)
+#   red    = pre-auto-compact warning AND severely degraded quality;
+#            fires early enough to let the user /compact manually
+# Default auto-compact trigger is ~83.5% (CLAUDE_AUTOCOMPACT_PCT_OVERRIDE).
+#   200k: auto-compact at ~167k → red at 75% (150k, ~17k tokens of buffer)
+#   1M:   auto-compact at ~967k → red at 85% (850k, ~117k tokens of buffer)
 if [ "$CONTEXT_SIZE" -ge 500000 ]; then
     CTX_YELLOW=50
     CTX_RED=85
 else
     CTX_YELLOW=60
-    CTX_RED=85
+    CTX_RED=75
 fi
 if [ "$PCT" -ge "$CTX_RED" ]; then
     BAR_COLOR="$RED"
