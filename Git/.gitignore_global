@@ -106,3 +106,4 @@ build/
 # AI AGENTS #
 #############
 .opencode/
+.claude/scheduled_tasks.lock
