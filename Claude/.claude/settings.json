@@ -147,12 +147,12 @@
     }
   },
   "outputStyle": "Default",
-  "effortLevel": "high",
+  "effortLevel": "xhigh",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
   "autoDreamEnabled": true,
-  "voiceEnabled": true,
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true
 }
