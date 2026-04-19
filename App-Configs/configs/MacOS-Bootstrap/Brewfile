@@ -128,6 +128,8 @@ brew "libpq"
 brew "lpeg"
 # Package manager for the Lua programming language
 brew "luarocks"
+# Fast, async, resource-friendly link checker
+brew "lychee"
 # Text-based web browser
 brew "lynx"
 # Mac App Store command-line interface
