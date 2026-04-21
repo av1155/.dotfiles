@@ -56,6 +56,16 @@ brew "coursier"
 brew "cpanminus"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
+# Low-level access to audio, keyboard, mouse, joystick, and graphics
+brew "sdl2"
+# Play, record, convert, and stream select audio and video codecs
+brew "ffmpeg"
+# Image format providing lossless and lossy compression for web images
+brew "webp"
+# Package compiler and linker metadata toolkit
+brew "pkgconf"
+# Duplicate file utility
+brew "czkawka"
 # Load/unload environment variables based on $PWD
 brew "direnv"
 # Pack, ship and run any application as a lightweight container
@@ -72,10 +82,6 @@ brew "eza"
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
-# Low-level access to audio, keyboard, mouse, joystick, and graphics
-brew "sdl2"
-# Play, record, convert, and stream select audio and video codecs
-brew "ffmpeg"
 # Command-line fuzzy finder written in Go
 brew "fzf"
 # GNU compiler collection
@@ -86,8 +92,6 @@ brew "gdu"
 brew "geckodriver"
 # GitHub command-line tool
 brew "gh"
-# Image format providing lossless and lossy compression for web images
-brew "webp"
 # Distributed revision control system
 brew "git"
 # Syntax-highlighting pager for git and diff output
@@ -118,6 +122,8 @@ brew "julia"
 brew "kind"
 # Statically typed programming language for the JVM
 brew "kotlin"
+# Kubernetes command-line interface
+brew "kubernetes-cli"
 # Lazier way to manage everything docker
 brew "lazydocker"
 # Simple terminal UI for git commands
@@ -156,6 +162,8 @@ brew "nss"
 brew "numpy"
 # Create, run, and share large language models (LLMs)
 brew "ollama", restart_service: :changed
+# Multithreaded PNG optimizer written in Rust
+brew "oxipng"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
 # Web-based PostgreSQL database browser
@@ -166,10 +174,10 @@ brew "pigz"
 brew "pinentry-mac"
 # Python dependency management tool
 brew "pipenv"
-# Package compiler and linker metadata toolkit
-brew "pkgconf"
 # Paste PNG into files
 brew "pngpaste"
+# PNG image optimizing utility
+brew "pngquant"
 # Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
 brew "prettier"
 # Bundle a Python application and all its dependencies
@@ -302,6 +310,8 @@ cask "ghostty"
 cask "google-chrome"
 # OpenPGP/GnuPG crypto, sign and key management tool
 cask "gpgfrontend"
+# Automated organisation
+cask "hazel"
 # Tool to optimise images to a smaller size
 cask "imageoptim"
 # JetBrains tools manager
