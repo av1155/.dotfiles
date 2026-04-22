@@ -108,7 +108,7 @@ if [ -n "$SIBLINGS" ]; then
     SIBLINGS_FILE=$(mktemp)
     echo "$SIBLINGS" > "$SIBLINGS_FILE"
     nohup bash -c "
-        sleep 8
+        sleep 40
         while IFS= read -r sibling; do
             [ -z \"\$sibling\" ] && continue
             workmux send \"\$sibling\" '📌 Main advanced — finish your current step, then run /rebase origin before continuing to avoid working on a stale base.'
