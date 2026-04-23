@@ -118,6 +118,8 @@ brew "imagemagick"
 brew "jq"
 # Fast, Dynamic Programming Language
 brew "julia"
+# Handy way to save and run project-specific commands
+brew "just"
 # Run local Kubernetes cluster in Docker
 brew "kind"
 # Statically typed programming language for the JVM
@@ -438,7 +440,6 @@ vscode "esbenp.prettier-vscode"
 vscode "formulahendry.auto-rename-tag"
 vscode "formulahendry.code-runner"
 vscode "github.codespaces"
-vscode "github.copilot-chat"
 vscode "golang.go"
 vscode "james-yu.latex-workshop"
 vscode "kevinrose.vsc-python-indent"
@@ -497,3 +498,4 @@ vscode "wholroyd.jinja"
 vscode "xaver.clang-format"
 go "github.com/koron/iferr"
 uv "aider-chat", with: ["pip"]
+uv "playwright"
