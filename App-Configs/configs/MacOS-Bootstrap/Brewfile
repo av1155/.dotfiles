@@ -7,6 +7,7 @@ tap "oven-sh/bun"
 tap "raine/workmux"
 tap "samtay/tui"
 tap "sst/tap"
+tap "stripe/stripe-cli"
 tap "supabase/tap"
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
@@ -250,6 +251,8 @@ brew "raine/workmux/workmux"
 brew "samtay/tui/tetris"
 # The AI coding agent built for the terminal.
 brew "sst/tap/opencode"
+# Stripe CLI utility
+brew "stripe/stripe-cli/stripe"
 # Supabase CLI
 brew "supabase/tap/supabase"
 # View, create, manipulate, print and manage files in Portable Document Format
@@ -348,6 +351,8 @@ cask "microsoft-teams"
 cask "miniforge"
 # Online collaborative whiteboard platform
 cask "miro"
+# Reverse proxy, secure introspectable tunnels to localhost
+cask "ngrok"
 # App to write, plan, collaborate, and get organised
 cask "notion"
 # Knowledge base that works on top of a local folder of plain text Markdown files
