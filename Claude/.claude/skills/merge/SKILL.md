@@ -108,10 +108,10 @@ if [ -n "$SIBLINGS" ]; then
     SIBLINGS_FILE=$(mktemp)
     echo "$SIBLINGS" > "$SIBLINGS_FILE"
     nohup bash -c "
-        sleep 40
+        sleep 300
         while IFS= read -r sibling; do
             [ -z \"\$sibling\" ] && continue
-            workmux send \"\$sibling\" '📌 Main advanced — finish your current step, then run /rebase origin before continuing to avoid working on a stale base.'
+            workmux send \"\$sibling\" '📌 Main advanced. Finish your current step, then rebase onto whichever of local main or origin/main is ahead before continuing to avoid working on a stale base.'
         done < $SIBLINGS_FILE
         rm -f $SIBLINGS_FILE
     " > /dev/null 2>&1 &
@@ -119,9 +119,13 @@ if [ -n "$SIBLINGS" ]; then
 fi
 ```
 
-The notification fires 8 seconds after scheduling, giving `workmux
-merge` time to complete. If the merge fails and main doesn't advance,
-siblings receive a spurious rebase ping — harmless but worth noting.
+The notification fires 300 seconds after scheduling, giving `workmux
+merge` time to complete.
+
+AI: if ANY earlier step failed (commit, rebase, dependency refresh,
+sibling capture), abort the flow BEFORE reaching this step. Do not
+schedule the notification at all. The nohup block should only run
+after Steps 1 to 3 have succeeded and you are about to run the merge.
 
 If `--keep` IS in the arguments, skip this step. Inline notification
 runs in Step 6 instead.
@@ -146,10 +150,14 @@ merge and notification runs inline here:
 if [ -n "$SIBLINGS" ]; then
     echo "$SIBLINGS" | while IFS= read -r sibling; do
         [ -z "$sibling" ] && continue
-        workmux send "$sibling" "📌 Main advanced — finish your current step, then run /rebase origin before continuing to avoid working on a stale base."
+        workmux send "$sibling" "📌 Main advanced. Finish your current step, then rebase onto whichever of local main or origin/main is ahead before continuing to avoid working on a stale base."
     done
 fi
 ```
 
-If `--keep` was NOT set, skip this step — Step 4 already scheduled the
+AI: if `workmux merge` in Step 5 failed (non-zero exit, or main did
+not actually advance), do NOT run this block. Siblings should only be
+notified when the merge truly succeeded.
+
+If `--keep` was NOT set, skip this step. Step 4 already scheduled the
 notification.
