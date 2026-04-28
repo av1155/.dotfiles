@@ -25,32 +25,27 @@
       "Read(~/.gnupg/**)",
       "Read(~/.docker/config.json)",
       "Read(~/.npmrc)",
-      "Read(~/.config/gh/**)",
+      "Read(~/.config/gh/**)"
+    ],
+    "ask": [
       "Write(./.env)",
       "Write(./.env.*)",
       "Bash(sudo *)",
       "Bash(chmod 777 *)",
-      "Bash(git push --force*)",
-      "Bash(git push -f*)",
-      "Bash(git push origin main*)",
-      "Bash(git push origin master*)",
-      "Bash(git push origin :*)",
+      "Bash(git push *)",
+      "Bash(git merge *)",
       "Bash(git reset --hard*)",
       "Bash(curl *| sh)",
       "Bash(wget *| sh)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm remove *)",
       "Bash(pnpm publish *)",
       "Bash(npm publish *)",
       "Bash(drop table*)",
       "Bash(DROP TABLE*)",
       "Bash(dd *)",
       "Bash(mkfs *)"
-    ],
-    "ask": [
-      "Bash(git push *)",
-      "Bash(git merge *)",
-      "Bash(pnpm install *)",
-      "Bash(pnpm add *)",
-      "Bash(pnpm remove *)"
     ],
     "defaultMode": "auto"
   },
@@ -96,6 +91,28 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/andreaventi/.config/tmux/plugins/tmux-assistant-resurrect/hooks/claude-session-track.sh'"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/andreaventi/.config/tmux/plugins/tmux-assistant-resurrect/hooks/claude-session-cleanup.sh'"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -118,8 +135,7 @@
     "supabase@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "vercel-plugin@vercel-vercel-plugin": true,
-    "vercel@claude-plugins-official": true
+    "vercel-plugin@vercel-vercel-plugin": true
   },
   "extraKnownMarketplaces": {
     "claude-notifications-go": {
