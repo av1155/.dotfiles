@@ -57,16 +57,6 @@ brew "coursier"
 brew "cpanminus"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
-# Low-level access to audio, keyboard, mouse, joystick, and graphics
-brew "sdl2"
-# Play, record, convert, and stream select audio and video codecs
-brew "ffmpeg"
-# Image format providing lossless and lossy compression for web images
-brew "webp"
-# Package compiler and linker metadata toolkit
-brew "pkgconf"
-# Duplicate file utility
-brew "czkawka"
 # Load/unload environment variables based on $PWD
 brew "direnv"
 # Pack, ship and run any application as a lightweight container
@@ -83,6 +73,10 @@ brew "eza"
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
+# Low-level access to audio, keyboard, mouse, joystick, and graphics
+brew "sdl2"
+# Play, record, convert, and stream select audio and video codecs
+brew "ffmpeg"
 # Command-line fuzzy finder written in Go
 brew "fzf"
 # GNU compiler collection
@@ -93,6 +87,8 @@ brew "gdu"
 brew "geckodriver"
 # GitHub command-line tool
 brew "gh"
+# Image format providing lossless and lossy compression for web images
+brew "webp"
 # Distributed revision control system
 brew "git"
 # Syntax-highlighting pager for git and diff output
@@ -177,6 +173,8 @@ brew "pigz"
 brew "pinentry-mac"
 # Python dependency management tool
 brew "pipenv"
+# Package compiler and linker metadata toolkit
+brew "pkgconf"
 # Paste PNG into files
 brew "pngpaste"
 # PNG image optimizing utility
@@ -315,8 +313,6 @@ cask "ghostty"
 cask "google-chrome"
 # OpenPGP/GnuPG crypto, sign and key management tool
 cask "gpgfrontend"
-# Automated organisation
-cask "hazel"
 # Tool to optimise images to a smaller size
 cask "imageoptim"
 # JetBrains tools manager
