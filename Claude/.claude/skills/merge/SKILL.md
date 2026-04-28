@@ -83,8 +83,8 @@ If nothing relevant changed, skip.
 
 `workmux merge` closes the current tmux window and kills this skill's
 shell process mid-execution. Sibling worktrees must be identified NOW,
-before the merge runs, so they can be notified to rebase onto the
-updated main.
+before the merge runs, so the pre-merge advisory in Step 4 can be sent
+before the merger window dies.
 
 ```bash
 MERGED=$(git rev-parse --show-toplevel | xargs basename)
@@ -96,39 +96,40 @@ SIBLINGS=$(workmux status --json | jq -r --arg self "$MERGED" '
 `$SIBLINGS` may be empty (no other worktrees active) — that's fine,
 Step 5 handles both cases.
 
-## Step 4: Schedule post-merge notification (if --keep NOT set)
+## Step 4: Send pre-merge advisory to siblings (if --keep NOT set)
 
 If `--keep` is NOT in the arguments AND `$SIBLINGS` is non-empty,
-schedule a detached background process to notify siblings after the
-merge completes. This must run BEFORE `workmux merge` because the
-current window dies during merge.
+send each sibling a self-describing advisory now, before `workmux
+merge` runs. This must happen BEFORE Step 5 because the current
+tmux window dies during merge.
+
+The advisory identifies the merger by handle and asks the receiver
+to verify whether the merge actually completed (by checking `wm
+list`) before rebasing. This avoids hardcoding any wait time:
+
+- if the merger handle is still in `wm list`, the merge has not
+  finished yet and the receiver should defer the rebase
+- if the merger handle is gone, the merge succeeded and the
+  receiver can fetch and rebase onto whichever of local main or
+  origin/main is ahead
 
 ```bash
 if [ -n "$SIBLINGS" ]; then
-    SIBLINGS_FILE=$(mktemp)
-    echo "$SIBLINGS" > "$SIBLINGS_FILE"
-    nohup bash -c "
-        sleep 300
-        while IFS= read -r sibling; do
-            [ -z \"\$sibling\" ] && continue
-            workmux send \"\$sibling\" '📌 Main advanced. Finish your current step, then rebase onto whichever of local main or origin/main is ahead before continuing to avoid working on a stale base.'
-        done < $SIBLINGS_FILE
-        rm -f $SIBLINGS_FILE
-    " > /dev/null 2>&1 &
-    disown
+    MSG="📌 Heads up from workmux worktree '$MERGED'. I'm about to merge my branch into main and don't know exactly when it will complete (pre-merge hooks, tests, etc may run first). Before you rebase: run \`wm list\` and check whether '$MERGED' is listed. If yes, the merge has not happened yet, so don't rebase, finish your current step and recheck later. If gone, the merge succeeded; run \`git fetch\` if you have an origin remote, then rebase onto whichever of local main or origin/main is ahead so you don't build on a stale base."
+    echo "$SIBLINGS" | while IFS= read -r sibling; do
+        [ -z "$sibling" ] && continue
+        workmux send "$sibling" "$MSG"
+    done
 fi
 ```
 
-The notification fires 300 seconds after scheduling, giving `workmux
-merge` time to complete.
-
 AI: if ANY earlier step failed (commit, rebase, dependency refresh,
 sibling capture), abort the flow BEFORE reaching this step. Do not
-schedule the notification at all. The nohup block should only run
-after Steps 1 to 3 have succeeded and you are about to run the merge.
+send the advisory at all. The advisory should only go out after
+Steps 1 to 3 have succeeded and you are about to run the merge.
 
-If `--keep` IS in the arguments, skip this step. Inline notification
-runs in Step 6 instead.
+If `--keep` IS in the arguments, skip this step. Step 6 sends an
+inline notification after the merge instead.
 
 ## Step 5: Run the merge
 
@@ -144,13 +145,16 @@ and tmux window (unless `--keep` is used).
 ## Step 6: Notify siblings inline (only if --keep IS set)
 
 If `--keep` was in the arguments, the current window survives the
-merge and notification runs inline here:
+merge. The merger does not disappear from `wm list`, so siblings
+cannot use the existence check from Step 4. Send a simpler
+post-merge confirmation inline:
 
 ```bash
 if [ -n "$SIBLINGS" ]; then
+    MSG="📌 From workmux worktree '$MERGED'. I just merged my branch into main and kept this worktree open with --keep. Main has advanced. Finish your current step, then run \`git fetch\` if you have an origin remote and rebase onto whichever of local main or origin/main is ahead so you stay current."
     echo "$SIBLINGS" | while IFS= read -r sibling; do
         [ -z "$sibling" ] && continue
-        workmux send "$sibling" "📌 Main advanced. Finish your current step, then rebase onto whichever of local main or origin/main is ahead before continuing to avoid working on a stale base."
+        workmux send "$sibling" "$MSG"
     done
 fi
 ```
@@ -159,5 +163,5 @@ AI: if `workmux merge` in Step 5 failed (non-zero exit, or main did
 not actually advance), do NOT run this block. Siblings should only be
 notified when the merge truly succeeded.
 
-If `--keep` was NOT set, skip this step. Step 4 already scheduled the
-notification.
+If `--keep` was NOT set, skip this step. Step 4 already sent the
+advisory.
