@@ -72,6 +72,7 @@ Do not present inferred conclusions as verified facts.
 - run the smallest relevant validation first
 - follow repository workflow requirements when present
 - stop broadening scope unless evidence requires it
+- opportunistic cleanup allowed per the housekeeping rules
 
 ---
 
@@ -360,6 +361,25 @@ For protected branches such as `main`:
 - Avoid casual edits to release workflow, CI, versioning, schema, migrations, or shared fixtures unless required.
 - If documentation and observed behavior conflict, follow the safer path and note the discrepancy.
 - Surface genuine uncertainty instead of silently guessing.
+
+---
+
+## Refactoring and housekeeping
+
+Apply the Boy Scout Rule when touching a file: scan for safe micro-cleanups
+nearby (vague names, magic numbers, dead code, unused imports). Apply them
+in a separate `chore: cleanup` commit, never bundled with feature or bug work.
+
+Hard constraints:
+
+- Never change behavior during cleanup. If unsure whether a change is
+  behavior-preserving, skip it.
+- Do not refactor code lacking test coverage. Write characterization tests
+  first or skip the refactor.
+- Do not over-decompose. Splitting a 40-line function into a dozen 2-liners
+  is worse than leaving it. Extract only when the extracted block has a name
+  more informative than reading the code itself.
+- Never refactor outside the scope of the current task unless asked.
 
 ---
 
