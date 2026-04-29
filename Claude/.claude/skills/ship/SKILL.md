@@ -64,9 +64,84 @@ git checkout -b <type>/<short-slug> origin/<default-branch>
 
 Branch naming: `type/short-slug` — lowercase, hyphenated. Derive the type from the nature of changes (feat, fix, chore, ci, docs, refactor, test).
 
-## 3. Quality Gates, Stage, and Commit
+## 3. Quality Gates, CHANGELOG, Stage, and Commit
 
-### 3a. Discover and run quality gates
+### 3a. Update CHANGELOG.md (if Keep a Changelog format detected)
+
+Check whether the project uses Keep a Changelog with an Unreleased section:
+
+```bash
+[ -f CHANGELOG.md ] && grep -qE '^## \[Unreleased\]$' CHANGELOG.md && echo "yes"
+```
+
+If no, skip this step.  If yes:
+
+#### Decide whether this change deserves a bullet
+
+The branch type is the first signal.  Default behaviour:
+
+| Branch prefix | Default | Override only when... |
+| --- | --- | --- |
+| `feat`, `fix`, `revert` | **Add a bullet.** | The change is user-invisible (e.g. an internal-only fix). |
+| `perf` | **Add a bullet.** | The diff has no measurable or user-observable effect. |
+| `chore`, `refactor`, `test`, `ci`, `docs`, `build`, `style` | **Skip.** | The diff touches a user-visible surface (e.g. a `chore` that bumps a public dependency in a way users will notice). |
+
+Then sanity-check by looking at the changed paths:
+
+- User-facing if changed: source under `src/` or equivalent app root, public templates, public routes, env-var documentation, Dockerfile (deployer-visible), `requirements*.txt` / `package.json` deps when version constraints affect users.
+- Never user-facing: `tests/`, `.github/`, `.claude/`, `.workmux.yaml`, internal docs, lock-file-only changes, comment-only edits.
+
+When the signals disagree (e.g. `chore` branch but the diff touches a user-visible file), trust the diff over the prefix.  When in doubt, draft a bullet and let the user remove it on review.
+
+#### Find the project's style guide before drafting
+
+Before writing a single bullet, read whichever of these exist (in this order, stop at the first hit) and follow the rules you find:
+
+1. A `### Changelog style guide` (or similarly-named) section in `AGENTS.md` / `CLAUDE.md`.
+2. `CONTRIBUTING.md` sections on changelog, release notes, or commit messages.
+3. The project's most recent 5 release blocks in `CHANGELOG.md` itself: match their voice (imperative vs noun-led), tense, length, and level of detail.
+
+If the project documents a banned-phrasings list, a length cap, or a "no internal class names" rule, honour it.  When a project has no documented guide, fall back to the **Generic rules** below.
+
+#### Generic rules (when no project guide exists)
+
+Sections per Keep a Changelog 1.1.0, in this order if you add a missing section header:
+
+- `### Added` — new features
+- `### Changed` — modifications to existing functionality
+- `### Deprecated` — soon-to-be-removed features
+- `### Removed` — removed features
+- `### Fixed` — bug fixes
+- `### Security` — vulnerability responses
+
+Voice and length:
+
+- One sentence per bullet.  A second sentence only when migration or upgrade-affecting context must ride with the change.
+- Target 80 to 160 characters.  Hard ceiling 250.  If the bullet runs longer, split it or move detail to the PR body.
+- Lead with user-facing impact, not implementation detail.
+- End with `(#N)` referencing the linked issue from step 1 (the PR number is not yet known; GitHub auto-links either form).
+- Use backticks for identifiers, file names, env vars, UI elements.
+- Use markdown `[text](url)` syntax for external links.
+
+Avoid (these read as auto-generated or low-effort):
+
+- Vague: "Various bug fixes", "Improved X", "Enhanced X", "Better X", "Bug fixes and stability improvements".
+- Marketing: "We are thrilled to...", "groundbreaking", "delightful new experience".
+- Magic adverbs without measurement: "seamlessly", "robustly", "significantly", "dramatically".  Quantify or omit.
+- Empty verbs: "leverages", "utilizes", "harnesses", "facilitates".  Pick the concrete verb.
+- Bold lead-ins (`**Performance:** faster X`) and marketing trail clauses (`for a smoother experience`).
+
+Audience-aware vocabulary:
+
+- For tools targeting **developers / SDK users**: name the public API surface that changed (function, type, parameter, env var, config key, CLI flag).  Imperative mood ("Add", "Fix", "Bump") is the dominant convention.  Examples: Stripe, Tailwind, Pydantic, Anthropic SDKs.
+- For tools targeting **self-hosters / sysadmins**: name the operator-visible surface (env var, config key, schema version, log line, HTTP route, container directive).  Avoid internal class names, private helpers, and source paths under `src/` unless they appear in operator-visible logs.  Noun-led present tense often reads more naturally here ("Logs page distinguishes...").  Examples: Authelia, AdGuard Home, Plausible, Caddy.
+- For tools targeting **end-user applications**: marketing-style release notes are appropriate, but they belong on a separate Releases page, not in `CHANGELOG.md`.  Keep the markdown file focused on upgraders.
+
+Match the project's audience.  If unsure, look at the README's "Who is this for" section, the Dockerfile (presence implies self-hosters), or the package metadata.
+
+Stage `CHANGELOG.md` alongside the rest of the commit so the bullet ships with the change rather than as a follow-up.
+
+### 3b. Discover and run quality gates
 
 Detect what's available in this project (same discovery as deep-audit Step 1b):
 
@@ -83,9 +158,9 @@ Run whatever exists. If quality gates fail, stop and report the failures. Do not
 
 If only non-code files changed (markdown, yaml, config), skip quality gates that don't apply.
 
-### 3b. Stage and commit
+### 3c. Stage and commit
 
-Stage relevant files (prefer explicit paths over `git add -A`). Write a conventional commit message:
+Stage relevant files (prefer explicit paths over `git add -A`). Include `CHANGELOG.md` if you edited it in 3a. Write a conventional commit message:
 
 ```
 type(scope): description

@@ -1,2 +1,0 @@
-FROM glm-4.7-flash:q4_K_M
-PARAMETER num_ctx 98304

@@ -1,2 +1,0 @@
-FROM devstral-small-2:24b
-PARAMETER num_ctx 131072

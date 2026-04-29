@@ -886,3 +886,8 @@ if grep -qi microsoft /proc/version 2>/dev/null; then
   export GALLIUM_DRIVER=d3d12
   export LIBVA_DRIVER_NAME=d3d12
 fi
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/andreaventi/.cache/lm-studio/bin"
+# End of LM Studio CLI section
+

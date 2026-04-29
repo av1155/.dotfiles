@@ -1,0 +1,2 @@
+FROM qwen3.6:27b
+PARAMETER num_ctx 131072
