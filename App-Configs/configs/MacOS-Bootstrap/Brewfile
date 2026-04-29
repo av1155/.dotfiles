@@ -117,6 +117,8 @@ brew "jq"
 brew "julia"
 # Handy way to save and run project-specific commands
 brew "just"
+# Modern load testing tool, using Go and JavaScript
+brew "k6"
 # Run local Kubernetes cluster in Docker
 brew "kind"
 # Statically typed programming language for the JVM
@@ -299,6 +301,8 @@ cask "dotnet-sdk"
 cask "figma"
 # Web browser
 cask "firefox"
+# Web browser
+cask "firefox@developer-edition"
 # UI toolkit for building applications for mobile, web and desktop
 cask "flutter"
 # Clipboard manager for developers
