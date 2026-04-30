@@ -1,0 +1,89 @@
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+personality = "pragmatic"
+
+[projects."/Users/andreaventi/Desktop/claude-test/cosmos-visualization"]
+trust_level = "trusted"
+
+[projects."/Users/andreaventi/Developer/Houndarr"]
+trust_level = "trusted"
+
+[projects."/Users/andreaventi/Developer/wedding-site"]
+trust_level = "trusted"
+
+[projects."/Users/andreaventi/Developer/invest-platform"]
+trust_level = "trusted"
+
+[projects."/Users/andreaventi/.dotfiles"]
+trust_level = "trusted"
+
+[notice.model_migrations]
+gpt-5-codex = "gpt-5.3-codex"
+"gpt-5.3-codex" = "gpt-5.4"
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[plugins."build-web-apps@openai-curated"]
+enabled = true
+
+[plugins."linear@openai-curated"]
+enabled = true
+
+[plugins."vercel@openai-curated"]
+enabled = true
+
+[features]
+codex_hooks = true
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+env_vars = ["CONTEXT7_API_KEY"]
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+enabled = true
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_PERSONAL_ACCESS_TOKEN"
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+enabled = true
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest", "--output-dir", "/tmp/codex-playwright"]
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+enabled = true
+
+[mcp_servers.supabase]
+url = "https://mcp.supabase.com/mcp?utm_source=claude-code-plugin"
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+enabled = true
+
+[mcp_servers.vercel]
+url = "https://mcp.vercel.com"
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+enabled = true
+
+[mcp_servers.magic]
+command = "sh"
+args = ["-lc", "API_KEY=\"$MAGIC_API_KEY\" exec npx -y @21st-dev/magic@latest"]
+env_vars = ["MAGIC_API_KEY"]
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+enabled = true
+
+[mcp_servers.stitch]
+url = "https://stitch.googleapis.com/mcp"
+env_http_headers = { "x-goog-api-key" = "GOOGLE_STITCH_API_KEY" }
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+enabled = true

@@ -271,6 +271,8 @@ Example:
 │
 ├── Claude/                     # Claude AI MCP server configurations
 │   └── .claude/
+├── Codex/                      # Codex global instructions, config, hooks, rules, and skills
+│   └── .codex/
 │
 ├── Config/                     # XDG config directory
 │   └── .config/
@@ -367,6 +369,7 @@ Pre-configured for modern development:
 - **AI Tools**:
     - OpenCode with specialized agents (code-reviewer, debugger, refactorer, etc.)
     - Claude MCP servers (git, time, fetch, brave-search, playwright, magic)
+    - Codex global AGENTS.md, MCP server configuration, hooks, approval rules, and workflow skills
 - **File Navigation**:
     - FZF: Fuzzy finder with custom keybindings
     - Bat: Syntax-highlighted file viewer
