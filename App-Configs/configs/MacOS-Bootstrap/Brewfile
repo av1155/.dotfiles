@@ -163,6 +163,8 @@ brew "nss"
 brew "numpy"
 # Create, run, and share large language models (LLMs)
 brew "ollama", restart_service: :changed
+# Vulnerability scanner which uses the OSV database
+brew "osv-scanner"
 # Multithreaded PNG optimizer written in Rust
 brew "oxipng"
 # Swiss-army knife of markup format conversion
@@ -351,6 +353,8 @@ cask "microsoft-teams"
 cask "miniforge"
 # Online collaborative whiteboard platform
 cask "miro"
+# AI platform with local and online models
+cask "mstystudio"
 # Reverse proxy, secure introspectable tunnels to localhost
 cask "ngrok"
 # App to write, plan, collaborate, and get organised
