@@ -1,290 +1,197 @@
 # AGENTS.md
 
-## Purpose
+Global defaults for Codex CLI under this user account.
+Repository-local `AGENTS.md` always wins over this file.
 
-This file defines the default operating rules for Codex in this environment.
+## Instruction precedence
 
-It is a global baseline intended to keep behavior consistent across repositories
-and tasks. Do not rely on hidden provider-specific behavior. Rely on explicit
-instructions, repository evidence, available tools, and stated workflow.
-
-If this file conflicts with a repository-local `AGENTS.md`, follow the
-repository-local file for instructions, guidance, workflow, delegation, and
-behavioral policy.
-
----
-
-## Instruction Precedence
-
-Apply instructions in this order:
-
-1. Direct user instruction
+1. Direct user instruction in the current turn
 2. Repository-local `AGENTS.md`
-3. Additional repository or config-linked instruction files
-4. This global `AGENTS.md`
-5. Other fallback compatible instruction files only when applicable
+3. Other repository or config-linked instruction files
+4. This file
 
-If repository-specific workflow rules are missing, say so briefly and proceed
-with the safest minimal behavior allowed.
+If the repository has no rules, say so briefly and proceed with the safest minimal behavior.
 
----
+## Personal conventions (Andrea Venti)
 
-## Core Operating Principles
+### Writing
 
-- Default to read-first, scope-first execution.
-- Never modify files unless the task, active mode, permissions, and repository
-  policy allow it.
-- Prefer the smallest correct change.
-- Do not introduce new layers, helpers, or abstractions when a simpler local
-  change is sufficient.
-- Keep diffs minimal, reviewable, reproducible, and easy to validate.
-- Prefer direct evidence over assumptions.
-- Avoid redundant exploration, repeated reads, and unnecessary work.
-- State uncertainty explicitly instead of inventing confidence.
-- Do not attempt to bypass safeguards.
-- Repository-local rules override this file when they conflict.
-- Break non-trivial tasks into smaller verifiable steps.
-- Preserve existing behavior unless the task explicitly requires behavioral
-  change.
-- Verify results with the smallest concrete check available; do not rely on
-  reasoning alone when code, tests, or tooling can confirm.
+- Never use em dashes. Use colons, semicolons, commas, periods, or parentheses.
+- Avoid the "Bold header: description" list pattern. Use plain bullets.
+- Avoid "It's not X, it's Y" negative parallelism.
+- Do not default to lists of exactly three items. Use the count that fits.
+- Vary sentence length and structure.
 
----
+### Code
 
-## Confidence Marking
+- TypeScript strict mode. Full type signatures on every function.
+- `interface` over `type` for object shapes.
+- `unknown` over `any` in production code; narrow at the boundary.
+- Named exports only, unless the framework requires a default.
+- No file over 300 lines. Split when it grows past that.
 
-When useful, label conclusions as:
+## Operating principles
 
-- `verified` - directly supported by inspected code, config, or test results
-- `likely` - strongly supported but not fully confirmed
-- `inferred` - reasoned from partial evidence
-- `unknown` - not established from available evidence
+- Read first, scope first. Investigate before editing.
+- Smallest correct change wins. Do not bundle unrelated concerns.
+- Preserve existing behavior unless the task explicitly requires a change.
+- State uncertainty honestly. Do not invent confidence.
+- Verify with the smallest concrete check (test, build, code read) before claiming done.
+- Do not bypass approval policies, sandbox modes, or trust boundaries.
 
-Do not present inferred conclusions as verified facts.
+## Tool order
 
----
+Prefer the cheapest tool that does the job.
 
-## Execution Modes
+```
+list / glob / grep        discovery
+read                      targeted ranges, not full files
+shell                     only when builtins are insufficient
+edit / patch              localized in-place changes
+write                     new files or full replacement only
+webfetch                  known URLs (docs, specs)
+websearch                 only when no source is known
+skill                     when an existing SKILL.md fits
+```
 
-### Planning, review, and read-only work
+## Boundaries
 
-- do not modify files
-- do not perform incidental cleanup or speculative edits
-- gather enough evidence to define scope before proposing implementation
+### Always do
 
-### Build and implementation work
+- Discovery via `list` / `glob` / `grep` / `read`
+- Reading docs, configs, git history
+- Running the smallest relevant validation before declaring done
+- Conventional Commits with 50-char title and 72-col body
+- Boy Scout cleanups in a separate `chore: cleanup` commit
 
-- investigate before editing
-- define a narrow scope
-- change only what is needed
-- run the smallest relevant validation first
-- follow repository workflow requirements when present
-- stop broadening scope unless evidence requires it
-- opportunistic cleanup is allowed only when it is directly tied to the task
+### Ask first
 
----
+- Edits in repos without test coverage
+- Dependency upgrades or lockfile changes
+- Schema, migration, CI, or release-workflow edits
+- New abstractions, helpers, or layers
+- Anything outside the stated task scope
+- `git push`, branch creation on remote, opening or merging PRs
 
-## Investigation and Token Discipline
+### Never do
 
-Optimize for correctness with minimal unnecessary work.
+- Force-push, `git reset --hard` on shared branches, branch deletion, or skipped hooks without explicit approval
+- Bypass a denied tool by routing through `shell` or another path
+- Commit, print, or paste secrets
+- Read `.env`, SSH keys, AWS credentials, or any sandbox-blocked path
+- Refactor untested code without writing characterization tests first
+- Mix feature work with cleanup or formatting churn in the same commit
 
-### Default investigation pattern
+## Investigation discipline
 
-1. Establish repository shape cheaply
-2. Identify likely source roots, tests, docs, config, workflows, and large files
-3. Map relevant files, symbols, and call paths
-4. Read only the most relevant ranges
-5. Escalate to deeper inspection only when justified
+1. Establish repository shape cheaply (manifests, workspace config, primary languages).
+2. Targeted glob/grep for the affected area before opening files.
+3. Range reads, not full-file reads.
+4. Stop once enough evidence is gathered.
+5. Reuse facts already collected; do not rediscover on follow-up tasks.
 
-### Required efficiency rules
+Anti-waste:
 
-- Do not start by reading many full files.
-- Prefer cheap discovery before deep inspection.
-- Prefer partial or line-range reads over full-file reads.
-- Read full files only when they are small or clearly central.
-- Reuse facts already gathered.
-- Do not ask multiple agents to rediscover the same area.
-- Stop exploring a branch once enough evidence has been gathered.
-- Prefer exact file and function references over long narration.
-- Quote only short snippets when necessary.
-- Do not perform broad rediscovery on follow-up tasks unless scope changed.
+- No vague delegations like "analyze the repo".
+- No pasting large excerpts.
+- No re-reading without reason.
 
-### Anti-waste rules
+## Refactoring
 
-- Do not give vague prompts like "analyze the repo".
-- Do not paste large code excerpts unless essential.
-- Do not reread the same content without a reason.
-- Do not use heavier approaches when a cheaper one is sufficient.
+- Apply Boy Scout cleanups in a separate `chore: cleanup` commit, never bundled with feature or bug work.
+- Do not refactor untested code; write characterization tests first or skip the refactor.
+- Do not over-decompose. Three similar lines beats a premature abstraction.
+- Do not refactor outside task scope unless asked.
 
----
+## Production scalability
 
-## Environment Summary
+Backend code must be production-scalable from the first version. Load the `scalability` skill (at `~/.agents/skills/scalability/`) when working on database queries, API endpoints, background jobs, caching, or any server-side code that runs under load. Top-level non-negotiables: no N+1 queries, always paginate, queue blocking work, set timeouts on external calls, emit p50/p95/p99 latency metrics.
 
-This environment may provide:
+## Git defaults
 
-- built-in capabilities
-- skills loaded through `SKILL.md`
-- repository-defined instruction files
-- isolated execution contexts or delegated agents
-- MCP servers configured through Codex `config.toml`
-- plugins and apps exposed by the active Codex runtime
+- Branch from the primary dev branch. Short, lowercase, hyphenated names.
+- One focused branch per logical change.
+- Conventional Commits: `<type>(<scope>)!: <description>`.
+- Common types: feat, fix, docs, refactor, perf, test, build, ci, chore, revert.
+- Prefer `gh` CLI over the web UI for issues, PRs, checks.
 
-The primary agent is responsible for scope, synthesis, and cross-cutting
-decisions.
+Example body:
 
-Do not assume every capability is enabled in every session. Use only what is
-actually available to the current agent.
+```
+fix(auth): invalidate stale session tokens on logout
 
----
+Tokens were retained in Redis after logout because the destroy
+hook ran asynchronously and could be skipped if the response
+stream closed early. Move the destroy call before response flush.
+```
+
+## MCP servers
+
+Global:
+
+| Server       | When to reach for it                                              |
+| ------------ | ----------------------------------------------------------------- |
+| `context7`   | Version-sensitive library or framework documentation              |
+| `firecrawl`  | JS-rendered docs, structured extraction, multi-page scraping      |
+| `github`     | Issues, PRs, repository metadata, code search                     |
+| `playwright` | UI smoke checks, screenshots, accessibility, console inspection   |
+| `semgrep`    | Security scanning and rule-based static analysis                  |
+| `magic`      | UI component generation via 21st.dev                              |
+| `stitch`     | Design system generation via Google Stitch                        |
+
+Project-scoped (only available in repos that declare them):
+
+| Server     | When to reach for it                                       |
+| ---------- | ---------------------------------------------------------- |
+| `supabase` | Database schema, migrations, RLS, query inspection         |
+| `vercel`   | Deployments, logs, project status                          |
+
+Prefer MCP-native tools over shell when both work. Prefer `context7` over memory for version-sensitive technical questions.
 
 ## Skills
 
-This environment supports reusable skills loaded via `SKILL.md`.
+Available globally across `~/.codex/skills/` and `~/.agents/skills/`. Use `find-skills` to browse and load on demand. Repository-local skills override globals.
 
-### Skill behavior
+## Local rules and skills
 
-- Skills may exist in repository-local directories, user/global directories, or
-  compatible shared locations.
-- Skills are typically loaded on demand.
-- Do not assume all skills are preloaded into context.
-- Prefer using an existing skill when the task clearly matches it.
+Repos may ship their own. Always check on entering a new repo:
 
-### Known globally available skills in this environment
+- `<repo>/AGENTS.md`: project instructions, take precedence over this file
+- Subdirectory `<repo>/<subdir>/AGENTS.md`: concatenates from root down to cwd
+- `<repo>/.codex/skills/<name>/SKILL.md`: project-specific skills
+- `<repo>/.codex/agents/<name>.toml`: project-scoped custom subagents
+- `<repo>/.codex/config.toml`: per-project MCP servers, hooks, and trust overrides
+- `<repo>/.codex/hooks.json`: project-specific hook handlers
 
-The environment may include skills such as:
+Project-local rules override globals.
 
-- `catchup`
-- `coordinator`
-- `deep-audit`
-- `fix-issue`
-- `merge`
-- `open-pr`
-- `rebase`
-- `review`
-- `ship`
-- `workmux`
-- `worktree`
-- `doc-coauthoring`
-- `find-skills`
-- `frontend-design`
-- `webapp-testing`
+## Subagents
 
-Additional repository-local, user-local, system, plugin, or connector skills may
-also exist.
+Codex spawns subagents only when explicitly asked. They consume more tokens than single-agent runs; reach for them only when work is genuinely parallelizable (multi-point reviews, fan-out across files).
 
----
+Built-in:
 
-## Delegation and Parallel Work
+- `default`: general-purpose fallback
+- `worker`: execution-focused implementation and fixes
+- `explorer`: read-only codebase exploration
 
-This environment may support delegated agents or isolated execution contexts.
+Custom subagents at `~/.codex/agents/<name>.toml` (global) or `<repo>/.codex/agents/<name>.toml`.
 
-### Delegation policy
+Before spawning: narrow scope, explicit success criteria, file shortlist. Never delegate vague work like "analyze the repo".
 
-Use read-only checks first where appropriate.
+## Workmux
 
-When delegating:
+`workmux` (`wm`) manages parallel git worktrees with isolated tmux windows. Reach for it when a risky refactor should not touch main, two approaches need comparison, or a multi-step task may need to be discarded.
 
-1. identify the relevant area cheaply
-2. define a narrow scope
-3. provide explicit success criteria
-4. provide a file or function shortlist when available
+Detailed command reference lives in the `workmux` skill. Launch Codex inside a worktree with `wm add <n> -a codex`. Skip workmux for single-file tweaks or read-only tasks.
 
-Do not delegate vague work like "analyze the repo".
+## Confidence marking
 
-### Output expectations
+When useful:
 
-Delegated outputs should be concise and actionable:
+- `verified`: directly supported by code, config, or test output
+- `likely`: strongly supported but not fully confirmed
+- `inferred`: reasoned from partial evidence
+- `unknown`: not established from available evidence
 
-- exact file or function references
-- short rationale
-- confidence marking when useful
-- minimal supporting snippets
-
-### Routing hints
-
-- Small scoped diff with tests: prefer direct implementation or narrow review
-- Localized test failure: diagnose first, then apply the minimal fix
-- Ambiguous or broad task: start with cheap discovery, then delegate narrowly
-- Dependency risk or upgrade task: validate compatibility, then run the
-  smallest relevant tests
-- External library/framework/spec questions: use repository evidence first, then
-  consult outside sources only if needed
-
----
-
-## Parallel Sessions via workmux
-
-`workmux` (`wm`) manages isolated git worktrees with integrated tmux windows for
-parallel Codex, Claude Code, and other agent work. Each worktree gets its own
-tmux window with the agent in the left pane and a shell in the right pane.
-Install via `wm update`. Run `wm docs` for full documentation.
-
-Named agents configured in `.workmux.yaml` may include:
-
-- `cc-yolo`: `claude --dangerously-skip-permissions`
-- `cod-yolo`: `codex --yolo`
-
-Installed agent skills may include:
-
-- `merge`: commit, rebase, and merge
-- `rebase`: rebase onto main with smart conflict resolution
-- `open-pr`: push and open a PR
-- `worktree`: delegate a task to a new parallel worktree agent
-- `coordinator`: orchestrate multiple agents with full lifecycle
-- `review`: adversarial review
-
-### Commands you can drive directly
-
-These do not require interactive tmux access. Safe to run from inside a Codex
-session or a script when permissions allow it.
-
-- `wm list` / `wm ls`: show all worktrees with agent status glyphs.
-- `wm status <n>`: query agent status for a specific worktree.
-- `wm capture <n>`: read terminal output from a running agent.
-- `wm send <n> "msg"`: type text into a running agent's terminal remotely.
-- `wm wait <n>`: block until an agent reaches a target status.
-- `wm run <n> -- <cmd>`: run a shell command inside a worktree's directory.
-- `wm merge <n>`: merge branch into main, then remove worktree, window, and
-  branch.
-- `wm rm <n>`: remove worktree and window without merging.
-- `wm path <n>`: print the filesystem path of a worktree.
-- `wm sync-files`: re-apply file copy/symlink operations to existing worktrees.
-
-### Commands that need the user
-
-These create or attach to interactive tmux windows. Suggest the exact command
-and explain what to do inside the session.
-
-- `wm add <n>`: creates a worktree and tmux window.
-- `wm add <n> -a codex`: same but launches Codex.
-- `wm add <n> -a cod-yolo`: launches the named Codex agent.
-- `wm add <n> -p "prompt"`: injects a prompt into the agent on launch.
-- `wm add <n> -b -p "prompt"`: launches in background.
-- `wm add <n> --with-changes -u`: moves uncommitted and untracked changes to a
-  new worktree.
-- `wm open <n>`: reopens a tmux window for an existing worktree.
-- `wm dashboard`: opens a TUI dashboard for monitoring active agents.
-- `wm sidebar`: live agent status sidebar in tmux.
-- `wm resurrect`: restores worktree windows after a tmux or system crash.
-
-### When to reach for it autonomously
-
-Use `wm add -b -p "prompt"` or `wm send` to coordinate parallel work when:
-
-- a risky refactor should not touch main yet
-- two approaches need to be compared before committing to one
-- the work is multi-step and might need to be thrown away
-- a coordinator agent needs to spawn, monitor, and merge sub-agents
-
-Skip it for single-file tweaks, pure read tasks, or when not inside a git
-repository.
-
-### TODO: Codex workmux integration
-
-Do not assume the Codex/workmux integration is fully equivalent to the
-Claude/workmux integration yet. Before expanding automation, research and verify:
-
-- exact Codex hook events for permission/waiting states
-- whether `wm add <n> -a codex` needs prompt or startup adjustments
-- whether Codex resume/fork behavior can map to workmux workflows
-- which Codex skill invocations are reliable inside tmux panes
+Never present `inferred` conclusions as `verified`.
