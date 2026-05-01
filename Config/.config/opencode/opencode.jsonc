@@ -25,7 +25,7 @@
             "whitelist": ["qwen3.6-35b-a3b"],
             "models": {
                 "qwen3.6-35b-a3b": {
-                    "name": "Qwen 3.6 35B A3B (local)",
+                    "name": "Qwen 3.6 35B A3B",
                 },
             },
         },
@@ -104,6 +104,7 @@
             "type": "remote",
             "enabled": true,
             "url": "https://mcp.context7.com/mcp",
+            "timeout": 60000,
             "headers": {
                 "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}",
             },
@@ -111,12 +112,14 @@
         "firecrawl": {
             "type": "local",
             "enabled": true,
+            "timeout": 60000,
             "environment": { "FIRECRAWL_API_KEY": "{env:FIRECRAWL_API_KEY}" },
             "command": ["npx", "-y", "firecrawl-mcp"],
         },
         "playwright": {
             "type": "local",
             "enabled": true,
+            "timeout": 60000,
             "command": ["npx", "@playwright/mcp@latest", "--output-dir", "."],
         },
         "semgrep": {
