@@ -139,6 +139,8 @@ Global:
 | `github`     | Issues, PRs, repository metadata, code search                     |
 | `playwright` | UI smoke checks, screenshots, accessibility, console inspection   |
 | `semgrep`    | Security scanning and rule-based static analysis                  |
+| `magic`      | UI component generation via 21st.dev                              |
+| `stitch`     | Design system generation via Google Stitch                        |
 
 Project-scoped (only available in repos that declare them in `opencode.json`/`opencode.jsonc`): commonly `supabase`, `vercel`, plus repo-specific ones like `shadcn`, `stripe`, `cloudflare`, `sentry`, `grafana`.
 

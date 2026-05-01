@@ -135,6 +135,21 @@
                 "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}",
             },
         },
+        "magic": {
+            "type": "local",
+            "enabled": true,
+            "timeout": 60000,
+            "environment": { "API_KEY": "{env:MAGIC_API_KEY}" },
+            "command": ["npx", "-y", "@21st-dev/magic@latest"],
+        },
+        "stitch": {
+            "type": "remote",
+            "enabled": true,
+            "url": "https://stitch.googleapis.com/mcp",
+            "headers": {
+                "X-Goog-Api-Key": "{env:GOOGLE_STITCH_API_KEY}",
+            },
+        },
     },
 
     "agent": {
@@ -149,6 +164,8 @@
                 "context7*": "allow",
                 "firecrawl*": "allow",
                 "semgrep*": "allow",
+                "magic*": "allow",
+                "stitch*": "allow",
                 "playwright*": "ask",
                 "github*": "ask",
                 "supabase*": "ask",
@@ -166,6 +183,8 @@
                 "context7*": "allow",
                 "firecrawl*": "allow",
                 "semgrep*": "allow",
+                "magic*": "allow",
+                "stitch*": "allow",
                 "playwright*": "ask",
                 "github*": "ask",
                 "supabase*": "ask",
