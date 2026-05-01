@@ -6,3 +6,4 @@ Config/.config/ghostty/dynamic.conf
 **/settings.local.json
 Config/.config/opencode/package-lock.json
 
+Config/.config/opencode/bun.lock
