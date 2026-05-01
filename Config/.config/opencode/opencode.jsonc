@@ -16,7 +16,7 @@
                 },
             },
         },
-        "lmstudio": {
+        "lms": {
             "npm": "@ai-sdk/openai-compatible",
             "name": "LM Studio (local)",
             "options": {
