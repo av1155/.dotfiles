@@ -4,7 +4,6 @@
     "leader": "ctrl+b",
     "session_share": "<leader>s",
     "session_unshare": "none",
-    "session_interrupt": "escape",
     "session_compact": "<leader>c",
     "session_child_cycle_reverse": "alt+3",
     "session_child_cycle": "alt+4",
