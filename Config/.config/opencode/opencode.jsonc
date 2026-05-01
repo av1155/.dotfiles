@@ -3,14 +3,7 @@
 
     "model": "openai/gpt-5.5",
 
-    "plugin": ["opencode-gemini-auth@latest"],
-
     "provider": {
-        "google": {
-            "options": {
-                "projectId": "opencode-490217",
-            },
-        },
         "ollama": {
             "npm": "@ai-sdk/openai-compatible",
             "name": "Ollama (local)",
@@ -23,12 +16,73 @@
                 },
             },
         },
+        "lmstudio": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "LM Studio (local)",
+            "options": {
+                "baseURL": "http://127.0.0.1:1234/v1",
+            },
+            "models": {
+                "qwen/qwen3.6-35b-a3b": {
+                    "name": "Qwen 3.6 35B A3B (local)",
+                },
+            },
+        },
     },
 
     "permission": {
-        "bash": "ask",
         "edit": "ask",
         "webfetch": "ask",
+        "read": {
+            "*": "allow",
+            "*.env": "deny",
+            "*.env.local": "deny",
+            "*.env.*.local": "deny",
+            "**/.env": "deny",
+            "**/.env.local": "deny",
+            "**/.env.*.local": "deny",
+            "secrets/**": "deny",
+            "**/credentials*": "deny",
+            "**/*.pem": "deny",
+            "~/.ssh/**": "deny",
+            "~/.aws/**": "deny",
+            "~/.gnupg/**": "deny",
+            "~/.docker/config.json": "deny",
+            "~/.npmrc": "deny",
+            "~/.config/gh/**": "deny",
+        },
+        "bash": {
+            "*": "ask",
+            "ls *": "allow",
+            "cat *": "allow",
+            "grep *": "allow",
+            "rg *": "allow",
+            "fd *": "allow",
+            "find *": "allow",
+            "git status*": "allow",
+            "git diff*": "allow",
+            "git log*": "allow",
+            "git branch*": "allow",
+            "git show*": "allow",
+            "git remote*": "allow",
+            "sudo *": "deny",
+            "chmod 777 *": "deny",
+            "rm -rf /*": "deny",
+            "dd *": "deny",
+            "mkfs *": "deny",
+            "drop table*": "deny",
+            "DROP TABLE*": "deny",
+            "git push *": "ask",
+            "git merge *": "ask",
+            "git reset --hard*": "ask",
+            "curl *|sh": "ask",
+            "wget *|sh": "ask",
+            "pnpm install *": "ask",
+            "pnpm add *": "ask",
+            "pnpm remove *": "ask",
+            "pnpm publish *": "ask",
+            "npm publish *": "ask",
+        },
     },
 
     "formatter": {
@@ -45,20 +99,13 @@
     },
 
     "mcp": {
-        "git": {
-            "type": "local",
+        "context7": {
+            "type": "remote",
             "enabled": true,
-            "command": ["uvx", "mcp-server-git"],
-        },
-        "time": {
-            "type": "local",
-            "enabled": true,
-            "command": ["uvx", "mcp-server-time"],
-        },
-        "fetch": {
-            "type": "local",
-            "enabled": true,
-            "command": ["uvx", "mcp-server-fetch"],
+            "url": "https://mcp.context7.com/mcp",
+            "headers": {
+                "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}",
+            },
         },
         "firecrawl": {
             "type": "local",
@@ -66,60 +113,59 @@
             "environment": { "FIRECRAWL_API_KEY": "{env:FIRECRAWL_API_KEY}" },
             "command": ["npx", "-y", "firecrawl-mcp"],
         },
-        "brave-search": {
-            "type": "local",
-            "enabled": true,
-            "environment": { "BRAVE_API_KEY": "{env:BRAVE_API_KEY}" },
-            "command": ["npx", "-y", "@brave/brave-search-mcp-server"],
-        },
-        "duckduckgo": {
-            "type": "local",
-            "enabled": true,
-            "command": ["uvx", "duckduckgo-mcp-server"],
-        },
-        "context7": {
-            "type": "local",
-            "enabled": true,
-            "environment": { "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}" },
-            "command": ["npx", "-y", "@upstash/context7-mcp"],
-        },
         "playwright": {
             "type": "local",
             "enabled": true,
             "command": ["npx", "@playwright/mcp@latest", "--output-dir", "."],
         },
-    },
-
-    "tools": {
-        "git*": false,
-        "time*": false,
-        "fetch*": false,
-        "firecrawl*": false,
-        "brave-search*": false,
-        "duckduckgo*": false,
-        "context7*": false,
-        "playwright*": false,
+        "semgrep": {
+            "type": "local",
+            "enabled": true,
+            "command": ["semgrep", "mcp"],
+        },
+        "github": {
+            "type": "remote",
+            "enabled": true,
+            "url": "https://api.githubcopilot.com/mcp/",
+            "headers": {
+                "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}",
+            },
+        },
     },
 
     "agent": {
         "build": {
             "mode": "primary",
-            "tools": {
-                "write": true,
-                "edit": true,
-                "bash": true,
-                "webfetch": true,
-                "git*": true,
-                "time*": true,
+            "permission": {
+                "edit": "allow",
+                "webfetch": "allow",
+                "websearch": "allow",
+                "task": "allow",
+                "skill": "allow",
+                "context7*": "allow",
+                "firecrawl*": "allow",
+                "semgrep*": "allow",
+                "playwright*": "ask",
+                "github*": "ask",
+                "supabase*": "ask",
+                "vercel*": "ask",
             },
         },
         "plan": {
             "mode": "primary",
-            "tools": {
-                "write": false,
-                "edit": false,
-                "bash": true,
-                "webfetch": true,
+            "permission": {
+                "edit": "deny",
+                "webfetch": "allow",
+                "websearch": "allow",
+                "task": "allow",
+                "skill": "allow",
+                "context7*": "allow",
+                "firecrawl*": "allow",
+                "semgrep*": "allow",
+                "playwright*": "ask",
+                "github*": "ask",
+                "supabase*": "ask",
+                "vercel*": "ask",
             },
         },
     },
