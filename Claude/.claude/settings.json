@@ -3,7 +3,9 @@
   "respectGitignore": false,
   "cleanupPeriodDays": 30,
   "env": {
-    "CLAUDE_CODE_NO_FLICKER": "1"
+    "CLAUDE_CODE_NO_FLICKER": "1",
+    "SEMGREP_SEND_METRICS": "off",
+    "SEMGREP_ENABLE_VERSION_CHECK": "0"
   },
   "attribution": {
     "commit": "",
@@ -135,7 +137,8 @@
     "supabase@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "vercel-plugin@vercel-vercel-plugin": true
+    "vercel-plugin@vercel-vercel-plugin": true,
+    "semgrep@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-notifications-go": {
