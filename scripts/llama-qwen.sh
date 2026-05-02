@@ -20,10 +20,10 @@ exec llama-server \
     --reasoning-format deepseek \
     --chat-template-kwargs '{"preserve_thinking":true}' \
     --image-min-tokens 1024 \
-    --temp 0.6 \
+    --temp 1.0 \
     --top-p 0.95 \
     --top-k 20 \
     --min-p 0.0 \
-    --presence-penalty 0.0 \
+    --presence-penalty 1.5 \
     --threads 10 \
     --perf
