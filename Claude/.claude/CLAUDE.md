@@ -147,7 +147,4 @@ Project-local rules override globals.
 Before delegating: narrow scope, explicit success criteria, file shortlist.
 Never delegate vague work like "analyze the repo".
 
-## Workmux
-
-`workmux` (`wm`) manages parallel git worktrees with isolated tmux windows. Reach for it when a risky refactor should not touch main, two approaches need comparison, or a multi-step task may need to be discarded. Skip for single-file tweaks or read-only tasks. Detailed command reference is in the `workmux` skill.
 

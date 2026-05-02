@@ -155,7 +155,4 @@ Custom subagents at `~/.codex/agents/<name>.toml` (global) or `<repo>/.codex/age
 
 Before spawning: narrow scope, explicit success criteria, file shortlist. Never delegate vague work like "analyze the repo".
 
-## Workmux
-
-`workmux` (`wm`) manages parallel git worktrees with isolated tmux windows. Reach for it when a risky refactor should not touch main, two approaches need comparison, or a multi-step task may need to be discarded. Launch Codex inside a worktree with `wm add <n> -a codex`. Skip for single-file tweaks or read-only tasks. Detailed command reference is in the `workmux` skill.
 
