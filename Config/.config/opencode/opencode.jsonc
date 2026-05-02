@@ -16,20 +16,25 @@
                 },
             },
         },
-        "lmstudio": {
+        "llamacpp": {
             "npm": "@ai-sdk/openai-compatible",
-            "name": "LM Studio (local)",
+            "name": "llama.cpp (local)",
             "options": {
-                "baseURL": "http://127.0.0.1:1234/v1",
+                "baseURL": "http://127.0.0.1:1235/v1",
             },
-            "whitelist": ["qwen3.6-35b-a3b"],
             "models": {
                 "qwen3.6-35b-a3b": {
                     "name": "Qwen 3.6 35B A3B",
+                    "limit": {
+                        "context": 262144,
+                        "output": 32768,
+                    },
                 },
             },
         },
     },
+
+    "lsp": {},
 
     "permission": {
         "edit": "ask",
@@ -111,7 +116,7 @@
         },
         "firecrawl": {
             "type": "local",
-            "enabled": true,
+            "enabled": false,
             "timeout": 60000,
             "environment": { "FIRECRAWL_API_KEY": "{env:FIRECRAWL_API_KEY}" },
             "command": ["npx", "-y", "firecrawl-mcp"],
@@ -122,14 +127,9 @@
             "timeout": 60000,
             "command": ["npx", "@playwright/mcp@latest", "--output-dir", "."],
         },
-        "semgrep": {
-            "type": "local",
-            "enabled": true,
-            "command": ["semgrep", "mcp"],
-        },
         "github": {
             "type": "remote",
-            "enabled": true,
+            "enabled": false,
             "url": "https://api.githubcopilot.com/mcp/",
             "headers": {
                 "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}",
@@ -137,14 +137,14 @@
         },
         "magic": {
             "type": "local",
-            "enabled": true,
+            "enabled": false,
             "timeout": 600000,
             "environment": { "API_KEY": "{env:MAGIC_API_KEY}" },
             "command": ["npx", "-y", "@21st-dev/magic@latest"],
         },
         "stitch": {
             "type": "remote",
-            "enabled": true,
+            "enabled": false,
             "url": "https://stitch.googleapis.com/mcp",
             "headers": {
                 "X-Goog-Api-Key": "{env:GOOGLE_STITCH_API_KEY}",
@@ -163,7 +163,6 @@
                 "skill": "allow",
                 "context7*": "allow",
                 "firecrawl*": "allow",
-                "semgrep*": "allow",
                 "magic*": "allow",
                 "stitch*": "allow",
                 "playwright*": "ask",
@@ -182,7 +181,6 @@
                 "skill": "allow",
                 "context7*": "allow",
                 "firecrawl*": "allow",
-                "semgrep*": "allow",
                 "magic*": "allow",
                 "stitch*": "allow",
                 "playwright*": "ask",

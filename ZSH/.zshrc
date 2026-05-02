@@ -766,6 +766,10 @@ if [ -d ~/scripts/scripts ]; then
     alias upall-rpi="~/scripts/scripts/package_updater_rpi.zsh"
 fi
 
+if [ -d ~/.dotfiles/scripts ]; then
+    alias qwen='~/.dotfiles/scripts/llama-qwen.sh'
+fi
+
 [ -f "$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh" ] && alias macOS-bootstrap="$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh"
 
 # [ -f "$HOME/.config/agent-worktrees/agent-worktrees.zsh" ] && \

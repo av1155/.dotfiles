@@ -1,0 +1,4 @@
+# Ignore every entry in this package. The scripts here are version-tracked
+# but invoked by absolute path via aliases in ZSH/.zshrc, never stowed.
+# Per stow(8): basename patterns (no '/') match any file/dir name exactly.
+.+
