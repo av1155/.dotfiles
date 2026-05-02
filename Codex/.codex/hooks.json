@@ -1,6 +1,36 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "workmux set-window-status working",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "command": "workmux set-window-status waiting",
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "workmux set-window-status working",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
       {
         "hooks": [
           {
@@ -15,16 +45,6 @@
         "hooks": [
           {
             "command": "workmux set-window-status done",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "command": "workmux set-window-status working",
             "type": "command"
           }
         ]

@@ -133,10 +133,8 @@
     "pyright-lsp@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "skill-codex@skill-codex": true,
-    "supabase@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "vercel-plugin@vercel-vercel-plugin": true,
     "semgrep@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
