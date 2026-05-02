@@ -114,7 +114,7 @@ Backend code must be production-scalable from the first version. Load the `scala
 - Conventional Commits: `<type>(<scope>)!: <description>`.
 - Common types: feat, fix, docs, refactor, perf, test, build, ci, chore, revert.
 - Prefer `gh` CLI over the web UI for issues, PRs, checks.
-- Never push directly to protected branches. Never force-push without explicit authorization.
+- Never push directly to protected branches. Verify protection status with `gh api repos/<owner>/<repo>/branches/<branch>/protection` (404 means unprotected) before refusing to push. Never force-push without explicit authorization.
 
 Example body:
 
