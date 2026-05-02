@@ -24,11 +24,8 @@ If the repository has no rules, say so briefly and proceed with the safest minim
 
 ### Code
 
-- TypeScript strict mode. Full type signatures on every function.
-- `interface` over `type` for object shapes.
-- `unknown` over `any` in production code; narrow at the boundary.
-- Named exports only, unless the framework requires a default.
-- No file over 300 lines. Split when it grows past that.
+- TypeScript-specific conventions live in the `typescript` skill (at `~/.agents/skills/typescript/`). Load it when touching `.ts` or `.tsx` files.
+- General preference everywhere: smallest correct change, no over-decomposition, no premature abstraction.
 
 ## Operating principles
 
@@ -114,6 +111,7 @@ Backend code must be production-scalable from the first version. Load the `scala
 - Conventional Commits: `<type>(<scope>)!: <description>`.
 - Common types: feat, fix, docs, refactor, perf, test, build, ci, chore, revert.
 - Prefer `gh` CLI over the web UI for issues, PRs, checks.
+- Never push directly to protected branches. Never force-push without explicit authorization.
 
 Example body:
 
@@ -134,7 +132,6 @@ Global:
 | `context7`   | Version-sensitive library or framework documentation              |
 | `firecrawl`  | JS-rendered docs, structured extraction, multi-page scraping      |
 | `github`     | Issues, PRs, repository metadata, code search                     |
-| `playwright` | UI smoke checks, screenshots, accessibility, console inspection   |
 | `semgrep`    | Security scanning and rule-based static analysis                  |
 | `magic`      | UI component generation via 21st.dev                              |
 | `stitch`     | Design system generation via Google Stitch                        |
@@ -150,7 +147,7 @@ Prefer MCP-native tools over shell when both work. Prefer `context7` over memory
 
 ## Skills
 
-Available globally across `~/.codex/skills/` and `~/.agents/skills/`. Use `find-skills` to browse and load on demand. Repository-local skills override globals.
+Use `find-skills` to browse and load skills on demand.
 
 ## Local rules and skills
 

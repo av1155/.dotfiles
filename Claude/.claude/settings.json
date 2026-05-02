@@ -130,7 +130,6 @@
     "frontend-design@claude-plugins-official": true,
     "github@claude-plugins-official": false,
     "lua-lsp@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "skill-codex@skill-codex": true,

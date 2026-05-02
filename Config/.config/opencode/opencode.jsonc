@@ -121,12 +121,6 @@
             "environment": { "FIRECRAWL_API_KEY": "{env:FIRECRAWL_API_KEY}" },
             "command": ["npx", "-y", "firecrawl-mcp"],
         },
-        "playwright": {
-            "type": "local",
-            "enabled": true,
-            "timeout": 60000,
-            "command": ["npx", "@playwright/mcp@latest", "--output-dir", "."],
-        },
         "github": {
             "type": "remote",
             "enabled": false,
@@ -165,7 +159,6 @@
                 "firecrawl*": "allow",
                 "magic*": "allow",
                 "stitch*": "allow",
-                "playwright*": "ask",
                 "github*": "ask",
                 "supabase*": "ask",
                 "vercel*": "ask",
@@ -183,7 +176,6 @@
                 "firecrawl*": "allow",
                 "magic*": "allow",
                 "stitch*": "allow",
-                "playwright*": "ask",
                 "github*": "ask",
                 "supabase*": "ask",
                 "vercel*": "ask",

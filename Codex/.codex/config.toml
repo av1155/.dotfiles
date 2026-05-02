@@ -54,14 +54,6 @@ startup_timeout_sec = 20
 tool_timeout_sec = 120
 enabled = false
 
-[mcp_servers.playwright]
-command = "npx"
-args = ["@playwright/mcp@latest", "--output-dir", "/tmp/codex-playwright"]
-startup_timeout_sec = 20
-tool_timeout_sec = 120
-enabled = true
-
-
 [mcp_servers.magic]
 command = "sh"
 args = ["-lc", "API_KEY=\"$MAGIC_API_KEY\" exec npx -y @21st-dev/magic@latest"]
