@@ -27,13 +27,16 @@ If the repository has no rules, say so briefly and proceed with the safest minim
 - TypeScript-specific conventions live in `~/.claude/rules/typescript/SKILL.md` and load only when touching `.ts` or `.tsx` files.
 - General preference everywhere: smallest correct change, no over-decomposition, no premature abstraction.
 
-## Operating principles
+## Working principles
 
 - Read first, scope first. Investigate before editing.
-- Smallest correct change wins. Do not bundle unrelated concerns.
-- Preserve existing behavior unless the task explicitly requires a change.
-- State uncertainty honestly. Do not invent confidence.
-- Verify with the smallest concrete check (test, build, code read) before claiming done.
+- Smallest correct change wins. Do not bundle unrelated concerns; do not over-decompose; three similar lines beats a premature abstraction.
+- Preserve existing behavior unless the task explicitly requires a change. Refactor outside the task scope only when asked.
+- Establish repo shape cheaply (manifests, workspace config, primary languages); targeted glob/grep before opening files; range reads not full files.
+- Stop once enough evidence is gathered. Reuse facts collected; do not rediscover on follow-up tasks.
+- State uncertainty honestly. Verify with the smallest concrete check (test, build, code read) before claiming done.
+- No vague delegations like "analyze the repo"; no pasting large excerpts; no re-reading without reason.
+- When refactoring untested code, write characterization tests first or skip the refactor.
 - Do not bypass plugin, permission, or runtime safeguards.
 
 ## Tool order
@@ -77,30 +80,7 @@ Agent                 multi-step research or work outside the main thread
 - Force-push, `git reset --hard` on shared branches, branch deletion, or skipped hooks without explicit approval
 - Bypass a denied tool by routing through `Bash` or another path
 - Commit, print, or paste secrets
-- Read `.env`, SSH keys, AWS credentials, or any plugin-blocked path
-- Refactor untested code without writing characterization tests first
 - Mix feature work with cleanup or formatting churn in the same commit
-
-## Investigation discipline
-
-1. Establish repository shape cheaply (manifests, workspace config, primary languages).
-2. Targeted glob/grep for the affected area before opening files.
-3. Range reads, not full-file reads.
-4. Stop once enough evidence is gathered.
-5. Reuse facts already collected; do not rediscover on follow-up tasks.
-
-Anti-waste:
-
-- No vague delegations like "analyze the repo".
-- No pasting large excerpts.
-- No re-reading without reason.
-
-## Refactoring
-
-- Apply Boy Scout cleanups in a separate `chore: cleanup` commit, never bundled with feature or bug work.
-- Do not refactor untested code; write characterization tests first or skip the refactor.
-- Do not over-decompose. Three similar lines beats a premature abstraction.
-- Do not refactor outside task scope unless asked.
 
 ## Production scalability
 
@@ -169,20 +149,5 @@ Never delegate vague work like "analyze the repo".
 
 ## Workmux
 
-`workmux` (`wm`) manages parallel git worktrees with isolated tmux windows.
-Reach for it when a risky refactor should not touch main, two approaches need comparison, or a multi-step task may need to be discarded.
+`workmux` (`wm`) manages parallel git worktrees with isolated tmux windows. Reach for it when a risky refactor should not touch main, two approaches need comparison, or a multi-step task may need to be discarded. Skip for single-file tweaks or read-only tasks. Detailed command reference is in the `workmux` skill.
 
-Detailed command reference is in the `workmux` skill. Start there before scripting against `wm`.
-
-Skip workmux for single-file tweaks or read-only tasks.
-
-## Confidence marking
-
-When useful:
-
-- `verified`: directly supported by code, config, or test output
-- `likely`: strongly supported but not fully confirmed
-- `inferred`: reasoned from partial evidence
-- `unknown`: not established from available evidence
-
-Never present `inferred` conclusions as `verified`.
