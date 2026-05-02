@@ -24,7 +24,11 @@ If the repository has no rules, say so briefly and proceed with the safest minim
 
 ### Code
 
-- TypeScript-specific conventions live in `~/.claude/rules/typescript/SKILL.md` and load only when touching `.ts` or `.tsx` files.
+- TypeScript / Next.js conventions live in the `typescript` skill (at `~/.claude/rules/typescript/`); auto-loads on `.ts` / `.tsx` edits.
+- Python conventions live in the `python` skill (at `~/.claude/rules/python/`); auto-loads on `.py` edits.
+- Backend code follows the `scalability` skill (at `~/.claude/rules/scalability/`); auto-loads on API / db / queue / cache files.
+- Comment authority is the `commenting` skill; load when writing or reviewing substantial comments. Project `docs/commenting-standard.md` overrides it when present.
+- Security-relevant code (auth, secrets, user input, external calls, LLM prompts) follows the `security` skill; load when working in those areas.
 - General preference everywhere: smallest correct change, no over-decomposition, no premature abstraction.
 
 ## Working principles

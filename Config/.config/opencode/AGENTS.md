@@ -24,7 +24,11 @@ If the repository has no rules, say so briefly and proceed with the safest minim
 
 ### Code
 
-- TypeScript-specific conventions live in the `typescript` skill (at `~/.agents/skills/typescript/`). Load it when touching `.ts` or `.tsx` files.
+- TypeScript / Next.js conventions live in the `typescript` skill (at `~/.agents/skills/typescript/`). Load when touching `.ts` or `.tsx` files.
+- Python conventions live in the `python` skill (at `~/.agents/skills/python/`). Load when touching `.py` files.
+- Backend code follows the `scalability` skill (at `~/.agents/skills/scalability/`). Load when working on database queries, API endpoints, queues, caches, or server-side code under load.
+- Comment authority is the `commenting` skill. Load when writing or reviewing substantial comments. Project `docs/commenting-standard.md` overrides it when present.
+- Security-relevant code (auth, secrets, user input, external calls, LLM prompts) follows the `security` skill. Load when working in those areas.
 - General preference everywhere: smallest correct change, no over-decomposition, no premature abstraction.
 
 ## Working principles
