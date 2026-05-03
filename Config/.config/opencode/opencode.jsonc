@@ -34,7 +34,18 @@
         },
     },
 
-    "lsp": {},
+    "lsp": {
+        // Match nvim's TS server (LazyVim default). vtsls is on PATH via pnpm.
+        "vtsls": {
+            "command": ["vtsls", "--stdio"],
+            "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"],
+        },
+        // Disable opencode's tsserver-based default since vtsls replaces it.
+        "typescript": { "disabled": true },
+        // pyright: leave as built-in. The shell auto-activates .venv (zshrc
+        // _venv_auto_activate) and projects pin python/imports via
+        // [tool.pyright] in pyproject.toml (venvPath/venv).
+    },
 
     "permission": {
         "edit": "ask",
@@ -93,7 +104,10 @@
 
     "formatter": {
         "prettier": {
-            "command": ["prettier", "--config", "{env:HOME}/.prettierrc.json", "--write", "$FILE"],
+            // Let prettier discover config (project rc wins; ~/.prettierrc.json
+            // is found via upward search for files under ~). Mirrors prettierd's
+            // PRETTIERD_DEFAULT_CONFIG semantics: global as fallback, not override.
+            "command": ["prettier", "--write", "$FILE"],
         },
         "clang-format": {
             "command": ["clang-format", "-i", "-style=file", "$FILE"],

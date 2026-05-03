@@ -112,6 +112,90 @@ Apply when working with Python files. For backend scalability concerns (queries,
 - **`uv tool install <pkg>`** for global CLI tools (aider, ruff if you want it standalone, etc.). Do not `pip install --user` or `npx`-equivalent for Python.
 - For monorepos: `[tool.uv.workspace] members = ["packages/*"]`. `uv sync --package <name>` and `uv run --package <name>` operate on a member.
 
+## Project initialization (the cross-tool baseline)
+
+The single non-negotiable block for AI-tool parity is `[tool.pyright]` with the venv pinned. Without it, pyright in opencode / Claude / codex reports "import unresolved" on every project dep, because none of those tools auto-discover the venv the way nvim's `venv-selector.nvim` does.
+
+```toml
+# Add to every Python project's pyproject.toml. Path values assume src layout +
+# .venv at the repo root; adjust if the project differs.
+[tool.pyright]
+include       = ["src", "tests"]
+extraPaths    = ["."]
+pythonVersion = "3.13"        # match [project.requires-python]
+venvPath      = "."
+venv          = ".venv"
+```
+
+Everything else below is an **example baseline**, not a fixed template. Adapt rule selection, strictness levels, and dep pins to the project's age, audience, and risk profile. Library projects, CLIs, FastAPI services, and data-science notebooks all want different cuts. Replace `<package_name>` with the importable package name; drop sections that don't apply.
+
+```toml
+[project]
+name = "<package_name>"
+requires-python = ">=3.13"          # bump to ">=3.14" for greenfield
+dynamic = ["version"]               # or pin a version directly
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/<package_name>"]
+
+# PEP 735 dev group — uv installs on `uv sync` by default
+[dependency-groups]
+dev = [
+    "ruff>=0.15",
+    "mypy>=1.20",
+    "pytest>=9",
+    "pytest-asyncio>=1.3",       # drop if no async code
+    "pytest-cov>=7",
+    "bandit[toml]>=1.9",         # drop for personal/throwaway projects
+]
+
+[tool.ruff]
+src            = ["src"]
+line-length    = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP", "SIM", "ANN", "S", "N"]
+ignore = ["ANN401"]                 # add project-specific ignores here
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S", "ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["<package_name>"]
+
+[tool.mypy]
+python_version       = "3.13"
+mypy_path            = "src"
+strict               = true
+warn_return_any      = true
+warn_unused_ignores  = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths    = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts      = "-q --tb=short"
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
+skips        = ["B101"]             # assert_used: needed in tests
+```
+
+After writing `pyproject.toml`:
+
+```bash
+uv sync                             # creates .venv + uv.lock and installs dev group
+git add pyproject.toml uv.lock      # commit lockfile for application projects (libraries: optional)
+```
+
+Editor parity then follows automatically: the user's shell auto-activates `.venv` (zsh `_venv_auto_activate` hook), so any agent launched in the project gets the venv-pinned `python`, `ruff`, etc. on PATH. Pyright reads `[tool.pyright]` and resolves third-party imports via `.venv`. For a real-world reference when adapting, see <https://raw.githubusercontent.com/av1155/houndarr/refs/heads/main/pyproject.toml> (FastAPI + aiosqlite + uv app — shows the full battery); minimal CLI / library projects can drop bandit, pytest-asyncio, and the `ANN` ruff rules.
+
 ## Testing (pytest 9 + pytest-asyncio 1.3)
 
 - `pyproject.toml` config: `asyncio_mode = "auto"` (every `async def test_*` runs without the marker), `asyncio_default_fixture_loop_scope = "function"` for max isolation, `addopts = "-q --tb=short"`.
