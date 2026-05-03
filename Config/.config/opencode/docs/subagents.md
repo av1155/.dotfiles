@@ -490,7 +490,7 @@ STATUS::dependency-updater::{"ok":true|false,"summary":"updated=<n>","metrics":{
 - **test-runner**: when code is edited or before merge; on CI failure.
 - **debugger**: upon failing tests or runtime exceptions; if stack trace present in context.
 - **docs-writer**: when public APIs, CLI flags, schema or migrations change; file patterns `README.md`, `docs/**`, `CHANGELOG.md`.
-- **dependency-updater**: when `package.json`, `poetry.lock`, `go.mod`, `Cargo.toml` change or CVE advisories appear.
+- **dependency-updater**: when `package.json`, `uv.lock`, `poetry.lock`, `go.mod`, `Cargo.toml` change or CVE advisories appear.
 
 ---
 

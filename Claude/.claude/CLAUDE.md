@@ -24,9 +24,9 @@ If the repository has no rules, say so briefly and proceed with the safest minim
 
 ### Code
 
-- TypeScript / Next.js conventions live in the `typescript` skill (at `~/.claude/rules/typescript/`); auto-loads on `.ts` / `.tsx` edits.
-- Python conventions live in the `python` skill (at `~/.claude/rules/python/`); auto-loads on `.py` edits.
-- Backend code follows the `scalability` skill (at `~/.claude/rules/scalability/`); auto-loads on API / db / queue / cache files.
+- TypeScript / Next.js conventions live in the `typescript` rule (at `~/.claude/rules/typescript.md`); auto-loads on `.ts` / `.tsx` edits via `paths:` frontmatter.
+- Python conventions live in the `python` rule (at `~/.claude/rules/python.md`); auto-loads on `.py` edits.
+- Backend code follows the `scalability` rule (at `~/.claude/rules/scalability.md`); auto-loads on API / db / queue / cache files.
 - Comment authority is the `commenting` skill; load when writing or reviewing substantial comments. Project `docs/commenting-standard.md` overrides it when present.
 - Security-relevant code (auth, secrets, user input, external calls, LLM prompts) follows the `security` skill; load when working in those areas.
 - General preference everywhere: smallest correct change, no over-decomposition, no premature abstraction.
@@ -88,7 +88,7 @@ Agent                 multi-step research or work outside the main thread
 
 ## Production scalability
 
-Backend code must be production-scalable from the first version. Detailed rules live at `~/.claude/rules/scalability/SKILL.md` and auto-load when touching API, database, queue, cache, or migration files. Top-level non-negotiables: no N+1 queries, always paginate, queue blocking work, set timeouts on external calls, emit p50/p95/p99 latency metrics.
+Backend code must be production-scalable from the first version. Detailed rules live at `~/.claude/rules/scalability.md` and auto-load when touching API, database, queue, cache, or migration files. Top-level non-negotiables: no N+1 queries, always paginate, queue blocking work, set timeouts on external calls, emit p50/p95/p99 latency metrics.
 
 ## Git defaults
 
@@ -129,14 +129,14 @@ Prefer MCP-native tools over shell when both work. Prefer `context7` over memory
 
 Available globally across `~/.agents/skills/`, `~/.claude/skills/`, and (in Claude) plugin caches. Use `find-skills` to browse and load on demand.
 
-Path-conditional rules at `~/.claude/rules/<name>/SKILL.md` auto-load when matching files are touched.
+Path-conditional rules at `~/.claude/rules/<name>.md` auto-load when matching files are touched (via `paths:` YAML frontmatter).
 
 ## Local rules and skills
 
 Repos may ship their own. Always check on entering a new repo:
 
 - `<repo>/CLAUDE.md` or `<repo>/.claude/CLAUDE.md`: project instructions, take precedence over this file
-- `<repo>/.claude/rules/<name>/SKILL.md`: path-conditional rules with `paths:` glob frontmatter
+- `<repo>/.claude/rules/<name>.md`: path-conditional rules with `paths:` glob frontmatter
 - `<repo>/.claude/skills/<name>/SKILL.md`: project-specific skills
 - `<repo>/.mcp.json`: project-specific MCP servers
 

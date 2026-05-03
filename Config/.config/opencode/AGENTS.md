@@ -136,7 +136,7 @@ Repos may ship their own. Always check on entering a new repo:
 
 - `<repo>/AGENTS.md` (or `<repo>/CLAUDE.md` as fallback): project instructions, take precedence over this file
 - `<repo>/.opencode/skills/<name>/SKILL.md`: project-specific skills
-- `<repo>/.claude/skills/<name>/SKILL.md` and `<repo>/.agents/skills/<name>/SKILL.md`: also auto-loaded
+- `<repo>/.agents/skills/<name>/SKILL.md`: cross-tool shared skills (Agent Skills standard)
 - `<repo>/opencode.json` or `<repo>/opencode.jsonc`: per-project MCP servers, permissions, agents
 - `<repo>/.opencode/plugins/`: project-specific JS/TS plugin hooks
 

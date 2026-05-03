@@ -263,6 +263,10 @@ Example:
 ├── install.sh                  # Automated installation script
 ├── .stow-global-ignore         # Files to exclude from stowing
 │
+├── Agents/                     # Cross-tool agent skills (Claude / Codex / OpenCode)
+│   └── .agents/
+│       └── skills/             # Shared SKILL.md files (python, typescript, scalability)
+│
 ├── App-Configs/                # Application-specific configurations
 │   └── configs/
 │       ├── iTerm2_Profile/     # iTerm2 profile and icons

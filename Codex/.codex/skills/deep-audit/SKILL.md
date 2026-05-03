@@ -55,7 +55,7 @@ Before building any audit plan, gather full context. Do NOT skip this phase.
 Read config files to auto-detect the project's stack. Check for (non-exhaustive — look for whatever exists):
 - **Language/runtime**: package.json, pyproject.toml, Cargo.toml, go.mod, build.gradle, pom.xml, Gemfile, mix.exs, composer.json
 - **Framework**: next.config.*, nuxt.config.*, vite.config.*, angular.json, svelte.config.*, manage.py, config/routes.rb
-- **Package manager**: detect from lockfile — pnpm-lock.yaml, yarn.lock, package-lock.json, Pipfile.lock, poetry.lock, Cargo.lock, go.sum
+- **Package manager**: detect from lockfile — pnpm-lock.yaml, yarn.lock, package-lock.json, uv.lock, Pipfile.lock, poetry.lock, Cargo.lock, go.sum
 - **Test framework**: vitest.config.*, jest.config.*, pytest.ini, .rspec, *_test.go files
 - **Linter/formatter**: .eslintrc.*, biome.json, .prettierrc, ruff.toml, .rubocop.yml, rustfmt.toml
 - **CI**: .github/workflows/, .gitlab-ci.yml, Jenkinsfile, .circleci/
