@@ -142,7 +142,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/<package_name>"]
 
-# PEP 735 dev group — uv installs on `uv sync` by default
+# PEP 735 dev group; uv installs on `uv sync` by default
 [dependency-groups]
 dev = [
     "ruff>=0.15",
@@ -194,7 +194,7 @@ uv sync                             # creates .venv + uv.lock and installs dev g
 git add pyproject.toml uv.lock      # commit lockfile for application projects (libraries: optional)
 ```
 
-Editor parity then follows automatically: the user's shell auto-activates `.venv` (zsh `_venv_auto_activate` hook), so any agent launched in the project gets the venv-pinned `python`, `ruff`, etc. on PATH. Pyright reads `[tool.pyright]` and resolves third-party imports via `.venv`. For a real-world reference when adapting, see <https://raw.githubusercontent.com/av1155/houndarr/refs/heads/main/pyproject.toml> (FastAPI + aiosqlite + uv app — shows the full battery); minimal CLI / library projects can drop bandit, pytest-asyncio, and the `ANN` ruff rules.
+Editor parity then follows automatically: the user's shell auto-activates `.venv` (zsh `_venv_auto_activate` hook), so any agent launched in the project gets the venv-pinned `python`, `ruff`, etc. on PATH. Pyright reads `[tool.pyright]` and resolves third-party imports via `.venv`. For a real-world reference when adapting, see <https://raw.githubusercontent.com/av1155/houndarr/refs/heads/main/pyproject.toml> (FastAPI + aiosqlite + uv app, the full battery); minimal CLI or library projects can drop bandit, pytest-asyncio, and the `ANN` ruff rules.
 
 ## Testing (pytest 9 + pytest-asyncio 1.3)
 
