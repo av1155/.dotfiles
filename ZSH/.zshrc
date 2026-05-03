@@ -223,7 +223,6 @@ _venv_auto_activate() {
 
 autoload -U add-zsh-hook
 add-zsh-hook chpwd _venv_auto_activate
-_venv_auto_activate
 
 # Ensure Pure's venv indicator stays as ".venv" every prompt. Runs after
 # direnv's precmd, so even if direnv resets state across .envrc transitions
@@ -775,3 +774,5 @@ fi
 export PATH="$PATH:/Users/andreaventi/.cache/lm-studio/bin"
 # End of LM Studio CLI section
 
+# Must run after every PATH mutation above so _VENV_PATH_BACKUP captures the full PATH.
+_venv_auto_activate
