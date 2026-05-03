@@ -31,39 +31,57 @@ your macOS development environment. It includes my personal dotfiles and the
 
 ## Features
 
-The `mac_bootstrap.zsh` script automates various setup tasks:
+The `mac_bootstrap.zsh` script automates various setup tasks. The script targets
+**Apple Silicon (arm64) only**.
 
-1. **Xcode Command Line Tools Installation**: Essential for development on
-   macOS, this step ensures that compilers and Git are available on your
-   machine (installed by Homebrew).
+1. **Homebrew + Xcode Command Line Tools**: Installs Homebrew, which now also
+   installs the Xcode Command Line Tools automatically — no separate
+   `xcode-select` step is needed.
 
-2. **Smart Repository Cloning**: It utilizes a robust cloning mechanism that initially tries SSH, and then switches to HTTPS with a Personal Access Token (PAT) if needed. If SSH fails, the user will be prompted for a PAT token.
+2. **Smart Repository Cloning**: Robust cloning that tries HTTPS first, falls
+   back to SSH, and finally to HTTPS with a Personal Access Token (PAT) if
+   neither works.
 
-3. **Symlink Creation**: Sets up symbolic links for essential configuration
-   files, linking them from the repository to your home directory for easy
-   access and management.
+3. **Brewfile-driven installs**: All formulae and casks are declared in
+   `Brewfile` and applied with `brew bundle`. The Brewfile is regenerated
+   automatically by `update_homebrew()` in `~/scripts/scripts/package_updater.zsh`,
+   so it always reflects the current state of the laptop.
 
-4. **Homebrew Management**: Installs Homebrew if not already present and uses a
-   Brewfile to manage software installations, keeping your environment
-   consistent and up-to-date.
+4. **GNU Stow for dotfiles**: Existing conflicting files are backed up to
+   `*.bak`, then `stow --restow */` symlinks each managed package into `$HOME`.
 
-5. **AstroNvim Setup with Dependency Management**: Integrates AstroNvim, a highly configurable Neovim distribution, with your user profile for an enhanced coding experience. The script also manages dependencies including Python, Ruby, and Perl.
+5. **Language Toolchains (modern stack)**:
+   - **Node.js**: pnpm-managed (`pnpm env use --global lts`). No nvm.
+   - **Python**: uv (system) + a dedicated uv venv for the Neovim Python
+     provider at `~/.local/share/nvim/venv`. No conda/miniforge.
+   - **Java**: a single Homebrew `openjdk`, optionally symlinked into
+     `/Library/Java/JavaVirtualMachines/` so `/usr/libexec/java_home` and
+     other tools find it. No Oracle JDK auto-downloader, no JDK bloat.
+   - **pnpm globals**: `typescript`, `tsx`, `prettier`, several LSP servers
+     (typescript-language-server, vtsls, vscode-langservers-extracted,
+     bash-language-server, yaml-language-server, tailwindcss-language-server),
+     plus `@playwright/cli`, `firecrawl-cli`, `wrangler`.
 
-6. **CondaBackup Repository Restoration**: Checks for the existence of a
-   CondaBackup repository, clones it if necessary, and restores Conda
-   environments from saved backups.
+6. **Per-project Python envs via direnv + chpwd hook**: The dotfiles ship
+   a zsh `chpwd` hook (`_venv_auto_activate`) that auto-activates a project's
+   `.venv/` on `cd`, plus a `direnv hook zsh` for projects with extra env
+   vars (`.envrc`).
 
-7. **Nerd Font Installation**: Automatically installs the JetBrainsMono Nerd
-   Font to enhance terminal aesthetics and compatibility with powerline
-   symbols.
+7. **Neovim**: installed via Brewfile. Configuration arrives via stow from
+   `~/.dotfiles/Config/.config/nvim/` (LazyVim-based). Bootstrap triggers
+   `Lazy! sync` headlessly to install plugins.
 
-8. **User Interface Enhancements**: The script includes functions for displaying
-   colorful and centered messages, adding a touch of personality to your
-   terminal.
+8. **Nerd Font Installation**: Installs JetBrainsMono Nerd Font for terminal
+   icons and ligatures.
 
-9. **To-Do List for App Downloads**: Generates a list of recommended
-   applications to download, saved as a text file on your desktop for easy
-   reference.
+9. **GitHub CLI + Copilot**: Logs into `gh` and installs `gh-copilot`.
+
+10. **Optional: Docker + Ollama + Open WebUI**: Sets up the local LLM stack
+    if requested.
+
+11. **TODO list**: Generates `~/Desktop/apps_to_download.txt` with the
+    handful of apps not installable via Homebrew (Mac App Store + a few
+    direct downloads).
 
 ## Installation
 

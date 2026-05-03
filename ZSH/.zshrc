@@ -39,12 +39,6 @@ Darwin)
     fi
     [ -d "$HOME/.oh-my-zsh" ] && export ZSH="$HOME/.oh-my-zsh"
 
-    if ! command -v conda &>/dev/null && command -v brew &>/dev/null; then
-        brew install miniforge 2>/dev/null || echo "Warning: Miniforge installation failed" >&2
-    fi
-    if [ -n "$HOMEBREW_PATH" ] && [ -d "$HOMEBREW_PATH/Caskroom/miniforge/base" ]; then
-        CONDA_PATH="$HOMEBREW_PATH/Caskroom/miniforge/base"
-    fi
     ;;
 
 Linux)
@@ -59,26 +53,7 @@ Linux)
         fi
         [ -d "$HOME/.oh-my-zsh" ] && export ZSH="$HOME/.oh-my-zsh"
 
-        if [ ! -d "$HOME/miniforge3" ] && [ ! -f "$HOME/.miniforge_install_attempted" ] && _check_network; then
-            temp_dir=$(mktemp -d)
-            installer="Miniforge3-$(uname)-$(uname -m).sh"
-            if curl -fsSL -o "$temp_dir/$installer" "https://github.com/conda-forge/miniforge/releases/latest/download/$installer" 2>/dev/null; then
-                if bash "$temp_dir/$installer" -b -p "$HOME/miniforge3" 2>/dev/null; then
-                    touch "$HOME/.miniforge_install_attempted"
-                    [ -x "$HOME/miniforge3/bin/conda" ] && "$HOME/miniforge3/bin/conda" init zsh 2>/dev/null
-                else
-                    touch "$HOME/.miniforge_install_attempted"
-                    echo "Warning: Miniforge installation failed" >&2
-                fi
-            else
-                touch "$HOME/.miniforge_install_attempted"
-                echo "Warning: Miniforge download failed" >&2
-            fi
-            rm -rf "$temp_dir"
-        fi
-        [ -d "$HOME/miniforge3" ] && CONDA_PATH="$HOME/miniforge3"
-
-    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then 
+    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then
         if [ ! -d "$HOME/.oh-my-zsh" ] && [ ! -f "$HOME/.ohmyzsh_install_attempted" ] && _check_network; then
             if sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended 2>/dev/null; then
                 touch "$HOME/.ohmyzsh_install_attempted"
@@ -88,25 +63,6 @@ Linux)
             fi
         fi
         [ -d "$HOME/.oh-my-zsh" ] && export ZSH="$HOME/.oh-my-zsh"
-
-        if [ ! -d "$HOME/miniforge3" ] && [ ! -f "$HOME/.miniforge_install_attempted" ] && _check_network; then
-            temp_dir=$(mktemp -d)
-            installer="Miniforge3-$(uname)-$(uname -m).sh"
-            if curl -fsSL -o "$temp_dir/$installer" "https://github.com/conda-forge/miniforge/releases/latest/download/$installer" 2>/dev/null; then
-                if bash "$temp_dir/$installer" -b -p "$HOME/miniforge3" 2>/dev/null; then
-                    touch "$HOME/.miniforge_install_attempted"
-                    [ -x "$HOME/miniforge3/bin/conda" ] && "$HOME/miniforge3/bin/conda" init zsh 2>/dev/null
-                else
-                    touch "$HOME/.miniforge_install_attempted"
-                    echo "Warning: Miniforge installation failed" >&2
-                fi
-            else
-                touch "$HOME/.miniforge_install_attempted"
-                echo "Warning: Miniforge download failed" >&2
-            fi
-            rm -rf "$temp_dir"
-        fi
-        [ -d "$HOME/miniforge3" ] && CONDA_PATH="$HOME/miniforge3"
 
     elif [[ -f "/etc/arch-release" || "$KERNEL_INFO" =~ "arch" || "$HOSTNAME" == "archlinux" ]]; then
         if ! command -v paru &>/dev/null && [ ! -f "$HOME/.paru_install_attempted" ] && _check_network; then
@@ -131,24 +87,6 @@ Linux)
         fi
         [ -d "/usr/share/oh-my-zsh" ] && export ZSH="/usr/share/oh-my-zsh"
 
-        if [ ! -d "$HOME/miniforge3" ] && [ ! -f "$HOME/.miniforge_install_attempted" ] && _check_network; then
-            temp_dir=$(mktemp -d)
-            installer="Miniforge3-$(uname)-$(uname -m).sh"
-            if curl -fsSL -o "$temp_dir/$installer" "https://github.com/conda-forge/miniforge/releases/latest/download/$installer" 2>/dev/null; then
-                if bash "$temp_dir/$installer" -b -p "$HOME/miniforge3" 2>/dev/null; then
-                    touch "$HOME/.miniforge_install_attempted"
-                    [ -x "$HOME/miniforge3/bin/conda" ] && "$HOME/miniforge3/bin/conda" init zsh 2>/dev/null
-                else
-                    touch "$HOME/.miniforge_install_attempted"
-                    echo "Warning: Miniforge installation failed" >&2
-                fi
-            else
-                touch "$HOME/.miniforge_install_attempted"
-                echo "Warning: Miniforge download failed" >&2
-            fi
-            rm -rf "$temp_dir"
-        fi
-        [ -d "$HOME/miniforge3" ] && CONDA_PATH="$HOME/miniforge3"
     fi
     ;;
 esac
@@ -216,7 +154,6 @@ if [ -d "$ZPLUG_HOME" ] && [ -f "$ZPLUG_HOME/init.zsh" ]; then
 
     zplug "mafredri/zsh-async", from:github
     zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
-    zplug "plugins/conda", from:oh-my-zsh, defer:2
     zplug "chrissicool/zsh-256color", defer:2
     zplug "zsh-users/zsh-autosuggestions", defer:2
     zplug "zsh-users/zsh-syntax-highlighting", defer:2
@@ -243,93 +180,60 @@ if command -v fastfetch &>/dev/null && [ -z "$FASTFETCH_SHOWN" ] && [[ "$PWD" !=
     fastfetch --logo small --logo-padding-top 1 &
 fi
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+# <-------------------- DIRENV ------------------>
 
-
-# <-------------------- CONDA INITIALIZATION ------------------>
-
-export AUTO_ACTIVATE_CONDA=true
-CONDA_EXEC_PATH="$CONDA_PATH/bin/conda"
-
-if [ -f "$CONDA_EXEC_PATH" ]; then
-    __conda_setup="$("$CONDA_EXEC_PATH" 'shell.zsh' 'hook' 2>/dev/null)"
-    if [ $? -eq 0 ]; then
-        eval "$__conda_setup"
-    else
-        CONDA_SH_PATH="$CONDA_PATH/etc/profile.d/conda.sh"
-        if [ -f "$CONDA_SH_PATH" ]; then
-            . "$CONDA_SH_PATH"
-        else
-            export PATH="$CONDA_PATH/bin:$PATH"
-        fi
-    fi
-
-    if [ ! -f "$HOME/.conda_configured" ]; then
-        if "$CONDA_EXEC_PATH" config --show | grep -q "auto_activate_base"; then
-            config_key="auto_activate_base"
-        else
-            config_key="auto_activate"
-        fi
-
-        if [ "$AUTO_ACTIVATE_CONDA" = "true" ]; then
-            "$CONDA_EXEC_PATH" config --set "$config_key" true
-        else
-            "$CONDA_EXEC_PATH" config --set "$config_key" false
-        fi
-        touch "$HOME/.conda_configured"
-    fi
-else
-    echo "Conda executable not found at $CONDA_EXEC_PATH"
+if command -v direnv &>/dev/null; then
+    eval "$(direnv hook zsh)"
 fi
 
-unset __conda_setup
 
+# <-------------------- AUTO-ACTIVATE PYTHON .venv ------------------>
 
-# <------------------ NVIM PYTHON PATH CONFIGURATION ------------------>
-
-if command -v conda &>/dev/null; then
-    set_python_path_for_neovim() {
-        if [[ -n "$CONDA_PREFIX" ]]; then
-            export NVIM_PYTHON_PATH="$CONDA_PREFIX/bin/python"
-        else
-            local system_python_path
-            system_python_path=$(which python3)
-            if [[ -z "$system_python_path" ]]; then
-                echo "Python is not installed. Please install Python to use with Neovim."
-            else
-                export NVIM_PYTHON_PATH="$system_python_path"
+# Manual activation (we don't `source .venv/bin/activate`) so the venv's
+# activate script never modifies PS1. Pure reads $VIRTUAL_ENV_PROMPT for its
+# venv indicator; we set it to ".venv" for a consistent display in every
+# tmux window, regardless of whether the shell started inside or outside
+# a project directory.
+_venv_auto_activate() {
+    local d=$PWD
+    while [ "$d" != "/" ]; do
+        if [ -x "$d/.venv/bin/python" ]; then
+            if [ "$VIRTUAL_ENV" != "$d/.venv" ]; then
+                # entering a venv (or switching between venvs)
+                if [ -z "${_VENV_PATH_BACKUP:-}" ]; then
+                    export _VENV_PATH_BACKUP="$PATH"
+                fi
+                export VIRTUAL_ENV="$d/.venv"
+                export VIRTUAL_ENV_PROMPT=".venv"
+                export PATH="$VIRTUAL_ENV/bin:$_VENV_PATH_BACKUP"
             fi
+            return
         fi
-    }
-
-    set_python_path_for_neovim
-
-    function precmd_set_python_path() {
-        if [[ "$PREV_CONDA_PREFIX" != "$CONDA_PREFIX" ]]; then
-            set_python_path_for_neovim
-            PREV_CONDA_PREFIX="$CONDA_PREFIX"
+        d=${d:h}
+    done
+    # leaving every venv: restore PATH and clear the markers
+    if [ -n "${VIRTUAL_ENV:-}" ]; then
+        if [ -n "${_VENV_PATH_BACKUP:-}" ]; then
+            export PATH="$_VENV_PATH_BACKUP"
+            unset _VENV_PATH_BACKUP
         fi
-    }
-
-    PREV_CONDA_PREFIX="$CONDA_PREFIX"
-
-    autoload -U add-zsh-hook
-    add-zsh-hook precmd precmd_set_python_path
-
-else
-    python_path=$(which python3)
-    if [[ -z "$python_path" ]]; then
-        echo "Python is not installed. Please install Python to use with Neovim."
-    else
-        export NVIM_PYTHON_PATH="$python_path"
+        unset VIRTUAL_ENV VIRTUAL_ENV_PROMPT
     fi
-fi
-
-aider () {
-  command conda run -n aider --no-capture-output aider "$@"
 }
+
+autoload -U add-zsh-hook
+add-zsh-hook chpwd _venv_auto_activate
+_venv_auto_activate
+
+# Ensure Pure's venv indicator stays as ".venv" every prompt. Runs after
+# direnv's precmd, so even if direnv resets state across .envrc transitions
+# the indicator stays consistent.
+_venv_sync_prompt() {
+    if [ -n "${VIRTUAL_ENV:-}" ] && [ "${VIRTUAL_ENV_PROMPT:-}" != ".venv" ]; then
+        export VIRTUAL_ENV_PROMPT=".venv"
+    fi
+}
+add-zsh-hook precmd _venv_sync_prompt
 
 
 # <-------------------- ALIASES -------------------->
@@ -536,11 +440,6 @@ if command -v bat &>/dev/null; then
         fi
     fi
     export BAT_THEME="Catppuccin Macchiato"
-fi
-
-if command -v thefuck &>/dev/null; then
-    eval "$(thefuck --alias)"
-    eval "$(thefuck --alias fk)"
 fi
 
 if command -v zoxide &>/dev/null; then
@@ -828,25 +727,6 @@ if [ ! -f "$ghostty_dynamic_conf" ] || [ "$(cat "$ghostty_dynamic_conf" 2>/dev/n
     printf "%s\n" "$new_ghostty_config" > "$ghostty_dynamic_conf"
 fi
 
-# ---
-
-JAVA_CLASSPATH_PREFIX="$HOME/.dotfiles/Java-Jars/javaClasspath"
-
-export CLASSPATH=""
-
-for jar in "$JAVA_CLASSPATH_PREFIX"/*.jar; do
-    if [ -e "$jar" ]; then
-        if [ -z "$CLASSPATH" ]; then
-            export CLASSPATH="$jar"
-        else
-            export CLASSPATH="$CLASSPATH:$jar"
-        fi
-    fi
-done
-
-export CLASSPATH="$CLASSPATH:."
-
-
 # <-------------------- API KEY CONFIGURATIONS -------------------->
 
 export_from_file() {
@@ -880,8 +760,8 @@ export PATH="$PATH:$HOME/.pub-cache/bin"
 
 export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH" ;;
 esac
 
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
