@@ -42,7 +42,7 @@ Apply when working with Python files. For backend scalability concerns (queries,
 - One concept per file. Split before a file grows past 400 lines.
 - Public API at the top, private helpers below; underscore-prefix private functions and module-level state.
 - Avoid mutable module-level state. Use a class, a closure, or pass state explicitly. The one common exception is a singleton settings object built lazily in `get_settings()`.
-- `__all__` only when you actively want to control `from foo import *`; otherwise it just rots.
+- `__all__` for two reasons only: controlling `from foo import *`, and silencing pyright's hint-level "is not accessed" greying on `_`-prefixed module-level names that sibling modules or tests consume. List those exports in `__all__` so the editor stops flagging them.
 - Source under `src/<package>/` (src layout). Tests under `tests/`, mirroring the source tree.
 
 ## Errors and validation
@@ -120,11 +120,12 @@ The single non-negotiable block for AI-tool parity is `[tool.pyright]` with the 
 # Add to every Python project's pyproject.toml. Path values assume src layout +
 # .venv at the repo root; adjust if the project differs.
 [tool.pyright]
-include       = ["src", "tests"]
-extraPaths    = ["."]
-pythonVersion = "3.13"        # match [project.requires-python]
-venvPath      = "."
-venv          = ".venv"
+include          = ["src", "tests"]
+extraPaths       = ["."]
+pythonVersion    = "3.13"          # match [project.requires-python]
+venvPath         = "."
+venv             = ".venv"
+typeCheckingMode = "standard"      # pin explicitly: basedpyright (LazyVim, opencode) defaults to "all" and surfaces diagnostics mypy --strict does not enforce
 ```
 
 Everything else below is an **example baseline**, not a fixed template. Adapt rule selection, strictness levels, and dep pins to the project's age, audience, and risk profile. Library projects, CLIs, FastAPI services, and data-science notebooks all want different cuts. Replace `<package_name>` with the importable package name; drop sections that don't apply.
