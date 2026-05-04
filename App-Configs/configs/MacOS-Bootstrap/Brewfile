@@ -9,6 +9,7 @@ tap "samtay/tui"
 tap "sst/tap"
 tap "stripe/stripe-cli"
 tap "supabase/tap"
+tap "teamookla/speedtest"
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
 # Extremely Fast Compression algorithm
@@ -27,8 +28,6 @@ brew "autoconf"
 brew "openssl@3"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
-# Secure and free password manager for all of your devices
-brew "bitwarden-cli"
 # Yet another cross-platform graphical process/system monitor
 brew "bottom"
 # Hacker News in your terminal
@@ -43,18 +42,10 @@ brew "cmake"
 brew "cmake-docs"
 # Console Matrix
 brew "cmatrix"
-# Powerful, clean, object-oriented scripting language
-brew "ruby"
-# Dependency manager for Cocoa projects
-brew "cocoapods"
 # Container runtimes on MacOS (and Linux) with minimal setup
 brew "colima", restart_service: :changed
 # GNU File, Shell, and Text utilities
 brew "coreutils"
-# Pure Scala Artifact Fetching
-brew "coursier"
-# Get, unpack, build, and install modules from CPAN
-brew "cpanminus"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
 # Load/unload environment variables based on $PWD
@@ -103,8 +94,6 @@ brew "glow"
 brew "libusb"
 # Open source programming language to build simple/reliable/efficient software
 brew "go"
-# Open-source build automation tool based on the Groovy and Kotlin DSL
-brew "gradle"
 # Kubernetes package manager
 brew "helm"
 # Generic library support script
@@ -121,8 +110,6 @@ brew "just"
 brew "k6"
 # Run local Kubernetes cluster in Docker
 brew "kind"
-# Statically typed programming language for the JVM
-brew "kotlin"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
 # Lazier way to manage everything docker
@@ -141,10 +128,6 @@ brew "luarocks"
 brew "lychee"
 # Text-based web browser
 brew "lynx"
-# Mac App Store command-line interface
-brew "mas"
-# Java-based project management
-brew "maven"
 # Simple tool to make locally trusted development certificates
 brew "mkcert"
 # Remote terminal application
@@ -163,6 +146,8 @@ brew "nmap"
 brew "nss"
 # Package for scientific computing with Python
 brew "numpy"
+# Development kit for the Java programming language
+brew "openjdk"
 # Vulnerability scanner which uses the OSV database
 brew "osv-scanner"
 # Multithreaded PNG optimizer written in Rust
@@ -175,34 +160,26 @@ brew "pgweb"
 brew "pigz"
 # Pinentry for GPG on Mac
 brew "pinentry-mac"
-# Python dependency management tool
-brew "pipenv"
 # Package compiler and linker metadata toolkit
 brew "pkgconf"
 # Paste PNG into files
 brew "pngpaste"
 # PNG image optimizing utility
 brew "pngquant"
-# Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
-brew "prettier"
+# Fast, disk space efficient package manager
+brew "pnpm"
 # Bundle a Python application and all its dependencies
 brew "pyinstaller"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.11"
 # Generic machine emulator and virtualizer
 brew "qemu"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Tools for Multiple Arcade Machine Emulator
 brew "rom-tools"
-# Safe, concurrent, practical language
-brew "rust"
-# Rust toolchain installer
-brew "rustup"
+# Extremely fast Python linter, written in Rust
+brew "ruff"
 # Easily detect and prevent bugs and anti-patterns in your codebase
 brew "semgrep"
-# Command-line interface for https://speedtest.net bandwidth tests
-brew "speedtest-cli"
 # Organize software neatly under a single directory tree (e.g. /usr/local)
 brew "stow"
 # Opinionated Lua code formatter
@@ -211,20 +188,14 @@ brew "stylua"
 brew "syncthing", restart_service: :changed
 # User interface to the TELNET protocol
 brew "telnet"
-# Programmatically correct mistyped console commands
-brew "thefuck"
 # Official tldr client written in Rust
 brew "tlrc"
 # Terminal multiplexer
 brew "tmux"
 # Extremely fast Python package installer and resolver, written in Rust
 brew "uv"
-# Command-line interface for Vercel
-brew "vercel-cli"
 # Modern watch command
 brew "viddy"
-# Vi 'workalike' with many additional features
-brew "vim"
 # Simple terminal image viewer written in Rust
 brew "viu"
 # Pager/text based browser
@@ -241,14 +212,10 @@ brew "yq"
 brew "zig"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
-# Easily compile and run Java files, manage cleanup, and view syntax-highlighted errors through a user-friendly fuzzy-finding menu.
-brew "av1155/scripts/javaprojectmanager"
 # Sentry command-line tool for error monitoring and debugging
 brew "getsentry/tools/sentry"
 # Everything you need to get started with Heroku
 brew "heroku/brew/heroku"
-# Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
-brew "oven-sh/bun/bun"
 # Opinionated workflow tool that orchestrates git worktrees and tmux
 brew "raine/workmux/workmux"
 # Tetris in your terminal
@@ -259,6 +226,8 @@ brew "sst/tap/opencode"
 brew "stripe/stripe-cli/stripe"
 # Supabase CLI
 brew "supabase/tap/supabase"
+# Ookla Speedtest
+brew "teamookla/speedtest/speedtest"
 # View, create, manipulate, print and manage files in Portable Document Format
 cask "adobe-acrobat-pro"
 # Collection of apps and services for photography, design, video, web, and UX
@@ -279,8 +248,6 @@ cask "arc"
 cask "balenaetcher"
 # Display management tool
 cask "betterdisplay"
-# Desktop app for GPT-4 / GPT-3.5 (OpenAI API)
-cask "chatbox"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
 # Hardware benchmarking utility
@@ -313,8 +280,6 @@ cask "flutter"
 cask "flycut"
 cask "font-noto-emoji"
 cask "font-noto-sans-symbols-2"
-# Tool to measure the computer system's performance
-cask "geekbench"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Web browser
@@ -329,8 +294,6 @@ cask "jetbrains-toolbox"
 cask "jordanbaird-ice"
 # Open-source keystroke visualiser
 cask "keycastr"
-# GPU-based terminal emulator
-cask "kitty"
 # Kubernetes IDE
 cask "lens"
 # Discover, download, and run local LLMs
@@ -351,12 +314,6 @@ cask "microsoft-edge"
 cask "microsoft-office"
 # Meet, chat, call, and collaborate in just one place
 cask "microsoft-teams"
-# Minimal installer for conda specific to conda-forge
-cask "miniforge"
-# Online collaborative whiteboard platform
-cask "miro"
-# AI platform with local and online models
-cask "mstystudio"
 # Reverse proxy, secure introspectable tunnels to localhost
 cask "ngrok"
 # App to write, plan, collaborate, and get organised
@@ -369,8 +326,6 @@ cask "onyx"
 cask "plex"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
-# Environment for statistical computing and graphics
-cask "r-app"
 # Imaging utility to install operating systems to a microSD card
 cask "raspberry-pi-imager"
 # Control your tools with a few keystrokes
@@ -383,8 +338,6 @@ cask "sequel-ace"
 cask "shottr"
 # Team communication and collaboration software
 cask "slack"
-# Application to control your PlayStation 4 or PlayStation 5
-cask "sony-ps-remote-play"
 # Music streaming service
 cask "spotify"
 # Spotify and iTunes in the menu bar
@@ -393,8 +346,6 @@ cask "spotmenu"
 cask "stats"
 # Video game digital distribution service
 cask "steam"
-# SSH client
-cask "termius"
 # Unpacks archive files
 cask "the-unarchiver"
 # To-do list
@@ -407,29 +358,10 @@ cask "utm"
 cask "visual-studio-code"
 # Multimedia player
 cask "vlc"
-# Remote desktop application focusing on security
-cask "vnc-viewer"
 # Native desktop client for WhatsApp
 cask "whatsapp"
 # Video communication and virtual meeting platform
 cask "zoom"
-mas "AdGuard Mini", id: 1440147259
-mas "Bitwarden", id: 1352778147
-mas "CleanMyMac", id: 1339170533
-mas "Dropover", id: 1355679052
-mas "Encrypto", id: 935235287
-mas "Final Cut Pro", id: 424389933
-mas "GarageBand", id: 682658836
-mas "Goodnotes", id: 1444383602
-mas "iMovie", id: 408981434
-mas "Keynote", id: 409183694
-mas "Numbers", id: 409203825
-mas "Pages", id: 409201541
-mas "Steam Link", id: 1246969117
-mas "TestFlight", id: 899247664
-mas "Windows App", id: 1295203466
-mas "WireGuard", id: 1451685025
-mas "Xcode", id: 497799835
 vscode "adpyke.codesnap"
 vscode "alefragnani.project-manager"
 vscode "batisteo.vscode-django"
@@ -508,5 +440,3 @@ vscode "wayou.vscode-todo-highlight"
 vscode "wholroyd.jinja"
 vscode "xaver.clang-format"
 go "github.com/koron/iferr"
-uv "aider-chat", with: ["pip"]
-uv "playwright"
