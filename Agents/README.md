@@ -9,23 +9,34 @@ Agents/
 ├── README.md                # this file (ignored by stow)
 └── .agents/
     └── skills/
-        ├── python/SKILL.md          # path-conditional: auto-loads on .py edits
-        ├── typescript/SKILL.md      # path-conditional: auto-loads on .ts/.tsx edits
-        ├── scalability/SKILL.md     # path-conditional: backend code (api/routes/...)
-        ├── commenting/SKILL.md      # description-discovered: cross-language style
-        ├── security/SKILL.md        # description-discovered: secrets/auth/input/LLM
-        └── playwright-cli/SKILL.md  # description-discovered: Playwright tool reference
+        ├── python/SKILL.md                       # path-conditional: auto-loads on .py edits
+        ├── typescript/SKILL.md                   # path-conditional: auto-loads on .ts/.tsx edits
+        ├── scalability/SKILL.md                  # path-conditional: backend code (api/routes/...)
+        ├── commenting/SKILL.md                   # description-discovered: cross-language style
+        ├── security/SKILL.md                     # description-discovered: secrets/auth/input/LLM
+        ├── playwright-cli/SKILL.md               # description-discovered: Playwright tool reference
+        ├── caveman/SKILL.md                      # description-discovered (mattpocock): ultra-compressed mode
+        ├── diagnose/SKILL.md                     # description-discovered (mattpocock): debugging loop
+        ├── grill-me/SKILL.md                     # description-discovered (mattpocock): plan interview
+        ├── grill-with-docs/SKILL.md              # description-discovered (mattpocock): grill + ADR/CONTEXT updates
+        ├── improve-codebase-architecture/SKILL.md # description-discovered (mattpocock): architecture deepening
+        ├── setup-matt-pocock-skills/SKILL.md     # description-discovered (mattpocock): per-repo setup
+        ├── tdd/SKILL.md                          # description-discovered (mattpocock): red-green-refactor
+        ├── to-issues/SKILL.md                    # description-discovered (mattpocock): plan to issues
+        ├── to-prd/SKILL.md                       # description-discovered (mattpocock): context to PRD
+        ├── triage/SKILL.md                       # description-discovered (mattpocock): issue triage state machine
+        ├── write-a-skill/SKILL.md                # description-discovered (mattpocock): scaffold a new skill
+        └── zoom-out/SKILL.md                     # description-discovered (mattpocock): broader context view
 ```
 
 After `stow Agents` (or `./install.sh`), each skill is reachable at:
 
 - `~/.agents/skills/<name>/SKILL.md` → `~/.dotfiles/Agents/.agents/skills/<name>/SKILL.md`
-- (resolves via relative symlinks for `python`, `typescript`, `scalability`, `commenting`, `security`, `playwright-cli`)
 
 The Claude side also gets in-repo relative symlinks back into the canonical content:
 
-- `Claude/.claude/rules/<name>.md` → `Agents/.agents/skills/<name>/SKILL.md` (for path-conditional rules: python, typescript, scalability)
-- `Claude/.claude/skills/<name>` → `Agents/.agents/skills/<name>` (for description-discovered skills: commenting, security, playwright-cli)
+- `Claude/.claude/rules/<name>.md` → `Agents/.agents/skills/<name>/SKILL.md` (path-conditional: python, typescript, scalability)
+- `Claude/.claude/skills/<name>` → `Agents/.agents/skills/<name>` (description-discovered: commenting, security, playwright-cli, caveman, diagnose, grill-me, grill-with-docs, improve-codebase-architecture, setup-matt-pocock-skills, tdd, to-issues, to-prd, triage, write-a-skill, zoom-out)
 
 ## How each agent picks them up
 
@@ -39,13 +50,19 @@ The Claude side is wired in `Claude/.claude/rules/<name>.md` as a **relative sym
 
 ## Adding a new shared skill
 
-1. Create `Agents/.agents/skills/<new-name>/SKILL.md` with the standard Agent Skills frontmatter (`name`, `description`, optional `paths:` for path-conditional loading).
-2. If it should auto-load in Claude as a path-conditional rule, also add a relative symlink:
-   ```bash
-   cd ~/.dotfiles/Claude/.claude/rules
-   ln -s ../../../Agents/.agents/skills/<new-name>/SKILL.md <new-name>.md
-   ```
-3. Re-run stow if needed: `cd ~/.dotfiles && ./install.sh` (or `stow --restow Agents Claude`).
+1. Create `Agents/.agents/skills/<new-name>/` containing `SKILL.md` (standard Agent Skills frontmatter: `name`, `description`, optional `paths:` for path-conditional loading), plus any reference files the skill bundles.
+2. Wire up the Claude side via an in-repo relative symlink. Pick one of:
+   - **Path-conditional rule** (auto-loads on matching globs):
+     ```bash
+     cd ~/.dotfiles/Claude/.claude/rules
+     ln -s ../../../Agents/.agents/skills/<new-name>/SKILL.md <new-name>.md
+     ```
+   - **Description-discovered skill** (loaded when description matches):
+     ```bash
+     cd ~/.dotfiles/Claude/.claude/skills
+     ln -s ../../../Agents/.agents/skills/<new-name> <new-name>
+     ```
+3. Re-stow: `cd ~/.dotfiles && stow --restow Agents Claude` (or `./install.sh`). Codex and OpenCode pick the skill up automatically via `~/.agents/skills/<new-name>/SKILL.md`; no per-tool symlink needed.
 4. Reference the skill in `Codex/.codex/AGENTS.md` and `Config/.config/opencode/AGENTS.md` if it should appear in their loading hints.
 
 ## Why a separate package
