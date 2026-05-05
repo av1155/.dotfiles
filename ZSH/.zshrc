@@ -666,6 +666,7 @@ fi
 
 if [ -d ~/.dotfiles/scripts ]; then
     alias qwen='~/.dotfiles/scripts/llama-qwen.sh'
+    alias qwen-agent='~/.dotfiles/scripts/llama-qwen-agent.sh'
 fi
 
 [ -f "$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh" ] && alias macOS-bootstrap="$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh"
