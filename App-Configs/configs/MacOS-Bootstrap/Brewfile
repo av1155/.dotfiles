@@ -234,8 +234,6 @@ cask "adobe-acrobat-pro"
 cask "adobe-creative-cloud"
 # Menu bar tool to limit maximum charging percentage
 cask "aldente"
-# Enable Windows-like alt-tab
-cask "alt-tab"
 # Transfer files from and to an Android smartphone
 cask "android-file-transfer"
 # Memory training application
@@ -266,6 +264,8 @@ cask "crystalfetch"
 cask "db-browser-for-sqlite"
 # Voice and text chat software
 cask "discord"
+# Window peeking utility app
+cask "dockdoor"
 # Developer platform
 cask "dotnet-sdk"
 # Collaborative team software
