@@ -305,6 +305,7 @@ Example:
 ├── Pi/                         # Pi (earendil-works/pi) global config
 │   └── .pi/agent/
 │       ├── AGENTS.md           # Symlink to Agents/.agents/AGENTS.md
+│       ├── mcp.json            # Pi MCP adapter global override
 │       └── settings.json       # Model defaults and installed Pi packages
 │
 ├── docs/                       # Documentation (tracked but not stowed via .stow-local-ignore)
@@ -400,7 +401,7 @@ Pre-configured for modern development:
     - **Claude Code** (Anthropic): settings, hooks, plugins, slash skills via `.claude/skills/` symlinks
     - **OpenAI Codex CLI**: `config.toml`, MCP servers, Starlark prefix-rules, native read of `~/.agents/skills/`
     - **OpenCode** (sst): `opencode.jsonc` with custom agents (build, plan), TS plugins, MCP, fallback read of `~/.claude/skills/` and `~/.agents/skills/`
-    - **Pi** (earendil-works/pi): tracked `settings.json` for model defaults and packages, TS extensions (incl. `@juicesharp/rpiv-args` for skill argument substitution), `~/.pi/agent/AGENTS.md` symlinked to canonical, and native `~/.agents/skills/` loading
+    - **Pi** (earendil-works/pi): tracked `settings.json` for model defaults and packages, tracked `mcp.json` for the Pi MCP adapter global override, TS extensions (incl. `@juicesharp/rpiv-args` for skill argument substitution), `~/.pi/agent/AGENTS.md` symlinked to canonical, and native `~/.agents/skills/` loading
     - All four harnesses share the canonical `Agents/.agents/AGENTS.md` via committed in-repo symlinks. Full per-harness reference, procedures, and decision log in `docs/AGENTIC-CODING-HARNESSES.md`.
 - **File Navigation**:
     - FZF: Fuzzy finder with custom keybindings

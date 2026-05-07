@@ -139,14 +139,14 @@ User's currently enabled Claude Code plugins (per `~/.claude/plugins/installed_p
 
 ## 6. MCP Servers
 
-| Harness     | Configuration location                                                                          | Native MCP support |
-| ----------- | ----------------------------------------------------------------------------------------------- | ------------------ |
-| Claude Code | `.mcp.json` (project, committed), `~/.claude.json` (user/local)                                 | ✓                  |
-| Codex CLI   | `[mcp_servers.<name>]` TOML tables in `~/.codex/config.toml` or `.codex/config.toml`            | ✓                  |
-| OpenCode    | `mcp:` key in `~/.config/opencode/opencode.jsonc` or project `opencode.jsonc`                   | ✓                  |
-| Pi          | **NOT supported.** Uses extension-registered tools instead (`pi.registerTool` in TS extensions) | ✗                  |
+| Harness     | Configuration location                                                                                                                                                  | Native MCP support |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| Claude Code | `.mcp.json` (project, committed), `~/.claude.json` (user/local)                                                                                                         | ✓                  |
+| Codex CLI   | `[mcp_servers.<name>]` TOML tables in `~/.codex/config.toml` or `.codex/config.toml`                                                                                    | ✓                  |
+| OpenCode    | `mcp:` key in `~/.config/opencode/opencode.jsonc` or project `opencode.jsonc`                                                                                           | ✓                  |
+| Pi          | Via `pi-mcp-adapter`: `~/.pi/agent/mcp.json` (Pi global override), `.pi/mcp.json` (project override), plus shared `.mcp.json` / `~/.config/mcp/mcp.json` import support | via package        |
 
-User's global MCP servers: `magic` (21st.dev), `stitch` (Google Stitch). Both currently disabled by default; enable per-need.
+User's global MCP servers: `context-mode` is enabled across Claude Code, Codex, OpenCode, and Pi via each harness's native config method. `magic` (21st.dev) and `stitch` (Google Stitch) are configured for Codex/OpenCode and disabled by default; enable per-need.
 
 Per-project MCP examples:
 
@@ -218,6 +218,7 @@ User's currently installed Pi packages (tracked in `.dotfiles/Pi/.pi/agent/setti
 | `@juicesharp/rpiv-args` v1.2.0       | **Adds `$ARGUMENTS` / `$1`-`$N` / `$@` / `${@:N}` / `${@:N:L}` substitution to Pi skill bodies.** Hooks `input`, `before_agent_start`, `session_start`                                                                   |
 | `@juicesharp/rpiv-todo`              | Persistent task tracking, `/todos` command, TUI overlay, dependency graph, survives `/reload` and compaction                                                                                                             |
 | `@juicesharp/rpiv-ask-user-question` | Tabbed-question dialog tool: 1-4 questions, 2-4 options each, single/multi-select, optional previews, free-text notes, Submit review tab                                                                                 |
+| `pi-mcp-adapter`                     | Adds MCP support to Pi through a compact proxy tool, lazy server lifecycle, direct-tool promotion, and config discovery from `~/.pi/agent/mcp.json`, `.pi/mcp.json`, `.mcp.json`, and `~/.config/mcp/mcp.json`           |
 
 `rpiv` = juicesharp's brand for a suite of Pi enhancements (from monorepo `rpiv-mono`).
 
@@ -507,6 +508,7 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 │   └── .pi/
 │       └── agent/
 │           ├── AGENTS.md       S→ ../../../Agents/.agents/AGENTS.md
+│           ├── mcp.json        (R)        # Pi MCP adapter global override (no secrets)
 │           └── settings.json   (R)        # model defaults, installed packages, non-secret UI settings
 ├── docs/                                   # NEW package (Stage 1); .stow-local-ignore: .+
 │   ├── .stow-local-ignore  (R)             # ignore everything (don't stow)

@@ -122,7 +122,6 @@
         "magic": {
             "type": "local",
             "enabled": false,
-            "timeout": 600000,
             "environment": { "API_KEY": "{env:MAGIC_API_KEY}" },
             "command": ["npx", "-y", "@21st-dev/magic@latest"],
         },
@@ -133,6 +132,11 @@
             "headers": {
                 "X-Goog-Api-Key": "{env:GOOGLE_STITCH_API_KEY}",
             },
+        },
+        "context-mode": {
+            "type": "local",
+            "enabled": true,
+            "command": ["npx", "-y", "context-mode"],
         },
     },
 
@@ -147,6 +151,7 @@
                 "skill": "allow",
                 "magic*": "allow",
                 "stitch*": "allow",
+                "context-mode*": "allow",
                 "supabase*": "ask",
                 "vercel*": "ask",
             },
@@ -161,6 +166,7 @@
                 "skill": "allow",
                 "magic*": "allow",
                 "stitch*": "allow",
+                "context-mode*": "allow",
                 "supabase*": "ask",
                 "vercel*": "ask",
             },

@@ -10,7 +10,8 @@
     "npm:@juicesharp/rpiv-todo",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:pi-powerline-footer",
-    "npm:@juicesharp/rpiv-args"
+    "npm:@juicesharp/rpiv-args",
+    "npm:pi-mcp-adapter"
   ],
   "workingVibeModel": "openai-codex/gpt-5.5",
   "workingVibeMode": "file"

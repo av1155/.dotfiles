@@ -54,3 +54,9 @@ startup_timeout_sec = 20
 tool_timeout_sec = 120
 enabled = false
 
+[mcp_servers.context-mode]
+command = "npx"
+args = ["-y", "context-mode"]
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+enabled = true
