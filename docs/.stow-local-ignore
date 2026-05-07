@@ -1,0 +1,5 @@
+# Ignore every entry in this package. Documentation is version-tracked
+# but never stowed into $HOME — the runbook is read directly from the
+# dotfiles repo when an LLM follows the agentic-coding-harnesses skill.
+# Per stow(8): basename patterns (no '/') match any file/dir name exactly.
+.+
