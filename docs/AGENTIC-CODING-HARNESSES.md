@@ -305,9 +305,23 @@ These are not modified by alignment work. Stage 3 fixes the 2 description blocke
 
 ## 18. Modification Ledger
 
-> Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
+Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
 
-> _No entries yet._
+### 2026-05-07 — Stage 3 false-alarm verification
+
+The Stage 2 audit's "Tier 1 description blocker" classification for three files was **incorrect**. Verification with frontmatter parsing confirmed:
+
+- `~/.agents/skills/vercel-react-native-skills/SKILL.md` — name `vercel-react-native-skills`, description 295 chars (valid YAML implicit multi-line plain scalar)
+- `~/.agents/skills/vercel-composition-patterns/SKILL.md` — name `vercel-composition-patterns`, description 310 chars (valid)
+- `.dotfiles/Codex/.codex/skills/deep-audit/SKILL.md` — name `deep-audit` (NOT `caveman` as previous audit claimed), description 466 chars (valid)
+
+Likely cause: the audit used a parser that didn't handle YAML's indented continuation form (`description:` on one line followed by indented continuation lines on subsequent lines). All three files are correctly formed per YAML 1.2.
+
+**No file modifications made.** If Pi (or any harness) is in fact failing to load these skills, the cause is downstream of frontmatter validity — possibly the harness's `skills:` configuration or its YAML parser strictness. Investigate during Stage 9 verification.
+
+### Pending entries
+
+(none)
 
 ## 19. Open Questions / Deferred Work
 
@@ -385,3 +399,20 @@ Ten stages with explicit approval gates:
 8. Project-level migrations (Houndarr → wedding-site → invest-platform)
 9. End-to-end verification
 10. Finalize runbook
+
+### Stage 2 audit-resolution decisions (2026-05-07)
+
+The 9 open questions raised in section 19 during the Stage 2 audit were resolved per the recommendations:
+
+1. `security` and `commenting` skills → **C** (description-triggered; no AGENTS.md migration)
+2. `agentic-coding-harnesses` → **C** (confirmed)
+3. Houndarr `hook-compliance.md` → **A** (move to AGENTS.md, delete file in Stage 8)
+4. invest-platform 5 unscoped rules → all **A** (move to AGENTS.md, delete files in Stage 8). Combined with aggressive trim of OTHER AGENTS.md content (target 11 KiB / 210 lines)
+5. invest-platform `plan-mode.md` → **delete entirely**; inline as comment elsewhere
+6. wedding-site AGENTS.md "broken" symlink → **investigate during Stage 8**, restore stub-pattern correctly
+7. wedding-site `skills-lock.json` → **recompute** during Stage 8 (preserve integrity-checking pattern)
+8. Codex/.codex/skills/ drift → **merge missing content** from Codex versions into Claude (canonical) versions before Stage 6 deletion
+9. `.opencode/commands/` directories in Houndarr and invest-platform → **delete entirely** (stale duplicates)
+
+### Stage 3 outcome (2026-05-07)
+All 3 alleged description-blockers verified to have valid YAML frontmatter with non-empty descriptions. Earlier audit was incorrect. No modifications made. See section 18.
