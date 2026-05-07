@@ -1,0 +1,17 @@
+{
+  "lastChangelogVersion": "0.74.0",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "defaultThinkingLevel": "high",
+  "packages": [
+    "npm:pi-subagents",
+    "npm:pi-web-access",
+    "npm:pi-lens",
+    "npm:@juicesharp/rpiv-todo",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:pi-powerline-footer",
+    "npm:@juicesharp/rpiv-args"
+  ],
+  "workingVibeModel": "openai-codex/gpt-5.5",
+  "workingVibeMode": "file"
+}

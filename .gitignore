@@ -7,3 +7,10 @@ Config/.config/ghostty/dynamic.conf
 Config/.config/opencode/package-lock.json
 
 Config/.config/opencode/bun.lock
+
+# Pi runtime and sensitive state
+Pi/.pi/agent/auth.json
+Pi/.pi/agent/sessions/
+Pi/.pi/agent/mcp-cache.json
+Pi/.pi/agent/context-mode/
+Pi/.pi/context-mode/
