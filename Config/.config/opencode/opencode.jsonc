@@ -119,30 +119,6 @@
     },
 
     "mcp": {
-        "context7": {
-            "type": "remote",
-            "enabled": true,
-            "url": "https://mcp.context7.com/mcp",
-            "timeout": 120000,
-            "headers": {
-                "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}",
-            },
-        },
-        "firecrawl": {
-            "type": "local",
-            "enabled": false,
-            "timeout": 60000,
-            "environment": { "FIRECRAWL_API_KEY": "{env:FIRECRAWL_API_KEY}" },
-            "command": ["npx", "-y", "firecrawl-mcp"],
-        },
-        "github": {
-            "type": "remote",
-            "enabled": false,
-            "url": "https://api.githubcopilot.com/mcp/",
-            "headers": {
-                "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}",
-            },
-        },
         "magic": {
             "type": "local",
             "enabled": false,
@@ -169,11 +145,8 @@
                 "websearch": "allow",
                 "task": "allow",
                 "skill": "allow",
-                "context7*": "allow",
-                "firecrawl*": "allow",
                 "magic*": "allow",
                 "stitch*": "allow",
-                "github*": "ask",
                 "supabase*": "ask",
                 "vercel*": "ask",
             },
@@ -186,11 +159,8 @@
                 "websearch": "allow",
                 "task": "allow",
                 "skill": "allow",
-                "context7*": "allow",
-                "firecrawl*": "allow",
                 "magic*": "allow",
                 "stitch*": "allow",
-                "github*": "ask",
                 "supabase*": "ask",
                 "vercel*": "ask",
             },

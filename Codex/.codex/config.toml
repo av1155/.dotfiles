@@ -39,21 +39,6 @@ codex_hooks = true
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 
-[mcp_servers.context7]
-command = "npx"
-args = ["-y", "@upstash/context7-mcp"]
-env_vars = ["CONTEXT7_API_KEY"]
-startup_timeout_sec = 20
-tool_timeout_sec = 120
-enabled = true
-
-[mcp_servers.github]
-url = "https://api.githubcopilot.com/mcp/"
-bearer_token_env_var = "GITHUB_PERSONAL_ACCESS_TOKEN"
-startup_timeout_sec = 20
-tool_timeout_sec = 120
-enabled = false
-
 [mcp_servers.magic]
 command = "sh"
 args = ["-lc", "API_KEY=\"$MAGIC_API_KEY\" exec npx -y @21st-dev/magic@latest"]
@@ -69,10 +54,3 @@ startup_timeout_sec = 20
 tool_timeout_sec = 120
 enabled = false
 
-[mcp_servers.firecrawl]
-command = "npx"
-args = ["-y", "firecrawl-mcp"]
-env_vars = ["FIRECRAWL_API_KEY"]
-startup_timeout_sec = 20
-tool_timeout_sec = 120
-enabled = true

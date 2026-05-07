@@ -1,6 +1,6 @@
 ---
 name: review
-description: Adversarial code review of the current branch. Launches a thorough review checking correctness, security, performance, architecture, type safety, and test coverage. Verifies findings against current library documentation via Context7 and web sources to avoid flagging correct modern patterns as errors. Use after completing a feature, before merging any agent-generated code, when running gate checks between waves, or whenever you suspect code quality issues. Also use when asked to "review," "audit," "check," or "look over" code changes, even if the user doesn't say "adversarial."
+description: Adversarial code review of the current branch. Launches a thorough review checking correctness, security, performance, architecture, type safety, and test coverage. Verifies findings against current library documentation via ctx7 and web sources to avoid flagging correct modern patterns as errors. Use after completing a feature, before merging any agent-generated code, when running gate checks between waves, or whenever you suspect code quality issues. Also use when asked to "review," "audit," "check," or "look over" code changes, even if the user doesn't say "adversarial."
 ---
 
 # Adversarial Code Review
@@ -139,13 +139,13 @@ You SHOULD look up documentation when:
 
 ### How to verify
 
-**Context7 (preferred for library docs):**
-Use the available Context7 MCP tools to resolve the library name and fetch the relevant section of docs for that library.
+**ctx7 (preferred for library docs):**
+Use `ctx7` to fetch current library docs.
 
-Use Context7 for: React, Next.js, Drizzle, Prisma, Zod, tRPC, Tailwind, Hono, Express, Fastify, Vitest, Jest, Playwright, SQLite/PostgreSQL drivers, Tanstack Query, Zustand, Jotai, SWR, Astro, Svelte, Vue, Nuxt, Remix, SolidJS, Effect, Turborepo, tsup, Vite, esbuild, and any other library with published docs.
+Use ctx7 for: React, Next.js, Drizzle, Prisma, Zod, tRPC, Tailwind, Hono, Express, Fastify, Vitest, Jest, Playwright, SQLite/PostgreSQL drivers, Tanstack Query, Zustand, Jotai, SWR, Astro, Svelte, Vue, Nuxt, Remix, SolidJS, Effect, Turborepo, tsup, Vite, esbuild, and any other library with published docs.
 
-**Web research (for everything Context7 can't answer):**
-Use Codex's available web search/fetch tools to find and read relevant pages. Use when Context7 doesn't have the answer, or you need to:
+**Web research (for everything ctx7 can't answer):**
+Use Codex's available web search/fetch tools to find and read relevant pages. Use when ctx7 doesn't have the answer, or you need to:
 - Search for a known bug, deprecation, or breaking change
 - Read a specific GitHub issue, PR, or changelog entry
 - Look up a migration guide (e.g., search "next.js 15 to 16 migration" → fetch the guide)
@@ -167,15 +167,15 @@ Use these when:
 - The diff pins a dependency version and you need to confirm it's current (or intentionally pinned)
 - A GitHub Action uses `@v4` and you want to verify v4 is the latest major
 - You suspect a package.json has outdated dependencies that introduce known vulnerabilities
-- Context7 or a fetched web page returned version info that conflicts with what `package.json` shows — the CLI is the tiebreaker
+- ctx7 or a fetched web page returned version info that conflicts with what `package.json` shows — the CLI is the tiebreaker
 
-If Context7, web research, and the package manager CLI all agree, you have high confidence. If any disagree, the CLI wins — it's hitting the live registry.
+If ctx7, web research, and the package manager CLI all agree, you have high confidence. If any disagree, the CLI wins — it's hitting the live registry.
 
 ### Verification rules
 - Do NOT look up every import. Only verify when a finding depends on it or when proactive checks would catch version drift.
 - Batch lookups efficiently: if 3 findings all involve the same library, do one lookup covering all 3.
-- **Three-layer verification**: Context7 for API docs -> web research for context and known issues -> package manager CLI for ground-truth versions. Use whichever layers a finding requires. Not every finding needs all three, but version-sensitive findings should hit the CLI.
-- If Context7 returns nothing useful, use web search to find the answer, then fetch/read the source. Do not give up after one tool.
+- **Three-layer verification**: ctx7 for API docs -> web research for context and known issues -> package manager CLI for ground-truth versions. Use whichever layers a finding requires. Not every finding needs all three, but version-sensitive findings should hit the CLI.
+- If ctx7 returns nothing useful, use web search to find the answer, then fetch/read the source. Do not give up after one tool.
 - If you verify and discover the code IS correct per current docs, **drop the finding**. Do not include it as a "nit" or a "well actually." Just remove it.
 - If you verify and discover the code has a REAL problem that's worse than you initially thought (e.g., a removed API), escalate the severity.
 - In the output, mark verified findings with `[verified]` so the reader knows you checked.

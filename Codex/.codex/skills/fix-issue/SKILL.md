@@ -25,7 +25,7 @@ These apply throughout every phase and matter more than any single step.
 
 ## Phase 1: Understand the Input
 
-Detect the issue, URL, stack trace, or problem description from the user's request and fetch context using whatever tools are available (`gh` CLI preferred, GitHub MCP as fallback, raw git as last resort):
+Detect the issue, URL, stack trace, or problem description from the user's request and fetch context using whatever tools are available (`gh` CLI preferred, raw git as fallback):
 
 **GitHub issue number** (bare digits like `322`):
 ```bash
@@ -58,7 +58,7 @@ If the Linear MCP is connected, use it to fetch the issue details.
 
 **Plain text description**: Use as-is.
 
-If `gh` is unavailable for any of the above, try the GitHub MCP. If neither is available, ask the user to paste the issue content.
+If `gh` is unavailable, ask the user to paste the issue content.
 
 ---
 
@@ -81,9 +81,9 @@ When you do spawn subagents, give each a clearly-scoped lane:
 
 - **Subagent 3: External context (if needed).** If the problem involves external APIs, upstream behavior, or library quirks:
   1. Check project-local docs first (README, docs/, vendored API specs, AGENTS.md).
-  2. Use Context7 MCP if available: call `resolve-library-id` with the library name, then `get-library-docs` with the resolved ID and a `topic` focused on the specific API or behavior in question. This pulls current, version-specific documentation and is more reliable than memory for fast-moving libraries.
+  2. Use `ctx7` to pull current, version-specific docs scoped to the API or behavior in question. More reliable than memory for fast-moving libraries.
   3. Use Codex's available web search/fetch tools for changelogs, known issues, GitHub discussions, or community-reported workarounds not covered in official docs.
-  4. Use Firecrawl as a fallback for JS-heavy doc sites that standard web fetching cannot render.
+  4. Use `firecrawl` as a fallback for JS-heavy doc sites that standard web fetching cannot render.
 
 Collect all subagent reports before proceeding. If a report contains a claim about a file or API that matters for the fix, open the referenced file yourself and verify the claim before building the plan on it. Subagent reports are evidence to cross-check, not ground truth to stack on.
 
@@ -126,7 +126,7 @@ Exit plan mode. Write the fix.
 
 Follow the plan from 2c. Make minimal, surgical changes. If the fix reveals other problems, note them for separate issues rather than folding them in.
 
-**Verify external library APIs before using them.** When the fix calls out to a third-party library (Next.js, Supabase, shadcn/ui, Tailwind, Anthropic SDK, Dwolla, etc.), confirm the current API signature before writing the call. Use Context7 docs when available, or fetch the relevant official doc page. Training data lags on libraries that release frequently, and a call written from memory against a year-old API is how fixes regress.
+**Verify external library APIs before using them.** When the fix calls out to a third-party library (Next.js, Supabase, shadcn/ui, Tailwind, Anthropic SDK, Dwolla, etc.), confirm the current API signature before writing the call. Use `ctx7` for a quick lookup, or fetch the relevant official doc page. Training data lags on libraries that release frequently, and a call written from memory against a year-old API is how fixes regress.
 
 **Hold the line on scope.** Per operating principle 3, do not add things the plan did not call for. Common temptations to resist:
 
@@ -185,7 +185,7 @@ Do it manually:
    git push -u origin HEAD
    ```
 
-3. Create PR using `gh` or GitHub MCP. Link the issue. Include:
+3. Create PR using `gh`. Link the issue. Include:
    - What the bug was (root cause from 2c with file:line evidence)
    - What the fix does
    - How it was tested (reference the pasted gate output from Phase 3c)
@@ -207,5 +207,5 @@ These are the non-negotiable constraints. Each has a reason; understand the reas
 
 5. **Respect the project's conventions.** Read AGENTS.md, look at recent commit messages, check the PR template. Match the style that the codebase already uses rather than importing a style from elsewhere.
 
-6. **Degrade gracefully.** If `gh`, GitHub MCP, Linear MCP, Context7, or web tools are unavailable, continue with what you have. The core workflow — investigate → plan → implement → test → ship — works with just git and code. Missing a tool is a reason to adapt, not to stop.
+6. **Degrade gracefully.** If `gh`, Linear MCP, `ctx7`, or web tools are unavailable, continue with what you have. The core workflow — investigate → plan → implement → test → ship — works with just git and code. Missing a tool is a reason to adapt, not to stop.
 </rules>

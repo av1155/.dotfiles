@@ -25,7 +25,7 @@ gh pr list --state open --head "$(git branch --show-current)" \
   --json number,title,url,statusCheckRollup --limit 1 2>/dev/null
 ```
 
-If `gh` is unavailable, check the GitHub MCP. If neither is available, skip PR detection and handle manually at step 5.
+If `gh` is unavailable, skip PR detection and handle manually at step 5.
 
 Use the results to skip completed steps:
 - Already on a feature branch? Skip step 2.
@@ -194,7 +194,7 @@ If a template exists, fill it in. If not, write a concise PR body with:
 gh pr create --title "<short title under 50 chars>" --body "<body>"
 ```
 
-If `gh` is unavailable, use the GitHub MCP. If neither is available, report the branch name and say "Push complete. Create the PR manually."
+If `gh` is unavailable, report the branch name and say "Push complete. Create the PR manually."
 
 ## 6. Wait for CI
 

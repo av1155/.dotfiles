@@ -85,10 +85,9 @@ Read any that look relevant to quality checking (names containing "review", "tes
 1. **Linear:** Check if the Linear MCP is connected AND the project references Linear (search AGENTS.md, README, or .codex/ configs for "linear" mentions). If so, use Linear MCP to look up the issue linked to the current branch. Linear issues often carry the ground-truth acceptance criteria.
 
 2. **GitHub (PR, issues, reviews):** If the remote is a GitHub repo, pull PR and issue context using whichever method is available, in this preference order:
-   - **`gh` CLI** (check `which gh`): fastest and most flexible. Use `gh pr view --json title,body,comments,reviews,url`, `gh pr diff`, `gh issue view <number> --json title,body,comments`, etc. The `gh api` subcommand can hit any GitHub REST or GraphQL endpoint if you need more.
-   - **GitHub MCP**: if connected, use its tools for PR/issue lookup, code search, and review comments.
-   - **Raw git**: `git log --oneline <base>..HEAD` for commit messages if neither `gh` nor the MCP is available.
-   Use whichever is available. If multiple are available, prefer `gh` CLI for speed and flexibility but fall back gracefully. Do not require any specific one.
+   - **`gh`** (check `which gh`): fastest and most flexible. `gh api` covers any REST or GraphQL endpoint.
+   - **Raw git**: `git log --oneline <base>..HEAD` for commit messages if `gh` is unavailable.
+   Prefer `gh` CLI; fall back to raw git when needed.
 
 3. **Neither:** Fall back to `git log` messages for intent context.
 
@@ -117,11 +116,11 @@ git diff <base> -- <file>
 
 For external libraries, APIs, or frameworks used in the changed code, verify correct usage:
 
-1. **context7 (first choice):** If the context7 MCP is connected, use `resolve-library-id` then `get-library-docs` to fetch current docs for any library or framework the changed code interacts with. Check whether the code uses the API correctly, handles all documented error cases, and isn't ignoring return values or response fields that the docs say are important.
+1. **`ctx7` (first choice):** Use it to fetch current docs for any library or framework the changed code interacts with. Check whether the code uses the API correctly, handles all documented error cases, and isn't ignoring return values or response fields that the docs say are important.
 
 2. **Web research:** Use Codex's available web search/fetch tools. Search for known issues, CVEs, deprecation notices, or migration guides related to the specific dependency versions in use. Check whether any external API the code calls has documented constraints the code doesn't enforce.
 
-3. **Firecrawl (JS-heavy fallback):** If standard web fetch tooling fails to properly render a page (returns empty content, incomplete HTML, or garbled output from a JavaScript-heavy documentation site), and the Firecrawl plugin or MCP is available, use it as a fallback to get properly rendered content. Do not use Firecrawl as a first choice; it is specifically for sites that standard fetching cannot handle.
+3. **firecrawl (JS-heavy fallback):** If standard web fetch tooling fails to render a page (empty content, incomplete HTML, garbled output from a JS-heavy doc site) and `firecrawl` is available, use it as a fallback. Reserve it for sites standard fetching cannot handle.
 
 Skip this entire substep if no web tools are available. The audit continues without it.
 
@@ -239,7 +238,7 @@ For each checklist item, determine:
 
 Do NOT be lazy. Do NOT skip items. Do NOT produce generic observations. Every finding must cite specific files, line numbers, and code. If a dimension has zero items (e.g., no concurrency in a pure synchronous script), state that explicitly and move on.
 
-**Observable behavior verification (when possible):** If the changes affect a web UI and browser automation is available (Playwright MCP or Codex-in-Chrome), consider spawning a subagent to actually load the affected page, trigger the new feature, and verify what the user sees — instead of only inferring behavior from source code. This is optional and should only be attempted if the project has a working dev server configuration. Do not block the audit on browser verification.
+**Observable behavior verification (when possible):** If the changes affect a web UI and `playwright-cli` is available, consider spawning a subagent to actually load the affected page, trigger the new feature, and verify what the user sees, instead of only inferring behavior from source code. This is optional and should only be attempted if the project has a working dev server configuration. Do not block the audit on browser verification.
 
 ---
 
@@ -303,9 +302,7 @@ Detect which tracker to use (same discovery as Step 1b):
    ```
    Apply labels matching project conventions. If no conventions exist, use `bug` for FAILs and `enhancement` for WARNs.
 
-3. **GitHub MCP** — if connected, use its issue creation tools as a fallback.
-
-4. **None available** — list the proposed issues in the chat so the user can create them manually.
+3. **None available** — list the proposed issues in the chat so the user can create them manually.
 
 **Presentation before approval:**
 
@@ -339,5 +336,5 @@ Only proceed after the user confirms. If the user modifies the list (removes ite
 6. **Don't audit generated files, lockfiles, or vendored dependencies** unless explicitly requested.
 7. **If the diff is very large (100+ files),** focus on non-test source files first, then audit test files for coverage gaps.
 8. **Adapt to the project.** Use whatever quality gates, skills, commands, test runners, linters, and issue trackers exist in the current project. Never hardcode tool names; discover them dynamically from config files and available resources.
-9. **Degrade gracefully.** Every optional tool (context7, web research, Firecrawl, Linear, GitHub, Playwright, security guidance) enhances the audit when present but must not block it when absent. If a tool is unavailable, note what was skipped and continue.
+9. **Degrade gracefully.** Every optional tool (`ctx7`, web research, `firecrawl`, Linear, `gh`, `playwright-cli`, security guidance) enhances the audit when present but must not block it when absent. If a tool is unavailable, note what was skipped and continue.
 10. **PASS means PASS.** If code correctly handles something, mark it PASS and move on. Do not manufacture concerns about correct code, do not hedge PASSes with "but you could also...", and do not invent hypothetical scenarios that require ignoring the code's actual behavior. The audit is a quality gate, not a wishlist. A clean audit should produce mostly PASSes with zero FAILs — that is the goal, not a sign that the audit wasn't thorough enough.

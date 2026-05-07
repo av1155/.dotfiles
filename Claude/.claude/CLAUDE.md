@@ -113,17 +113,10 @@ stream closed early. Move the destroy call before response flush.
 
 | Server       | When to reach for it                                              |
 | ------------ | ----------------------------------------------------------------- |
-| `context7`   | Version-sensitive library or framework documentation              |
-| `firecrawl`  | JS-rendered docs, structured extraction, multi-page scraping      |
-| `github`     | Issues, PRs, repository metadata, code search                     |
-| `playwright` | UI smoke checks, screenshots, accessibility, console inspection   |
-| `semgrep`    | Security scanning and rule-based static analysis                  |
-| `supabase`   | Database schema, migrations, RLS, query inspection                |
-| `vercel`     | Deployments, logs, project status                                 |
 | `magic`      | UI component generation via 21st.dev                              |
 | `stitch`     | Design system generation via Google Stitch                        |
 
-Prefer MCP-native tools over shell when both work. Prefer `context7` over memory for version-sensitive technical questions.
+Prefer MCP-native tools over shell when both work. For version-sensitive library docs use the `ctx7` CLI (see `~/.claude/rules/context7.md`) rather than memory.
 
 ## Skills
 

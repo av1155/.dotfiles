@@ -35,7 +35,7 @@ gh pr list --state open --limit 5 \
   --json number,title,headRefName 2>/dev/null
 ```
 
-If `gh` is unavailable, check if the GitHub MCP is connected and use it. If neither is available, skip and note "PR status unavailable (no gh CLI or GitHub MCP)."
+If `gh` is unavailable, skip and note "PR status unavailable (no `gh` CLI)."
 
 ## 3. Issue Tracker Context
 
@@ -43,7 +43,7 @@ Detect which tracker this project uses and pull current state:
 
 **Linear:** If the Linear MCP is connected and the project references Linear (check AGENTS.md, README, or `.codex/` configs), pull the active sprint/cycle and any issues assigned to the current user or linked to the current branch.
 
-**GitHub Issues:** If no Linear, use `gh` or GitHub MCP to check for issues linked to the current branch or recent PRs.
+**GitHub Issues:** If no Linear, use `gh` to check for issues linked to the current branch or recent PRs.
 
 **Neither:** Skip. Don't fail the catchup over missing tracker access.
 

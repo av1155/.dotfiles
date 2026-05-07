@@ -261,7 +261,7 @@ If the `security-guidance` plugin produced findings in Step 2c, incorporate them
 3. Check for loading states, progress indicators, error messages, success confirmations
 4. Check for partial failure scenarios: step 1 succeeds, step 2 fails — what's the user's state?
 
-If browser automation tools are available (Playwright MCP, Claude-in-Chrome) and the project has a dev server, consider actually loading the page and testing the feature. This is optional and should not block the audit.
+If `playwright-cli` is available and the project has a dev server, consider actually loading the page and testing the feature. This is optional and should not block the audit.
 
 ### Severity
 
