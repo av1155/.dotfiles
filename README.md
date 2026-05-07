@@ -57,7 +57,7 @@ exec zsh
 - **Smart Plugin Management**: ZPlug with Pure theme, syntax highlighting, autosuggestions, and async rendering
 - **Self-Healing tmux**: Automatic plugin manager setup with session persistence and custom keybindings
 - **Enhanced Navigation**: FZF fuzzy finder integrated with bat, git, and file browsing
-- **AI Development Tools**: Pre-configured OpenCode agents, Claude MCP servers, and Aider integration
+- **Cross-Harness AI Setup**: Claude Code, OpenAI Codex CLI, OpenCode, and Pi all reading a single canonical AGENTS.md and shared skill pool. Documented in `docs/AGENTIC-CODING-HARNESSES.md`
 - **Python Environment**: Conda/Miniforge auto-setup with Neovim provider configuration
 - **Node.js Management**: NVM lazy-loading for instant shell startup
 - **Java Development**: Auto-configured classpath with JUnit and common libraries
@@ -113,8 +113,8 @@ The installation script handles everything automatically:
     By default, the installer will ask whether you want to run a dry run first or apply changes immediately.
 
     **What the script does:**
-    - Auto-detects required base directories (such as `.config`, `.local`, `.ssh`, `.fonts`, `.claude`, and `Library` when present in package roots)
-    - Creates only required base directories for Stow (such as `~/.config`, `~/.local`, `~/.ssh`, `~/.fonts`, `~/.claude`, and `~/Library`)
+    - Auto-detects required base directories (such as `.config`, `.local`, `.ssh`, `.fonts`, `.claude`, `.agents`, `.pi`, and `Library` when present in package roots)
+    - Creates only required base directories for Stow (such as `~/.config`, `~/.local`, `~/.ssh`, `~/.fonts`, `~/.claude`, `~/.agents`, `~/.pi`, and `~/Library`)
     - Avoids relying on pre-created nested managed paths, so Stow can link managed entries cleanly
     - Detects conflicts with existing files
     - Backs up conflicting files to `filename.bak` (with notification)
@@ -138,7 +138,7 @@ If you prefer manual control:
 1. Pre-create only base directories:
 
     ```bash
-    mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts ~/.claude ~/Library
+    mkdir -p ~/.config ~/.local ~/.ssh ~/.fonts ~/.claude ~/.agents ~/.pi ~/Library
     ```
 
     Do **not** pre-create nested managed paths such as:
@@ -263,9 +263,13 @@ Example:
 ├── install.sh                  # Automated installation script
 ├── .stow-global-ignore         # Files to exclude from stowing
 │
-├── Agents/                     # Cross-tool agent skills (Claude / Codex / OpenCode)
+├── Agents/                     # Canonical cross-harness pool (read by all 4 harnesses)
 │   └── .agents/
-│       └── skills/             # Shared SKILL.md files (python, typescript, scalability)
+│       ├── AGENTS.md           # Single canonical instruction file (Claude/Codex/OpenCode/Pi all symlink here)
+│       └── skills/             # 29 SKILL.md skills (5 conventions + 12 Matt Pocock + 11 personal workflow + 1 discovery)
+│
+├── AgentWorktrees/             # Workmux worktree helpers (zsh plugin + per-worktree settings)
+│   └── .claude/
 │
 ├── App-Configs/                # Application-specific configurations
 │   └── configs/
@@ -273,10 +277,19 @@ Example:
 │       ├── KittyAppIconMac/    # Custom Kitty icons
 │       └── MacOS-Bootstrap/    # macOS dev environment bootstrap script
 │
-├── Claude/                     # Claude AI MCP server configurations
+├── Claude/                     # Claude Code config
 │   └── .claude/
-├── Codex/                      # Codex global instructions, config, hooks, rules, and skills
+│       ├── CLAUDE.md           # Symlink to Agents/.agents/AGENTS.md
+│       ├── settings.json       # Permissions, hooks, plugins, statusline
+│       ├── rules/              # Path-conditional rules (context7 + symlinks to .agents/skills/)
+│       └── skills/             # All symlinks pointing into .agents/skills/
+│
+├── Codex/                      # Codex CLI config
 │   └── .codex/
+│       ├── AGENTS.md           # Symlink to Agents/.agents/AGENTS.md
+│       ├── config.toml         # Model, MCP servers, plugins, projects
+│       ├── hooks.json          # Hook handlers
+│       └── rules/              # Starlark prefix-rules (allow/prompt/forbidden gates)
 │
 ├── Config/                     # XDG config directory
 │   └── .config/
@@ -285,9 +298,21 @@ Example:
 │       ├── hypr/               # Hyprland window manager (Linux)
 │       ├── kitty/              # Kitty terminal emulator
 │       ├── lazygit/            # Git TUI configuration
-│       ├── opencode/           # OpenCode AI agents & settings
+│       ├── opencode/           # OpenCode TUI agent (AGENTS.md symlinked to canonical)
 │       ├── tmux/               # Tmux configuration & plugins
 │       └── yazi/               # File manager configuration
+│
+├── Pi/                         # Pi (earendil-works/pi) global config
+│   └── .pi/agent/
+│       └── AGENTS.md           # Symlink to Agents/.agents/AGENTS.md
+│
+├── docs/                       # Documentation (tracked but not stowed via .stow-local-ignore)
+│   ├── .stow-local-ignore      # Pattern: .+ (skip everything; no $HOME symlinks)
+│   ├── AGENTIC-CODING-HARNESSES.md  # Cross-harness reference and runbook
+│   └── cross-tool-standardization/  # Prior research material
+│
+├── scripts/                    # Utility scripts (tracked but not stowed via .stow-local-ignore)
+│   └── .stow-local-ignore      # Pattern: .+ (invoked via aliases, never symlinked)
 │
 ├── Fonts/                      # JetBrains Mono Nerd Font (all variants)
 │   └── .fonts/
@@ -370,10 +395,12 @@ Pre-configured for modern development:
 
 - **Neovim**: Python provider auto-configured with conda environments
 - **Git**: Enhanced with FZF integration and custom aliases
-- **AI Tools**:
-    - OpenCode with specialized agents (code-reviewer, debugger, refactorer, etc.)
-    - Claude MCP servers (git, time, fetch, brave-search, playwright, magic)
-    - Codex global AGENTS.md, MCP server configuration, hooks, approval rules, and workflow skills
+- **AI Coding Harnesses**: Cross-harness alignment for four agentic CLIs reading a single canonical AGENTS.md and shared skill pool:
+    - **Claude Code** (Anthropic): settings, hooks, plugins, slash skills via `.claude/skills/` symlinks
+    - **OpenAI Codex CLI**: `config.toml`, MCP servers, Starlark prefix-rules, native read of `~/.agents/skills/`
+    - **OpenCode** (sst): `opencode.jsonc` with custom agents (build, plan), TS plugins, MCP, fallback read of `~/.claude/skills/` and `~/.agents/skills/`
+    - **Pi** (earendil-works/pi): packages and TS extensions (incl. `@juicesharp/rpiv-args` for skill argument substitution); reads `~/.pi/agent/AGENTS.md` (symlinked to canonical) and `~/.agents/skills/` natively
+    - All four harnesses share the canonical `Agents/.agents/AGENTS.md` via committed in-repo symlinks. Full per-harness reference, procedures, and decision log in `docs/AGENTIC-CODING-HARNESSES.md`.
 - **File Navigation**:
     - FZF: Fuzzy finder with custom keybindings
     - Bat: Syntax-highlighted file viewer
