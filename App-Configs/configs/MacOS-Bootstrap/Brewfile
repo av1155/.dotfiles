@@ -166,8 +166,6 @@ brew "pkgconf"
 brew "pngpaste"
 # PNG image optimizing utility
 brew "pngquant"
-# Fast, disk space efficient package manager
-brew "pnpm"
 # Bundle a Python application and all its dependencies
 brew "pyinstaller"
 # Generic machine emulator and virtualizer
@@ -208,6 +206,8 @@ brew "woff2"
 brew "yazi"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
+# Feature-rich command-line audio/video downloader
+brew "yt-dlp"
 # Programming language designed for robustness, optimality, and clarity
 brew "zig"
 # Shell extension to navigate your filesystem faster
