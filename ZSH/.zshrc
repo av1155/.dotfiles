@@ -777,3 +777,11 @@ export PATH="$PATH:/Users/andreaventi/.cache/lm-studio/bin"
 
 # Must run after every PATH mutation above so _VENV_PATH_BACKUP captures the full PATH.
 _venv_auto_activate
+
+# pnpm
+export PNPM_HOME="/Users/andreaventi/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
