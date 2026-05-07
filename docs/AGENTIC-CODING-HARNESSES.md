@@ -15,55 +15,229 @@ This document captures verified behavior per harness, the canonical file layout 
 
 ## 1. Harness Reference
 
-> TODO (Stage 2): per-harness install paths, versions, what each one reads from disk at session start.
+| Harness | Version | Install path | Session-start input |
+|---|---|---|---|
+| **Claude Code** (Anthropic) | per release | `claude` CLI (Homebrew + IDE integrations) | `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md` (matching `paths:`), auto-memory `MEMORY.md`, project `<repo>/CLAUDE.md` (concatenated root-to-cwd), project `<repo>/.claude/rules/*.md` |
+| **Codex CLI** (OpenAI) | 0.128.0 | `/opt/homebrew/Caskroom/codex/<v>/codex-aarch64-apple-darwin` (Rust binary) | `~/.codex/AGENTS.override.md` then `AGENTS.md`, project `AGENTS.md` walk-up (32 KiB combined cap) |
+| **OpenCode** (sst) | 1.14.41 | npm/Homebrew | `~/.config/opencode/AGENTS.md` (or `CLAUDE.md` fallback), project `AGENTS.md`. `instructions:` field globs/URLs in `opencode.jsonc` |
+| **Pi** (earendil-works) | 0.73.0 | npm `@earendil-works/pi-coding-agent` | `~/.pi/agent/AGENTS.md` (or `CLAUDE.md`), project `.pi/AGENTS.md` walk-up. `SYSTEM.md`/`APPEND_SYSTEM.md` for system prompt customization |
+
+Project-scope artifacts are inspected at session start; subdirectory CLAUDE.md / AGENTS.md load on-demand when those subdirs are accessed (Claude). Pi accepts `--no-context-files` / `-nc` to disable session-start loading.
 
 ## 2. Skills
 
-> TODO (Stages 2, 5): per-harness skill loading paths, SKILL.md frontmatter compatibility matrix, argument substitution support, `paths:` field semantics, description-based discovery.
+### Per-harness skill loading paths (verified)
+
+| Harness | Reads from | Native? |
+|---|---|---|
+| Claude Code | `~/.claude/skills/<name>/`, `<repo>/.claude/skills/<name>/`, plugin caches | yes |
+| Codex CLI | `$HOME/.agents/skills/`, `$CWD/.agents/skills/`, `$REPO_ROOT/.agents/skills/`, `/etc/codex/skills/`, bundled SYSTEM. Also reads deprecated `$CODEX_HOME/skills/` (i.e. `~/.codex/skills/`) at higher precedence. Source: `codex-rs/core-skills/src/loader.rs:293-320`. | yes |
+| OpenCode | `.opencode/skills/`, `~/.config/opencode/skills/`, `.claude/skills/`, `~/.claude/skills/`, `.agents/skills/`, `~/.agents/skills/` (in that precedence order) | yes |
+| Pi | `~/.pi/agent/skills/`, `.pi/skills/`, `~/.agents/skills/`, `.agents/skills/`, packages, **plus any path in `skills:` settings array** | yes |
+
+### Frontmatter compatibility (verified)
+
+| Field | Claude | Codex | OpenCode | Pi |
+|---|---|---|---|---|
+| `name` (required) | ✓ | ✓ | ✓ (regex `^[a-z0-9]+(-[a-z0-9]+)*$`) | ✓ |
+| `description` (required for Pi) | ✓ | ✓ | ✓ (1-1024 chars) | ✓ (hard-fail without it) |
+| `paths:` (path-conditional auto-load) | ✓ | ignored | ignored | ignored |
+| `argument-hint`, `arguments` | ✓ | ignored | ignored | ignored* |
+| `allowed-tools` | ✓ | ignored | ignored | ✓ |
+| `disable-model-invocation` | ✓ | ignored | ignored | ✓ |
+| `when_to_use`, `model`, `effort`, `context`, `agent`, `hooks`, `shell`, `user-invocable` | ✓ | ignored | ignored | ignored |
+| `license`, `metadata`, `compatibility` | partial | partial | ✓ | ✓ |
+
+*Pi gains `$ARGUMENTS`, `$1`-`$N`, `$@`, `${@:N}`, `${@:N:L}` substitution via the `@juicesharp/rpiv-args` extension.
+
+Unrecognized fields are silently ignored (no errors). Minimum portable SKILL.md = `name + description + body`.
+
+### Skill body argument substitution
+
+| Surface | Supports `$ARGUMENTS` / `$1` |
+|---|---|
+| Claude Code skill body | ✓ |
+| Claude Code command body (`.claude/commands/*.md`) | ✓ |
+| OpenCode `commands/*.md` | ✓ |
+| OpenCode skill body | ✗ |
+| Codex skill body | ✗ |
+| Pi skill body | ✓ (with `@juicesharp/rpiv-args`) |
+
+### Description-based discovery
+
+All four harnesses use the SKILL.md `description:` field at session-prompt time to decide whether to load the skill. Weak descriptions = skill stays invisible. Pattern that works: "Use when X. Triggers on Y. Skip if Z." Reference: `~/.dotfiles/Agents/.agents/skills/find-docs/SKILL.md` and `deep-audit/SKILL.md`.
 
 ## 3. Rules
 
-> TODO (Stage 2): Claude path-conditional `.claude/rules/*.md` mechanics, Codex Starlark `.rules` (command-prefix gates), OpenCode AGENTS.md-as-rules pattern.
+### Claude Code rules (`.claude/rules/*.md`)
+
+- Per [code.claude.com/docs/en/memory#organize-rules-with-claude/rules/](https://code.claude.com/docs/en/memory):
+- Rules **without** `paths:` frontmatter load at session start with the same priority as `.claude/CLAUDE.md`.
+- Rules **with** `paths:` frontmatter load only when Claude reads files matching the pattern (NOT on every tool use).
+- Rules can be symlinks to skills (the existing pattern for python/typescript/scalability).
+- User-level rules at `~/.claude/rules/` are loaded before project-level rules; project rules override.
+
+### Codex rules (`.codex/rules/*.rules`)
+
+- Starlark language (Python-like syntax). Source: [developers.openai.com/codex/rules](https://developers.openai.com/codex/rules).
+- Define command-prefix gates with `prefix_rule()`: `pattern`, `decision` (allow/prompt/forbidden), `justification`.
+- NOT a prose-rules system. Functionally distinct from Claude rules.
+- This setup uses a single global `~/.codex/rules/default.rules` (allowlist for pnpm, gh, git, docker, curl, supabase, workmux).
+
+### OpenCode "rules"
+
+- Per [opencode.ai/docs/rules](https://opencode.ai/docs/rules) — NOT a separate subsystem.
+- Rules = AGENTS.md content + external instruction files loaded via `instructions:` glob in opencode.jsonc.
+- Project guidance per Cursor convention. Created/updated via `/init` command.
+
+### Pi context files
+
+- Pi accepts `AGENTS.md` or `CLAUDE.md` at global (`~/.pi/agent/`) and project locations.
+- Pi has no separate "rules" concept; AGENTS.md content is the rule layer.
+- `SYSTEM.md` (replace) or `APPEND_SYSTEM.md` (append) at the same locations override the system prompt entirely.
 
 ## 4. AGENTS.md / CLAUDE.md
 
-> TODO (Stage 4): loading order per harness, size caps (Codex 32 KiB hard cap, Claude < 200 lines recommended), single-canonical-with-symlinks strategy, section-header convention for tool-specific content.
+### Per-harness behavior
+
+| Harness | File loaded | Size cap | `@import` syntax | Concatenation |
+|---|---|---|---|---|
+| Claude Code | `CLAUDE.md` only (NOT `AGENTS.md`) | None hard; Anthropic recommends < 200 lines per file (adherence drops above) | Yes — `@path/to/file`, max 5 hops | All files in directory tree concatenated root-to-cwd; subdirectory files load on-demand |
+| Codex CLI | `AGENTS.override.md` then `AGENTS.md`, plus configurable `project_doc_fallback_filenames` | **32 KiB combined hard cap** (`project_doc_max_bytes`); silent truncation from start when exceeded | No | Concatenated root-to-cwd; later files override earlier |
+| OpenCode | `AGENTS.md`, falls back to `CLAUDE.md` if no AGENTS.md present | None documented; community recommends < 300 lines | No (uses `instructions:` for modular loading) | Project file > global `~/.config/opencode/AGENTS.md` > global `~/.claude/CLAUDE.md` |
+| Pi | `AGENTS.md` or `CLAUDE.md` (either name) | None documented | No | Walk-up from cwd to root, plus global `~/.pi/agent/<file>` |
+
+### "Lost in the middle" adherence
+
+LLMs allocate ~40-60% less attention to mid-context tokens than to head/tail tokens (Stanford 2023 onward; persists in 2026 frontier models). Practical impact: position critical instructions at top OR end of AGENTS.md; accept that mid-file content gets less reliable enforcement. Files >300 lines show 14-22% increase in reasoning tokens per the agents.md empirical study.
+
+### HTML comments stripped (Claude only)
+
+Block-level `<!-- maintainer note -->` HTML comments in CLAUDE.md are stripped before context injection. Use them for human notes that shouldn't consume tokens. Note: comments inside fenced code blocks are preserved.
+
+### Single-canonical strategy (this setup)
+
+Canonical file at `~/.dotfiles/Agents/.agents/AGENTS.md`. Each harness's expected location is a committed in-repo symlink:
+- `Claude/.claude/CLAUDE.md` → `../../Agents/.agents/AGENTS.md`
+- `Codex/.codex/AGENTS.md` → `../../Agents/.agents/AGENTS.md`
+- `Config/.config/opencode/AGENTS.md` → `../../../Agents/.agents/AGENTS.md`
+- `Pi/.pi/agent/AGENTS.md` → `../../../Agents/.agents/AGENTS.md`
+
+Stage 4 verified all four `$HOME` paths resolve to identical SHA-256 content. Tool-specific bits (e.g. Codex sandbox note for ctx7, OpenCode artifacts directory) live in clearly-marked subsections within the canonical file.
 
 ## 5. Plugins
 
-> TODO (Stage 2): Claude marketplaces, Codex plugins (`developers.openai.com/codex/plugins`), OpenCode TypeScript plugins, Pi packages and extensions.
+| Harness | System | Install path |
+|---|---|---|
+| Claude Code | Marketplaces (`claude-plugins-official` is auto-available); plugin = `.claude-plugin/plugin.json` + skills/ + agents/ + hooks/ subdirs. Skills namespace as `/plugin-name:skill`. | `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/` |
+| Codex CLI | Plugins bundle skills + apps + MCP servers. Distinct from skills. Reference: [developers.openai.com/codex/plugins](https://developers.openai.com/codex/plugins). | Codex internal cache |
+| OpenCode | TypeScript modules exporting plugin functions. Hooks: `tool.execute.before`, `command.executed`, `file.edited`, etc. | `.opencode/plugins/` (project) or `~/.config/opencode/plugins/` (global), or npm packages via `plugin:` array |
+| Pi | "Extensions" (TypeScript) and "packages" (npm/git/local). Extensions register tools (`pi.registerTool`), providers (`pi.registerProvider`), event handlers (`pi.on`). | Packages installed via `pi install npm:<name>` |
+
+User's currently enabled Claude Code plugins (per `~/.claude/plugins/installed_plugins.json`): code-review, security-guidance, pyright-lsp, typescript-lsp, lua-lsp, frontend-design, semgrep, supabase, ui-ux-pro-max, claude-notifications-go, codex (OpenAI), skill-codex.
 
 ## 6. MCP Servers
 
-> TODO (Stage 8): Claude `.mcp.json` / `~/.claude.json` scopes, Codex `[mcp_servers.<name>]` in config.toml, OpenCode `mcp:` key in opencode.jsonc. Pi does NOT support MCP natively (uses extension-registered tools).
+| Harness | Configuration location | Native MCP support |
+|---|---|---|
+| Claude Code | `.mcp.json` (project, committed), `~/.claude.json` (user/local) | ✓ |
+| Codex CLI | `[mcp_servers.<name>]` TOML tables in `~/.codex/config.toml` or `.codex/config.toml` | ✓ |
+| OpenCode | `mcp:` key in `~/.config/opencode/opencode.jsonc` or project `opencode.jsonc` | ✓ |
+| Pi | **NOT supported.** Uses extension-registered tools instead (`pi.registerTool` in TS extensions) | ✗ |
+
+User's global MCP servers: `magic` (21st.dev), `stitch` (Google Stitch). Both currently disabled by default; enable per-need.
+
+Per-project MCP examples:
+- invest-platform `.mcp.json`: cloudflare, grafana, next-devtools, shadcn
+- wedding-site `.mcp.json`: shadcn, next-devtools, stripe (with shell wrapper for env-var expansion since Claude doesn't expand `${VAR}` in args)
 
 ## 7. Hooks
 
-> TODO (Stage 2): Claude `settings.json` hooks (25+ events), Codex `hooks.json`, OpenCode plugin hooks (`tool.execute.before`, `command.executed`, etc.), Pi extension events via `pi.on(event, handler)`.
+| Harness | Configuration | Events |
+|---|---|---|
+| Claude Code | `hooks` key in `settings.json` or skill/agent frontmatter | 25+ events: SessionStart, Setup, InstructionsLoaded, UserPromptSubmit, PreToolUse, PermissionRequest, PostToolUse, PostToolUseFailure, PostToolBatch, PermissionDenied, Notification, SubagentStart/Stop, TaskCreated/Completed, Stop, StopFailure, TeammateIdle, ConfigChange, CwdChanged, FileChanged, WorktreeCreate/Remove, PreCompact, PostCompact, SessionEnd, Elicitation, ElicitationResult |
+| Codex CLI | `~/.codex/hooks.json` or project `.codex/hooks.json`. `codex_hooks` feature must be enabled in `config.toml`. | (subset; reference Codex docs) |
+| OpenCode | TS plugin hooks via `pi.on()`-equivalent: `tool.execute.before`, `tool.execute.after`, `command.executed`, `file.edited`, `file.watcher.updated`, `installation.updated`, `lsp.client.diagnostics` | per OpenCode plugin docs |
+| Pi | TS extension event handlers via `pi.on(event, handler)`: `session_start`, `session_end`, `turn_start`, `turn_end`, `message_start`, `message_end`, `tool_call`, `tool_result`, `context`, `before_provider_request`, `after_provider_response`, `model_select`, `thinking_level_select`, `input`, `user_bash`, `before_agent_start` | per Pi extensions docs |
+
+User's global Claude Code hooks (from `~/.claude/settings.json`): workmux tmux status updates (Notification, PreToolUse, PostToolUse, Stop, UserPromptSubmit) and a SessionStart hook for session tracking.
 
 ## 8. Sub-agents
 
-> TODO (Stage 2): Claude built-ins (Explore, Plan, general-purpose), Codex sub-agents, OpenCode primary agents (build, plan) and sub-agents (general, explore), Pi pi-subagents package.
+| Harness | Read-only discovery | General execution / planning |
+|---|---|---|
+| Claude Code | `Explore` (Haiku, fast codebase search) | `Plan` (architect), `general-purpose` |
+| Codex CLI | `explorer` | `default`, `worker`. Custom subagents at `~/.codex/agents/<name>.toml` or `.codex/agents/<name>.toml` |
+| OpenCode | `@explore` | `@general`. Custom agents in `opencode.jsonc` `agent` key or `.opencode/agents/*.md` |
+| Pi | via `pi-subagents` package | via `pi-subagents` package |
+
+Pi's subagent support comes from the `pi-subagents` npm package (third-party, not core Pi). It provides 8 built-in agent personas (scout, researcher, planner, worker, reviewer, context-builder, oracle, delegate) and supports `.chain.md` workflow chains, parallel execution, git worktree isolation.
 
 ## 9. Settings
 
-> TODO (Stage 2): `~/.claude/settings.json`, `~/.codex/config.toml`, `~/.config/opencode/opencode.jsonc`, `~/.pi/agent/settings.json`. Permissions, env vars, statusline, enabled plugins.
+| Harness | File | Format |
+|---|---|---|
+| Claude Code | `~/.claude/settings.json`, project `.claude/settings.json`, `.claude/settings.local.json` | JSON. Keys: `permissions`, `env`, `hooks`, `statusLine`, `enabledPlugins`, `extraKnownMarketplaces`, `outputStyle`, `effortLevel`, `voice`, `autoMemoryEnabled`, etc. |
+| Codex CLI | `~/.codex/config.toml`, project `.codex/config.toml` | TOML. Sections: top-level (`model`, `model_reasoning_effort`, `personality`), `[projects]`, `[plugins]`, `[features]`, `[mcp_servers.<name>]`, `[notice]`, `[tui]` |
+| OpenCode | `~/.config/opencode/opencode.jsonc`, project `opencode.jsonc` | JSONC. Keys: `provider`, `model`, `lsp`, `permission`, `formatter`, `mcp`, `agent`, `command`, `plugin`, `instructions`, `theme`, `keybinds`, `server` |
+| Pi | `~/.pi/agent/settings.json`, project `.pi/settings.json` | JSON. Keys: `defaultProvider`, `defaultModel`, `packages`, `skills` (path array), `compaction`, `lastChangelogVersion` |
 
 ## 10. Permissions Models
 
-> TODO (Stage 2): per-harness allow/ask/deny patterns. Claude `permissions` in settings.json, Codex Starlark `prefix_rule()`, OpenCode `permission` key with pattern matching, Pi extension-controlled.
+| Harness | Mechanism |
+|---|---|
+| Claude Code | `permissions.allow`, `permissions.ask`, `permissions.deny` arrays in settings.json. Pattern: `Tool(arg-pattern:*)`, e.g. `Bash(git push:*)`. Layered: managed > local > project > user > defaults |
+| Codex CLI | Starlark `prefix_rule()` in `~/.codex/rules/default.rules`. Decisions: allow / prompt / forbidden. Plus per-project trust settings in `config.toml` `[projects]` section |
+| OpenCode | `permission` key in opencode.jsonc with per-tool subkeys (bash, edit, read, glob, grep, task, skill, lsp, webfetch, websearch, external_directory, doom_loop). Actions: `allow`, `ask`, `deny`. Pattern matching with `*`, `?`, `~` expansion |
+| Pi | Extension-controlled. `pi.on("tool_call", ...)` handler can return `{block: true}` to deny |
 
 ## 11. Auto-memory
 
-> TODO (Stage 2): Claude `MEMORY.md` mechanics (200 lines / 25 KB loaded at session start, project-scoped at `~/.claude/projects/<project>/memory/`). No equivalent in Codex / OpenCode / Pi.
+Claude Code only. Per [code.claude.com/docs/en/memory#auto-memory](https://code.claude.com/docs/en/memory):
+
+- Storage: `~/.claude/projects/<project>/memory/` (per git repo; all worktrees and subdirs share one auto-memory directory)
+- Loaded at session start: first 200 lines OR 25 KB of `MEMORY.md` (whichever first)
+- Topic files (`debugging.md`, `api-conventions.md`, etc.) NOT loaded at startup; read on-demand
+- Toggle via `/memory` command or `autoMemoryEnabled` setting; env var `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`
+- Subagents can have separate persistent auto-memory
+
+Codex / OpenCode / Pi have no auto-memory equivalent. Cross-session continuity must be handled via AGENTS.md updates or external systems.
 
 ## 12. Pi Extensions Inventory
 
-> TODO (Stage 7): per-extension summary covering `pi-subagents`, `pi-web-access`, `pi-lens`, `pi-powerline-footer`, `@juicesharp/rpiv-args` (adds `$ARGUMENTS`/`$1` substitution to skill bodies), `@juicesharp/rpiv-todo`, `@juicesharp/rpiv-ask-user-question`. What each registers (tools, hooks, providers).
+User's currently installed Pi packages (from `pi list`):
+
+| Package | What it does |
+|---|---|
+| `pi-subagents` | Adds 8 built-in subagent personas; supports chains, parallel execution, TUI clarification, git worktree isolation |
+| `pi-web-access` | Adds `web_search` (Exa, Perplexity, Gemini), `code_search` (Exa MCP), `fetch_content` (URL+local with GitHub/YouTube/PDF specialization), `get_search_content` |
+| `pi-lens` | Real-time pipeline on file writes: secrets detection, 26+ formatters, ESLint/Ruff auto-fix, LSP (37 servers), tree-sitter + ast-grep + Semgrep linting, dependency analysis. 35+ languages, 180+ ast-grep security rules |
+| `pi-powerline-footer` | Powerline status bar: editor stash, working vibes, model/tokens/cost segments, bash mode |
+| `@juicesharp/rpiv-args` v1.2.0 | **Adds `$ARGUMENTS` / `$1`-`$N` / `$@` / `${@:N}` / `${@:N:L}` substitution to Pi skill bodies.** Hooks `input`, `before_agent_start`, `session_start` |
+| `@juicesharp/rpiv-todo` | Persistent task tracking, `/todos` command, TUI overlay, dependency graph, survives `/reload` and compaction |
+| `@juicesharp/rpiv-ask-user-question` | Tabbed-question dialog tool: 1-4 questions, 2-4 options each, single/multi-select, optional previews, free-text notes, Submit review tab |
+
+`rpiv` = juicesharp's brand for a suite of Pi enhancements (from monorepo `rpiv-mono`).
 
 ## 13. Cross-Harness Compatibility Matrix
 
-> TODO (Stage 2): table of feature support per harness — frontmatter fields, argument substitution, MCP, hooks, sub-agents, plugin systems, etc. What's portable vs. what's tool-specific.
+| Capability | Claude Code | Codex CLI | OpenCode | Pi |
+|---|---|---|---|---|
+| Session-start instructions (AGENTS.md / CLAUDE.md) | CLAUDE.md only | AGENTS.md, 32 KiB cap | AGENTS.md, fallback CLAUDE.md | AGENTS.md or CLAUDE.md |
+| `@import` in instructions | ✓ | ✗ | ✗ (use `instructions:` field) | ✗ |
+| Path-conditional auto-load (`paths:` frontmatter) | ✓ skills + rules | ✗ | ✗ | ✗ |
+| Slash command invocation | ✓ `/skill` | partial (built-ins only; no user-defined) | ✓ `/cmd` | configurable via extension |
+| `$ARGUMENTS` / `$1` body substitution | ✓ skills + commands | ✗ | ✓ commands only (not skills) | ✓ with `rpiv-args` extension |
+| Skill description-based discovery | ✓ | ✓ | ✓ | ✓ (description hard-required) |
+| Native MCP | ✓ | ✓ | ✓ | ✗ (extension-tools instead) |
+| Auto-memory | ✓ | ✗ | ✗ | ✗ |
+| Sub-agents (built-in) | Explore, Plan, general-purpose | explorer, default, worker | @explore, @general (+ build, plan as primary) | via pi-subagents pkg |
+| Plugin system | manifests + marketplaces | bundled (skills + apps + MCP) | TS modules + npm | TS extensions + npm packages |
+| Hooks | ✓ 25+ events | ✓ | ✓ TS plugin hooks | ✓ via `pi.on()` in extensions |
+| Reads `~/.agents/skills/` natively | ✗ (this setup uses symlinks) | ✓ | ✓ | ✓ |
+| Reads `~/.claude/skills/` natively | ✓ | ✗ | ✓ (fallback) | ✓ if added to `skills:` array |
+| HTML comment stripping | ✓ | ✗ | ✗ | ✗ |
+| Project trust / sandboxing | permission-mode | sandbox modes | permission patterns | extension-controlled |
 
 ## 14. Provenance / Origin
 
@@ -280,28 +454,176 @@ These are not modified by alignment work. Stage 3 fixes the 2 description blocke
 
 ## 15. File Layout
 
-> TODO (Stage 5): canonical tree of `.dotfiles/` after migration. Where each kind of artifact lives, which paths are real files vs. committed symlinks vs. stow-target symlinks.
+Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real file, **S→** = committed symlink with target. Stow installs each top-level dir into `$HOME` matching its inner path structure.
+
+```
+~/.dotfiles/
+├── Agents/                                 # NEW canonical pool
+│   └── .agents/
+│       ├── AGENTS.md  (R)                  # canonical for all 4 harnesses
+│       └── skills/
+│           ├── agentic-coding-harnesses/   (R, Stage 1)
+│           │   └── SKILL.md
+│           ├── caveman/                    (R, Matt Pocock)
+│           ├── catchup/                    (R, Stage 5 migration)
+│           ├── deep-audit/                 (R, Stage 5 migration)
+│           ├── ship/, merge/, rebase/, ...  (Stage 5 migrations)
+│           ├── python/, typescript/, scalability/, security/, commenting/
+│           └── ...                         (12 Matt Pocock + 5 conventions + 11 personal workflow + 1 discovery = 29 canonical skills)
+├── Claude/
+│   └── .claude/
+│       ├── CLAUDE.md       S→ ../../Agents/.agents/AGENTS.md
+│       ├── settings.json   (R)             # permissions, hooks, plugins, statusline
+│       ├── rules/                          # 4 entries
+│       │   ├── context7.md       (R)       # ctx7 CLI wrapper (only "real" global rule)
+│       │   ├── python.md         S→ ../../../Agents/.agents/skills/python/SKILL.md
+│       │   ├── typescript.md     S→ ../../../Agents/.agents/skills/typescript/SKILL.md
+│       │   └── scalability.md    S→ ../../../Agents/.agents/skills/scalability/SKILL.md
+│       └── skills/                         # 41 entries (all symlinks)
+│           ├── catchup           S→ ../../../Agents/.agents/skills/catchup
+│           ├── caveman           S→ ../../../Agents/.agents/skills/caveman
+│           └── ...                         # all symlinks pointing into Agents pool
+├── Codex/
+│   └── .codex/
+│       ├── AGENTS.md       S→ ../../Agents/.agents/AGENTS.md
+│       ├── config.toml     (R)             # model, projects, plugins, MCP, features
+│       ├── rules/
+│       │   └── default.rules    (R)        # Starlark prefix-rules
+│       └── (NO skills dir — deleted Stage 6; Codex reads ~/.agents/skills/ natively)
+├── Config/
+│   └── .config/
+│       └── opencode/
+│           ├── AGENTS.md   S→ ../../../Agents/.agents/AGENTS.md
+│           ├── opencode.jsonc   (R)        # model, providers, lsp, permission, mcp, agents, formatter
+│           ├── package.json     (R)        # plugin deps
+│           ├── tui.json         (R)        # TUI customization
+│           └── plugins/                    # OpenCode TS plugins
+├── Pi/                                     # NEW package (Stage 7)
+│   └── .pi/
+│       └── agent/
+│           └── AGENTS.md   S→ ../../../Agents/.agents/AGENTS.md
+├── docs/                                   # NEW package (Stage 1); .stow-local-ignore: .+
+│   ├── .stow-local-ignore  (R)             # ignore everything (don't stow)
+│   ├── AGENTIC-CODING-HARNESSES.md (R)     # this runbook
+│   └── cross-tool-standardization/         # prior research (preserved)
+├── scripts/                                # .stow-local-ignore: .+
+└── (other stow packages: AgentWorktrees/, App-Configs/, Fonts/, Formatting-Files/,
+   Git/, Java-Jars/, Local/, macOS-Library/, SSH/, ZSH/)
+```
+
+**Per-project layout** (Houndarr / wedding-site / invest-platform):
+
+```
+<repo>/
+├── AGENTS.md       (R)                     # project canonical (CLAUDE.md is one-line @AGENTS.md stub)
+├── CLAUDE.md       (R, just "@AGENTS.md")
+├── CONTEXT.md      (R)                     # domain glossary
+├── .agents/skills/ (R dirs)                # project-specific skills (canonical)
+└── .claude/
+    ├── settings.json (R)
+    ├── rules/      (R, path-scoped only after migration)
+    └── skills/     (S→, symlinks to .agents/skills/<name>)
+```
 
 ## 16. Procedures
 
-> TODO (Stages 5-9): step-by-step procedures for:
-> - Add a new skill (canonical location + skill-symlink wiring)
-> - Modify a Matt Pocock or other imported skill
-> - Trim an AGENTS.md that's exceeding the Codex 32 KiB cap
-> - Handle a plugin or setup-script re-install that overwrites tracked content
-> - Re-stow after adding new packages or top-level paths
-> - Debug "skill not loading" per harness (Pi description blocker, Codex skill path, OpenCode regex validation)
-> - Verify each harness loads correctly after migration
+### Add a new skill
+
+1. Decide the bucket: **A** (always-on) → don't make a skill; add content to AGENTS.md. **B** (path-conditional) → SKILL.md with `paths:` frontmatter. **C** (task/procedure) → SKILL.md with description-trigger.
+2. Create the canonical SKILL.md at `~/.dotfiles/Agents/.agents/skills/<name>/SKILL.md`. Required frontmatter: `name` (lowercase-hyphens), `description` (write a strong "Use when X. Triggers on Y." description; Pi will hard-skip empty descriptions).
+3. For Claude Code visibility, create a directory symlink: `cd ~/.dotfiles && ln -s ../../../Agents/.agents/skills/<name> Claude/.claude/skills/<name>`.
+4. Run `cd ~/.dotfiles && stow --restow Agents Claude` to wire `$HOME` symlinks.
+5. Verify all 4 harnesses see the skill: `ls ~/.agents/skills/<name>/SKILL.md` and `ls -L ~/.claude/skills/<name>/SKILL.md`.
+
+### Modify an imported skill (Matt Pocock or installer-managed)
+
+1. Edit the file directly under `~/.dotfiles/Agents/.agents/skills/<name>/SKILL.md`.
+2. Commit with a clear message describing the modification rationale.
+3. **Add an entry to section 18 (Modification Ledger)** with date, skill name, what changed, why, and how to re-apply.
+4. Re-running the installer (e.g. `setup-matt-pocock-skills`) writes through the stow symlink → produces a git diff. Review with `git diff Agents/`. Decide whether to keep the upstream version (revert your change) or re-apply your modification per the ledger entry.
+
+### Trim AGENTS.md exceeding the Codex 32 KiB cap
+
+1. Identify the operational sections that don't strictly need always-on context: extended CLI catalogs, full procedural runbooks, library-specific deep dives.
+2. Move each to a topical doc file (`docs/runbooks/<topic>.md` or similar). Keep AGENTS.md as a hub with brief 3-10 line summaries and links.
+3. Delete temporary debt sections (e.g. "Pre-Launch Password Gate") that are TODO-flavored.
+4. Verify size: `wc -c <repo>/AGENTS.md`. Target: < 30 KiB to leave headroom for future additions.
+5. Anthropic recommends < 200 lines per CLAUDE.md/AGENTS.md; over 300 lines reliably increases reasoning tokens 14-22% per agents.md research. Prefer subdir AGENTS.md (loads on-demand in Claude) over one massive root file when content is dir-specific.
+
+### Handle a plugin or setup-script re-install that overwrites tracked content
+
+1. After running the installer, check `git status`/`git diff` in dotfiles.
+2. For each modified file under `Agents/`, decide:
+   - Accept upstream → `git checkout -- <path>` (keep installer version, drop your edits).
+   - Keep your version → `git restore --source HEAD~1 <path>` (revert to last commit).
+   - Merge → manually reconcile, commit with rationale.
+3. **Add ledger entry** documenting the conflict resolution.
+
+### Re-stow after adding a top-level package (or after deletions)
+
+1. `cd ~/.dotfiles && stow --restow <PackageName>` (or `*/` for all).
+2. **Stow does NOT clean up orphan `$HOME` symlinks** when their target source has been deleted from the package. Manual cleanup: `find ~/<dir> -type l -! -exec test -e {} \; -delete` (POSIX find variant) or for known paths, `rm <path>` for each broken symlink. Stage 6 hit this: deleted `Codex/.codex/skills/` in the package, but `~/.codex/skills/<11 broken symlinks>` remained until manual cleanup in Stage 9.
+3. After cleanup, `stow --restow` again to ensure package state is consistent.
+
+### Debug "skill not loading"
+
+Per-harness diagnostic flow:
+
+| Harness | Symptom | Check |
+|---|---|---|
+| Pi | Skill is invisible to model | (1) Does SKILL.md have a non-empty `description:` field? Pi hard-skips skills without one. (2) Is the skill in a Pi-discoverable path? Run `pi list-skills` if available; verify `skills:` array in `~/.pi/agent/settings.json` includes the skill's parent dir. |
+| Claude Code | Skill doesn't auto-load on path match | Verify `paths:` frontmatter is correct YAML. Use the `InstructionsLoaded` hook to log what loaded. |
+| Codex | Skill not in slash menu / `$<name>` invocation fails | Verify SKILL.md is at `~/.agents/skills/<name>/SKILL.md` (canonical) or `~/.codex/skills/<name>/SKILL.md` (deprecated). Ensure name is lowercase-alphanumeric-hyphens. |
+| OpenCode | Skill not surfaced | OpenCode validates name regex `^[a-z0-9]+(-[a-z0-9]+)*$`. Capital letters or underscores cause silent skip. |
+| All | Description-discovery failing | The model picks skills based on description trigger words. If the description is generic ("Helps with X"), the model won't reach for it. Rewrite description as "Use when X. Triggers on Y/Z. Skip if Q." |
+
+### Verify each harness loads correctly
+
+1. Hash check: `for p in ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.config/opencode/AGENTS.md ~/.pi/agent/AGENTS.md ~/.agents/AGENTS.md; do shasum -a 256 "$p"; done` — all 5 should match.
+2. Claude Code: launch any session, run `/memory`, confirm CLAUDE.md content matches canonical.
+3. Codex: launch `codex` in any directory, confirm session-start instructions match. For repos near the 32 KiB cap, watch for missing leading content (silent truncation from start).
+4. OpenCode: launch `opencode`, check session-start.
+5. Pi: launch `pi`, ask about agentic environment to confirm `agentic-coding-harnesses` skill triggers.
+6. Slash invocation: in Claude, try `/ship` or `/catchup` — should resolve to canonical skill.
+7. Path-conditional: edit a `.py` file in any project — Claude should auto-load `python` rule (it's a `paths:`-frontmatter symlink to the canonical skill).
 
 ## 17. Cap & Adherence Cheatsheet
 
-> TODO (Stage 4): one-page reference of the size caps and adherence guidance:
-> - Codex `project_doc_max_bytes` = 32 KiB default (silent truncation from start)
-> - Claude < 200 lines per CLAUDE.md (Anthropic recommendation; longer reduces adherence)
-> - OpenCode no documented hard cap; community recommends < 300 lines
-> - Pi no documented hard cap; SKILL.md description hard-required
-> - "Lost in the middle" research summary
-> - Skill discovery via description quality
+| Harness | Hard cap | Soft guideline | Truncation behavior |
+|---|---|---|---|
+| Claude Code | None | < 200 lines per CLAUDE.md/AGENTS.md (Anthropic) | None — full file loaded; adherence drops on long files |
+| Codex CLI | **32 KiB combined `project_doc_max_bytes`** (configurable) | Same | **Silent truncation from start** when exceeded; no warning |
+| OpenCode | None documented | < 300 lines (community / agents.md research) | None documented |
+| Pi | None documented | Same | None; but skills with empty `description:` hard-fail to load |
+
+### Skill description quality
+
+| Indicator | Effect |
+|---|---|
+| Description contains explicit trigger phrases ("Use when X", "Triggers on Y") | Model reaches for skill reliably |
+| Description is generic ("Helps with X", "A skill for Y") | Model doesn't trigger; skill stays invisible |
+| Description is empty | Pi: hard-skipped. Other harnesses: silently invisible |
+| Description starts with the action ("Audit code", "Create PR") | Strong signal |
+| Description names the user phrases that should invoke ("Use when user says: review my changes") | Strongest signal |
+
+### "Lost in the middle"
+
+| Position | Attention weight |
+|---|---|
+| Beginning of context | High |
+| End of context | High |
+| Middle | 40-60% lower |
+
+Practical: critical AGENTS.md content goes near the top OR near the end. Mid-file sections experience reliability drops, especially in files >300 lines. (Stanford 2023 research; persists in 2026 frontier models.)
+
+### Per-project current state (post-Stage-9 verification)
+
+| Project | AGENTS.md | Cap utilization |
+|---|---|---|
+| Houndarr | 547 lines / 23.7 KiB | 72% |
+| wedding-site | 418 lines / 32.2 KiB | **98% — at the cap, 587 bytes margin** |
+| invest-platform | 397 lines / 28.6 KiB | 87% (4 KiB headroom) |
+| Global | 226 lines / 11.4 KiB | 35% |
 
 ## 18. Modification Ledger
 
@@ -318,6 +640,14 @@ The Stage 2 audit's "Tier 1 description blocker" classification for three files 
 Likely cause: the audit used a parser that didn't handle YAML's indented continuation form (`description:` on one line followed by indented continuation lines on subsequent lines). All three files are correctly formed per YAML 1.2.
 
 **No file modifications made.** If Pi (or any harness) is in fact failing to load these skills, the cause is downstream of frontmatter validity — possibly the harness's `skills:` configuration or its YAML parser strictness. Investigate during Stage 9 verification.
+
+### 2026-05-07 — Stage 6 cleanup: orphan Codex symlinks
+
+After deleting `.dotfiles/Codex/.codex/skills/` in Stage 6 and running `stow --restow Codex`, 11 broken symlinks remained at `~/.codex/skills/<name>` pointing to the now-deleted dotfiles paths. **Stow does not clean up orphan symlinks** whose target source has been deleted from the package — it only manages symlinks for content that still exists in the package.
+
+Cleanup performed in Stage 9: `for skill in catchup coordinator deep-audit fix-issue merge open-pr rebase review ship workmux worktree; do rm "$HOME/.codex/skills/$skill"; done`. After cleanup, `~/.codex/skills/` contains only `.system/` (Codex's bundled system skills).
+
+**Lesson recorded in section 16 (Procedures: Re-stow after deletions).** Future deletions of dotfiles content should be followed by manual `find` for broken symlinks in `$HOME` and explicit `rm`.
 
 ### Pending entries
 
@@ -345,12 +675,23 @@ Likely cause: the audit used a parser that didn't handle YAML's indented continu
 
 9. **Houndarr / invest-platform `.opencode/commands/` files**: drifted from canonical `.agents/skills/`. Resolution: delete `.opencode/commands/` directories entirely. They were a previous OpenCode pattern that never got cleaned up. Confirm before deletion in Stage 8.
 
+### Discovered during execution (post-Stage 9)
+
+10. **wedding-site AGENTS.md at 98% of Codex cap** (32,181 bytes / 32,768 cap; 587 bytes margin). Any future addition triggers silent truncation in Codex. Future trim pass needed; could move git-workflow + paulinas-branch sections into a project-scoped runbook.
+11. **Stow does not clean up orphan symlinks** when target sources are deleted (Stage 6 → Stage 9 lesson). Section 16 procedure now documents the manual cleanup step.
+12. **invest-platform `claude-progress.md` modification + `CONTEXT.md` untracked** at execution time. Left untouched (user's in-flight work). User decides commit timing.
+
 ### Deferred to consolidation phase (post-alignment)
 
 - Whether plugin-installed global skills (vercel-*, supabase-*, etc., 14 total) should move to project-only scope
 - Tooling for automated plugin-reinstall diff resolution
 - Generalizing wedding-site `skills-lock.json` pattern across projects (or removing entirely)
 - Worktree branching strategy for large refactors
+- wedding-site AGENTS.md secondary trim pass to recover headroom under Codex cap
+- Convert wedding-site `frontend-ui.md` from rule to skill with `paths:` frontmatter (cross-harness visibility)
+- Convert invest-platform's 4 remaining path-scoped rules (frontend-ui, testing-patterns, typescript-conventions, writing-style) from rules to skills with `paths:` frontmatter (cross-harness visibility)
+- Pre-Launch Password Gate code in invest-platform `src/proxy.ts` and `turbo.json` `globalEnv` (was removed from AGENTS.md docs in Stage 8c-2; remove from code at site launch)
+- Convert pre-existing absolute symlink at `Config/.config/opencode/plugins/workmux-status.ts` to a relative symlink so stow can manage Config without aborting
 
 ## 20. Decision Log
 
@@ -416,3 +757,58 @@ The 9 open questions raised in section 19 during the Stage 2 audit were resolved
 
 ### Stage 3 outcome (2026-05-07)
 All 3 alleged description-blockers verified to have valid YAML frontmatter with non-empty descriptions. Earlier audit was incorrect. No modifications made. See section 18.
+
+### Stage 4 outcome (2026-05-07) — Global AGENTS.md consolidation (HIGH RISK, completed)
+- Drafted canonical `Agents/.agents/AGENTS.md` (226 lines / 11.4 KiB / 36% of Codex cap) consolidating ~80% common content from the three drifted global instruction files. Tool-specific 20% drift placed in clearly-marked sections.
+- Replaced `Claude/.claude/CLAUDE.md`, `Codex/.codex/AGENTS.md`, `Config/.config/opencode/AGENTS.md` with committed in-repo symlinks → canonical.
+- Verified all 4 harness `$HOME` paths resolve to identical SHA-256.
+- Net change: -278 lines across 4 files. Pre-existing absolute symlink at `Config/.config/opencode/plugins/workmux-status.ts` flagged as future stow-cleanup item (unrelated to alignment).
+
+### Stage 5 outcome — Skill canonical-location migration
+- Moved 11 user-authored personal-workflow skill directories from `Claude/.claude/skills/` to `Agents/.agents/skills/` via `git mv` (rename detection: 13 file moves at 100% similarity).
+- Replaced each original location with a directory skill-symlink. `Claude/.claude/skills/` is now composed entirely of symlinks pointing into `Agents/.agents/skills/`.
+- All 11 skills now natively visible to Codex / OpenCode / Pi via `~/.agents/skills/`; Claude reaches them via the in-repo symlink chain.
+
+### Stage 6 outcome — Codex/.codex/skills/ deletion
+- Verified Codex CLI source code (`codex-rs/core-skills/src/loader.rs:293-320`) confirms `~/.agents/skills/` is canonical and the deprecated `~/.codex/skills/` is also scanned (legacy support, higher precedence).
+- Diff verification: the 11 Codex duplicates were SUBSETS of canonical (Claude versions had Claude-specific frontmatter not present in Codex versions, but body content was identical or near-identical). No unique Codex content to preserve.
+- Deleted `Codex/.codex/skills/` entire directory (-2,556 lines committed).
+- Stage 9 follow-up: cleaned up 11 orphan symlinks at `~/.codex/skills/` that stow left behind. See section 18.
+
+### Stage 7 outcome — Pi stow package
+- New `Pi/` stow package created with `Pi/.pi/agent/AGENTS.md` as committed in-repo symlink to canonical.
+- Stowed; `~/.pi/agent/AGENTS.md` now resolves through to canonical AGENTS.md content.
+- All four harnesses confirmed reading identical content via SHA-256 verification.
+
+### Stage 8 outcome — Project-level migrations (3 sub-stages)
+
+**Houndarr (Stage 8a)**: Net -422 lines.
+- 7 `.claude/rules/houndarr-*.md` rule-symlinks replaced with `.claude/skills/<name>` directory skill-symlinks.
+- `.claude/rules/hook-compliance.md` (77 lines) folded into AGENTS.md as new "Hook compliance" subsection.
+- 3 commands (bump, check, test) consolidated to canonical at `.agents/skills/<name>/SKILL.md` with `.claude/skills/<name>` symlinks; deleted `.claude/commands/` and `.opencode/commands/` (untracked).
+- `.claude/rules/` is now empty.
+
+**wedding-site (Stage 8b)**: Net -72 lines.
+- AGENTS.md H1 fixed: `# CLAUDE.md` → `# AGENTS.md` (stale heading from prior rename).
+- `git-workflow.md` and `paulinas-branch.md` rule contents folded into AGENTS.md as new sections.
+- `skills-lock.json` SHA-256 hashes recomputed for all 3 stripe skills (skills modified May 3 but lock not updated).
+- `frontend-ui.md` rule kept as path-scoped (deferred conversion to skill).
+
+**invest-platform (Stage 8c)**: Net -1,384 lines across 3 commits.
+- 8c-1: Migrated 3 `.claude/skills/` (opengrep, sprint-plan, sprint-pr) to canonical. Added 6 skill-symlinks for existing `.agents/skills/` (check, linear-sync, new-adapter, new-component, new-migration, progress-update). Deleted 6 stale duplicates each in `.claude/commands/` and `.opencode/commands/`. linear-sync 270-line drift resolved by deletion.
+- 8c-2: Trimmed AGENTS.md from 695 lines / 32 KiB (AT cap) to 200 lines / 15 KiB (53% reduction). Created 4 new docs: `docs/runbooks/dev-reference.md`, `testing-guide.md`, `observability.md`, `component-library.md`. Deleted "Pre-Launch Password Gate" temporary section.
+- 8c-3: Merged 5 unscoped rule contents (commenting, dev-credentials, git-workflow, linear-conventions, security-compliance) into AGENTS.md as new sections; condensed during merge to fit cap. Deleted 6 rule files (5 unscoped + plan-mode). Final AGENTS.md: 397 lines / 28.6 KiB / 87% of cap, 4 KiB headroom. `.claude/rules/` retains only the 4 path-scoped rules.
+
+### Stage 9 outcome — End-to-end verification
+- All 4 harness `$HOME` paths verified to resolve to identical canonical AGENTS.md (SHA-256 `760e2130...`).
+- All CLI versions present and current.
+- Pi packages intact (7 packages including `rpiv-args` for argument substitution).
+- Cleaned up 11 orphan Codex symlinks (see section 18).
+- Per-project size verification: Houndarr 72%, wedding-site **98%**, invest-platform 87% of Codex cap.
+- **Open concern**: wedding-site AGENTS.md at 98% has only 587 bytes margin. Future additions trigger silent Codex truncation. Flagged in section 19.
+
+### Stage 10 outcome — Runbook finalize
+- Sections 1-13, 15-17 filled in with verified per-harness behavior, compatibility matrix, file layout, procedures, and cap cheatsheet.
+- Decision log (this section) updated with all stage execution outcomes.
+- Modification ledger (section 18) updated with the Stage 6 orphan-symlink lesson.
+- Open questions (section 19) updated with wedding-site cap concern.
