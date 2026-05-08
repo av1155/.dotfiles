@@ -126,7 +126,7 @@ function contextSegment(ctx: SegmentContext, level: number): string {
     const textPart = text(`${pctText}${windowText}${autoText}`);
     if (level <= 0) return textPart;
 
-    const barWidth = level >= 3 ? contextBarWidth(ctx) : 8;
+    const barWidth = contextBarWidth(level);
     const filled = Math.min(barWidth, Math.max(0, Math.floor((pct * barWidth) / 100)));
     const band = contextBand(ctx);
     const [barFg, barBg] = contextBandColors(band);
@@ -134,8 +134,11 @@ function contextSegment(ctx: SegmentContext, level: number): string {
     return `${bar} ${textPart}`;
 }
 
-function contextBarWidth(ctx: SegmentContext): number {
-    return ctx.contextWindow >= 500_000 ? 12 : 10;
+function contextBarWidth(level: number): number {
+    if (level >= 3) return 14;
+    if (level === 2) return 10;
+    if (level === 1) return 8;
+    return 0;
 }
 
 function contextBand(ctx: SegmentContext): ContextBand {
