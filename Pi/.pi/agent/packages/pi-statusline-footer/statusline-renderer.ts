@@ -238,28 +238,32 @@ function parseLspStatus(statuses: ReadonlyMap<string, string>): InfraStatus {
     const activeCount = raw.match(/\bLSP\s+Active\s*\((\d+)\)/i)?.[1];
     if (activeCount) return { kind: "healthy", label: "LSP", count: activeCount };
     if (/\bactive\b/i.test(raw)) return { kind: "healthy", label: "LSP" };
-    if (/inactive|disabled|off|unavailable/i.test(raw) || !raw) return { kind: "inactive", label: "LSP" };
+    if (/inactive|disabled|off|unavailable/i.test(raw) || !raw)
+        return { kind: "inactive", label: "LSP" };
 
     return { kind: "partial", label: "LSP" };
 }
 
 function parseMcpStatus(statuses: ReadonlyMap<string, string>): InfraStatus {
-    const raw = statuses.get("mcp") ?? "";
-    const ratio = raw.match(/(\d+\s*\/\s*\d+)/)?.[1]?.replace(/\s+/g, "");
+    const raw = stripAnsi(statuses.get("mcp") ?? "").trim();
+    if (/\bconnecting\b/i.test(raw)) return { kind: "partial", label: "MCP" };
+
+    const ratio =
+        raw.match(/\bMCP:\s*(\d+)\s*\/\s*(\d+)\s+servers\b/i) ??
+        raw.match(/\b(\d+)\s*\/\s*(\d+)\b/);
     if (ratio) {
-        const [connectedText, totalText] = ratio.split("/");
-        const connected = Number(connectedText);
-        const total = Number(totalText);
+        const connected = Number(ratio[1]);
+        const total = Number(ratio[2]);
+        if (connected <= 0) return { kind: "inactive", label: "MCP" };
         return {
-            kind: connected === total ? "healthy" : connected > 0 ? "partial" : "inactive",
+            kind: connected === total ? "healthy" : "partial",
             label: "MCP",
-            count: ratio,
+            count: String(connected),
         };
     }
-    const count = raw.match(/\b(\d+)\b/)?.[1];
-    if (/connected|active|ready|enabled/i.test(raw))
-        return { kind: "healthy", label: "MCP", count };
-    if (/partial|degraded|error|failed/i.test(raw)) return { kind: "partial", label: "MCP", count };
+
+    if (/needs-auth|failed|error|degraded/i.test(raw)) return { kind: "partial", label: "MCP" };
+    if (/connected|active|ready|enabled/i.test(raw)) return { kind: "healthy", label: "MCP" };
     return { kind: "inactive", label: "MCP" };
 }
 
