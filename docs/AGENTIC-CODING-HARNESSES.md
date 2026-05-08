@@ -5,7 +5,7 @@ Comprehensive reference for the four agentic coding harnesses used across global
 - **Claude Code** (Anthropic, CLI + IDE integrations)
 - **Codex CLI** (OpenAI, terminal coding agent)
 - **OpenCode** (sst, open-source TUI agent)
-- **Pi** (earendil-works/pi v0.73.0, minimalist extensible terminal harness)
+- **Pi** (earendil-works/pi v0.74.0, minimalist extensible terminal harness)
 
 This document captures verified behavior per harness, the canonical file layout in `~/.dotfiles/`, procedures for common operations, and the decision log for the alignment migration. It is the source of truth for how the cross-harness environment is wired.
 
@@ -20,7 +20,7 @@ This document captures verified behavior per harness, the canonical file layout 
 | **Claude Code** (Anthropic) | per release | `claude` CLI (Homebrew + IDE integrations)                                  | `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md` (matching `paths:`), auto-memory `MEMORY.md`, project `<repo>/CLAUDE.md` (concatenated root-to-cwd), project `<repo>/.claude/rules/*.md` |
 | **Codex CLI** (OpenAI)      | 0.128.0     | `/opt/homebrew/Caskroom/codex/<v>/codex-aarch64-apple-darwin` (Rust binary) | `~/.codex/AGENTS.override.md` then `AGENTS.md`, project `AGENTS.md` walk-up (32 KiB combined cap)                                                                                      |
 | **OpenCode** (sst)          | 1.14.41     | npm/Homebrew                                                                | `~/.config/opencode/AGENTS.md` (or `CLAUDE.md` fallback), project `AGENTS.md`. `instructions:` field globs/URLs in `opencode.jsonc`                                                    |
-| **Pi** (earendil-works)     | 0.73.0      | npm `@earendil-works/pi-coding-agent`                                       | `~/.pi/agent/AGENTS.md` (or `CLAUDE.md`), project `.pi/AGENTS.md` walk-up. `SYSTEM.md`/`APPEND_SYSTEM.md` for system prompt customization                                              |
+| **Pi** (earendil-works)     | 0.74.0      | npm `@earendil-works/pi-coding-agent`                                       | `~/.pi/agent/AGENTS.md` (or `CLAUDE.md`), project `.pi/AGENTS.md` walk-up. `SYSTEM.md`/`APPEND_SYSTEM.md` for system prompt customization                                              |
 
 Project-scope artifacts are inspected at session start; subdirectory CLAUDE.md / AGENTS.md load on-demand when those subdirs are accessed (Claude). Pi accepts `--no-context-files` / `-nc` to disable session-start loading.
 
@@ -139,12 +139,12 @@ User's currently enabled Claude Code plugins (per `~/.claude/plugins/installed_p
 
 ## 6. MCP Servers
 
-| Harness     | Configuration location                                                                                                                                                  | Native MCP support |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| Claude Code | `.mcp.json` (project, committed), `~/.claude.json` (user/local)                                                                                                         | ✓                  |
-| Codex CLI   | `[mcp_servers.<name>]` TOML tables in `~/.codex/config.toml` or `.codex/config.toml`                                                                                    | ✓                  |
-| OpenCode    | `mcp:` key in `~/.config/opencode/opencode.jsonc` or project `opencode.jsonc`                                                                                           | ✓                  |
-| Pi          | Via `pi-mcp-adapter`: `~/.pi/agent/mcp.json` (Pi global override), `.pi/mcp.json` (project override), plus shared `.mcp.json` / `~/.config/mcp/mcp.json` import support | via package        |
+| Harness     | Configuration location                                                                                                                                                  | MCP support |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Claude Code | `.mcp.json` (project, committed), `~/.claude.json` (user/local)                                                                                                         | ✓           |
+| Codex CLI   | `[mcp_servers.<name>]` TOML tables in `~/.codex/config.toml` or `.codex/config.toml`                                                                                    | ✓           |
+| OpenCode    | `mcp:` key in `~/.config/opencode/opencode.jsonc` or project `opencode.jsonc`                                                                                           | ✓           |
+| Pi          | Via `pi-mcp-adapter`: `~/.pi/agent/mcp.json` (Pi global override), `.pi/mcp.json` (project override), plus shared `.mcp.json` / `~/.config/mcp/mcp.json` import support | via package |
 
 User's global MCP servers: `context-mode` is enabled across Claude Code, Codex, OpenCode, and Pi via each harness's native config method. `magic` (21st.dev) and `stitch` (Google Stitch) are configured for Codex/OpenCode and disabled by default; enable per-need.
 
@@ -177,12 +177,12 @@ Pi's subagent support comes from the `pi-subagents` npm package (third-party, no
 
 ## 9. Settings
 
-| Harness     | File                                                                                      | Format                                                                                                                                                                                                                                                                  |
-| ----------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Claude Code | `~/.claude/settings.json`, project `.claude/settings.json`, `.claude/settings.local.json` | JSON. Keys: `permissions`, `env`, `hooks`, `statusLine`, `enabledPlugins`, `extraKnownMarketplaces`, `outputStyle`, `effortLevel`, `voice`, `autoMemoryEnabled`, etc.                                                                                                   |
-| Codex CLI   | `~/.codex/config.toml`, project `.codex/config.toml`                                      | TOML. Sections: top-level (`model`, `model_reasoning_effort`, `personality`), `[projects]`, `[plugins]`, `[features]`, `[mcp_servers.<name>]`, `[notice]`, `[tui]`                                                                                                      |
-| OpenCode    | `~/.config/opencode/opencode.jsonc`, project `opencode.jsonc`                             | JSONC. Keys: `provider`, `model`, `lsp`, `permission`, `formatter`, `mcp`, `agent`, `command`, `plugin`, `instructions`, `theme`, `keybinds`, `server`                                                                                                                  |
-| Pi          | `~/.pi/agent/settings.json`, project `.pi/settings.json`                                  | JSON. Keys: `defaultProvider`, `defaultModel`, `packages`, `skills` (path array), `compaction`, `lastChangelogVersion`. Global `settings.json` is tracked in `.dotfiles/Pi/.pi/agent/settings.json`; `auth.json`, sessions, caches, and local databases stay untracked. |
+| Harness     | File                                                                                      | Format                                                                                                                                                                                                                                                                                                                        |
+| ----------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | `~/.claude/settings.json`, project `.claude/settings.json`, `.claude/settings.local.json` | JSON. Keys: `permissions`, `env`, `hooks`, `statusLine`, `enabledPlugins`, `extraKnownMarketplaces`, `outputStyle`, `effortLevel`, `voice`, `autoMemoryEnabled`, etc.                                                                                                                                                         |
+| Codex CLI   | `~/.codex/config.toml`, project `.codex/config.toml`                                      | TOML. Sections: top-level (`model`, `model_reasoning_effort`, `personality`), `[projects]`, `[plugins]`, `[features]`, `[mcp_servers.<name>]`, `[notice]`, `[tui]`                                                                                                                                                            |
+| OpenCode    | `~/.config/opencode/opencode.jsonc`, project `opencode.jsonc`                             | JSONC. Keys: `provider`, `model`, `lsp`, `permission`, `formatter`, `mcp`, `agent`, `command`, `plugin`, `instructions`, `theme`, `keybinds`, `server`                                                                                                                                                                        |
+| Pi          | `~/.pi/agent/settings.json`, project `.pi/settings.json`                                  | JSON. Keys: `defaultProvider`, `defaultModel`, `defaultThinkingLevel`, `packages`, `extensions`, `skills` (path array), `compaction`, `lastChangelogVersion`, UI preferences. Global `settings.json` is tracked in `.dotfiles/Pi/.pi/agent/settings.json`; `auth.json`, sessions, caches, and local databases stay untracked. |
 
 ## 10. Permissions Models
 
@@ -205,20 +205,21 @@ Claude Code only. Per [code.claude.com/docs/en/memory#auto-memory](https://code.
 
 Codex / OpenCode / Pi have no auto-memory equivalent. Cross-session continuity must be handled via AGENTS.md updates or external systems.
 
-## 12. Pi Extensions Inventory
+## 12. Pi Packages and Extensions Inventory
 
-User's currently installed Pi packages (tracked in `.dotfiles/Pi/.pi/agent/settings.json`, equivalent to `pi list`):
+User's currently installed Pi packages and local extensions are tracked in `.dotfiles/Pi/.pi/agent/settings.json`.
 
-| Package                              | What it does                                                                                                                                                                                                             |
+| Package / extension                  | What it does                                                                                                                                                                                                             |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `pi-subagents`                       | Adds 8 built-in subagent personas; supports chains, parallel execution, TUI clarification, git worktree isolation                                                                                                        |
 | `pi-web-access`                      | Adds `web_search` (Exa, Perplexity, Gemini), `code_search` (Exa MCP), `fetch_content` (URL+local with GitHub/YouTube/PDF specialization), `get_search_content`                                                           |
 | `pi-lens`                            | Real-time pipeline on file writes: secrets detection, 26+ formatters, ESLint/Ruff auto-fix, LSP (37 servers), tree-sitter + ast-grep + Semgrep linting, dependency analysis. 35+ languages, 180+ ast-grep security rules |
-| `pi-powerline-footer`                | Powerline status bar: editor stash, working vibes, model/tokens/cost segments, bash mode                                                                                                                                 |
+| `packages/pi-statusline-footer`      | Local statusline/footer package: editor stash, working vibes, model/tokens/cost segments, bash mode                                                                                                                      |
 | `@juicesharp/rpiv-args` v1.2.0       | **Adds `$ARGUMENTS` / `$1`-`$N` / `$@` / `${@:N}` / `${@:N:L}` substitution to Pi skill bodies.** Hooks `input`, `before_agent_start`, `session_start`                                                                   |
 | `@juicesharp/rpiv-todo`              | Persistent task tracking, `/todos` command, TUI overlay, dependency graph, survives `/reload` and compaction                                                                                                             |
 | `@juicesharp/rpiv-ask-user-question` | Tabbed-question dialog tool: 1-4 questions, 2-4 options each, single/multi-select, optional previews, free-text notes, Submit review tab                                                                                 |
 | `pi-mcp-adapter`                     | Adds MCP support to Pi through a compact proxy tool, lazy server lifecycle, direct-tool promotion, and config discovery from `~/.pi/agent/mcp.json`, `.pi/mcp.json`, `.mcp.json`, and `~/.config/mcp/mcp.json`           |
+| `extensions/all-core-tools.ts`       | Local extension that keeps all official Pi built-in tools active every session: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`                                                                                    |
 
 `rpiv` = juicesharp's brand for a suite of Pi enhancements (from monorepo `rpiv-mono`).
 
@@ -232,7 +233,7 @@ User's currently installed Pi packages (tracked in `.dotfiles/Pi/.pi/agent/setti
 | Slash command invocation                           | ✓ `/skill`                     | partial (built-ins only; no user-defined) | ✓ `/cmd`                                      | configurable via extension    |
 | `$ARGUMENTS` / `$1` body substitution              | ✓ skills + commands            | ✗                                         | ✓ commands only (not skills)                  | ✓ with `rpiv-args` extension  |
 | Skill description-based discovery                  | ✓                              | ✓                                         | ✓                                             | ✓ (description hard-required) |
-| Native MCP                                         | ✓                              | ✓                                         | ✓                                             | ✗ (extension-tools instead)   |
+| MCP                                                | ✓                              | ✓                                         | ✓                                             | via `pi-mcp-adapter` package  |
 | Auto-memory                                        | ✓                              | ✗                                         | ✗                                             | ✗                             |
 | Sub-agents (built-in)                              | Explore, Plan, general-purpose | explorer, default, worker                 | @explore, @general (+ build, plan as primary) | via pi-subagents pkg          |
 | Plugin system                                      | manifests + marketplaces       | bundled (skills + apps + MCP)             | TS modules + npm                              | TS extensions + npm packages  |
@@ -508,8 +509,12 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 │   └── .pi/
 │       └── agent/
 │           ├── AGENTS.md       S→ ../../../Agents/.agents/AGENTS.md
+│           ├── extensions/
+│           │   └── all-core-tools.ts (R)  # enables all official Pi built-in tools every session
 │           ├── mcp.json        (R)        # Pi MCP adapter global override (no secrets)
-│           └── settings.json   (R)        # model defaults, installed packages, non-secret UI settings
+│           ├── packages/
+│           │   └── pi-statusline-footer/  # local Pi statusline/footer package
+│           └── settings.json   (R)        # model defaults, packages, extensions, non-secret UI settings
 ├── docs/                                   # NEW package (Stage 1); .stow-local-ignore: .+
 │   ├── .stow-local-ignore  (R)             # ignore everything (don't stow)
 │   ├── AGENTIC-CODING-HARNESSES.md (R)     # this runbook
@@ -569,12 +574,21 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 
 ### Track Pi settings safely
 
-1. Inspect `~/.pi/agent/settings.json` before tracking. It should contain model defaults, package names, skill paths, compaction settings, and UI preferences only.
-2. Do **not** track `~/.pi/agent/auth.json`, `sessions/`, `mcp-cache.json`, context-mode SQLite databases, provider credentials, literal bearer tokens, or generated package caches.
+1. Inspect `~/.pi/agent/settings.json` before tracking. It should contain model defaults, package names, extension paths, skill paths, compaction settings, and UI preferences only.
+2. Do **not** track `~/.pi/agent/auth.json`, `sessions/`, `mcp-cache.json`, context-mode SQLite databases, provider credentials, literal bearer tokens, or generated package caches. Tracked local Pi packages under `Pi/.pi/agent/packages/` should be source code, not generated dependency caches.
 3. Move safe settings into the Pi stow package: `mv ~/.pi/agent/settings.json ~/.dotfiles/Pi/.pi/agent/settings.json`.
 4. Re-stow: `cd ~/.dotfiles && stow --restow Pi`.
 5. Verify the live file is a symlink: `ls -l ~/.pi/agent/settings.json`.
 6. If adding MCP config later, track `mcp.json` only when it uses command/env-var references rather than literal tokens.
+
+### Track Pi extensions safely
+
+1. Store non-secret global Pi extensions under `Pi/.pi/agent/extensions/`.
+2. Add relative paths to `.dotfiles/Pi/.pi/agent/settings.json`, e.g. `"extensions": ["extensions/all-core-tools.ts"]`.
+3. Keep extension code free of credentials, literal bearer tokens, local database paths, or generated cache content.
+4. Re-stow: `cd ~/.dotfiles && stow --restow Pi`.
+5. Verify the live extension resolves from the stow package: `ls -l ~/.pi/agent/extensions/<name>.ts`.
+6. For global core-tool activation, keep `all-core-tools.ts`: it uses Pi's documented `pi.setActiveTools()` extension API to activate official built-ins, without registering replacement tools.
 
 ### Re-stow after adding a top-level package (or after deletions)
 
@@ -839,7 +853,7 @@ All 3 alleged description-blockers verified to have valid YAML frontmatter with 
 
 - All 4 harness `$HOME` paths verified to resolve to identical canonical AGENTS.md (SHA-256 `760e2130...`).
 - All CLI versions present and current.
-- Pi packages intact (7 packages including `rpiv-args` for argument substitution).
+- Pi packages intact (8 packages including `rpiv-args` for argument substitution) plus the local `all-core-tools.ts` extension.
 - Cleaned up 11 orphan Codex symlinks (see section 18).
 - Per-project size verification: Houndarr 72%, wedding-site **98%**, invest-platform 87% of Codex cap.
 - **Open concern**: wedding-site AGENTS.md at 98% has only 587 bytes margin. Future additions trigger silent Codex truncation. Flagged in section 19.
