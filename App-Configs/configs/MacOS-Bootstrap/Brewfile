@@ -8,7 +8,6 @@ tap "raine/workmux"
 tap "samtay/tui"
 tap "sst/tap"
 tap "stripe/stripe-cli"
-tap "supabase/tap"
 tap "teamookla/speedtest"
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
@@ -182,6 +181,8 @@ brew "semgrep"
 brew "stow"
 # Opinionated Lua code formatter
 brew "stylua"
+# Open source Firebase alternative
+brew "supabase"
 # Open source continuous file synchronization application
 brew "syncthing", restart_service: :changed
 # User interface to the TELNET protocol
@@ -216,6 +217,8 @@ brew "zoxide"
 brew "getsentry/tools/sentry"
 # Everything you need to get started with Heroku
 brew "heroku/brew/heroku"
+# Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
+brew "oven-sh/bun/bun"
 # Opinionated workflow tool that orchestrates git worktrees and tmux
 brew "raine/workmux/workmux"
 # Tetris in your terminal
@@ -224,8 +227,6 @@ brew "samtay/tui/tetris"
 brew "sst/tap/opencode"
 # Stripe CLI utility
 brew "stripe/stripe-cli/stripe"
-# Supabase CLI
-brew "supabase/tap/supabase"
 # Ookla Speedtest
 brew "teamookla/speedtest/speedtest"
 # View, create, manipulate, print and manage files in Portable Document Format
