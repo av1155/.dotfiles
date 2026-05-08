@@ -7,12 +7,16 @@
     "npm:pi-subagents",
     "npm:pi-web-access",
     "npm:pi-lens",
+    "packages/pi-statusline-footer",
     "npm:@juicesharp/rpiv-todo",
     "npm:@juicesharp/rpiv-ask-user-question",
-    "npm:pi-powerline-footer",
     "npm:@juicesharp/rpiv-args",
     "npm:pi-mcp-adapter"
   ],
+  "extensions": [
+    "extensions/all-core-tools.ts"
+  ],
   "workingVibeModel": "openai-codex/gpt-5.5",
-  "workingVibeMode": "file"
+  "workingVibeMode": "file",
+  "workingVibe": "star-wars"
 }
