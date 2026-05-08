@@ -131,7 +131,6 @@
     "security-guidance@claude-plugins-official": true,
     "skill-codex@skill-codex": true,
     "typescript-lsp@claude-plugins-official": true,
-    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
     "semgrep@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
@@ -171,5 +170,5 @@
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
-  "model": "sonnet"
+  "skillListingBudgetFraction": 0.02
 }

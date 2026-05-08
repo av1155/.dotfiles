@@ -21,18 +21,6 @@ trust_level = "trusted"
 gpt-5-codex = "gpt-5.3-codex"
 "gpt-5.3-codex" = "gpt-5.4"
 
-[plugins."github@openai-curated"]
-enabled = false
-
-[plugins."build-web-apps@openai-curated"]
-enabled = true
-
-[plugins."linear@openai-curated"]
-enabled = true
-
-[plugins."vercel@openai-curated"]
-enabled = true
-
 [features]
 codex_hooks = true
 
