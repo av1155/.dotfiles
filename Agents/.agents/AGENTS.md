@@ -120,7 +120,7 @@ stream closed early. Move the destroy call before response flush.
 
 ## MCP servers
 
-Claude Code, Codex, and OpenCode all support MCP. Pi does not (Pi uses extension-registered tools instead).
+Pi supports MCP through the `pi-mcp-adapter` extension; servers are lazy-connected by default.
 
 | Server   | When to reach for it                       |
 | -------- | ------------------------------------------ |
