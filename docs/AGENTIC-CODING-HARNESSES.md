@@ -680,6 +680,27 @@ Cleanup performed in Stage 9: `for skill in catchup coordinator deep-audit fix-i
 
 **Lesson recorded in section 16 (Procedures: Re-stow after deletions).** Future deletions of dotfiles content should be followed by manual `find` for broken symlinks in `$HOME` and explicit `rm`.
 
+### 2026-05-07 — Global skills cleanup + 4 official skills brought back
+
+**Removed** (14 inappropriately-global skills at `~/.agents/skills/` that were real directories outside dotfiles, source unknown but not Codex-installed):
+
+`vercel-cli-with-tokens`, `vercel-composition-patterns`, `vercel-react-best-practices`, `vercel-react-native-skills`, `vercel-react-view-transitions`, `deploy-to-vercel`, `supabase` (v0.1.2 stale), `supabase-postgres-best-practices` (stale), `web-design-guidelines`, `webapp-testing`, `doc-coauthoring`, `find-docs`, `find-skills`, `frontend-design`
+
+After cleanup, `~/.agents/skills/` count: 44 → 30. All 30 remaining entries are stow-managed symlinks pointing into `.dotfiles/Agents/.agents/skills/`. The `supabase` and `supabase-postgres-best-practices` skills remain available via the project-scoped `supabase@claude-plugins-official` plugin (newer v0.1.6, namespaced as `supabase:supabase`). The `frontend-design` skill remains available via the globally-enabled `frontend-design@claude-plugins-official` plugin (namespaced as `frontend-design:frontend-design`).
+
+**Brought back** (4 official Anthropic skills from [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills) repo, version-tracked in dotfiles):
+
+| Skill | Path | Modifications |
+|---|---|---|
+| `skill-creator` | `Agents/.agents/skills/skill-creator/` (248 KB with `scripts/`, `references/`, `assets/`) | None (verbatim copy) |
+| `webapp-testing` | `Agents/.agents/skills/webapp-testing/` (32 KB with `scripts/`) | None (verbatim copy) |
+| `doc-coauthoring` | `Agents/.agents/skills/doc-coauthoring/` (16 KB) | None (verbatim copy) |
+| `frontend-design-global` | `Agents/.agents/skills/frontend-design-global/` (20 KB) | **Renamed** from `frontend-design` to avoid namespace collision with the `frontend-design@claude-plugins-official` plugin's bundled skill. **Generalized** language: replaced "Claude is capable of extraordinary creative work" → "a frontier LLM is capable of extraordinary creative work". Added `metadata.origin: anthropics/skills (frontend-design)` and `metadata.fork-reason: Cross-harness availability and harness-neutral language` |
+
+All 4 are now visible globally to all 4 harnesses via `~/.agents/skills/` (Codex / OpenCode / Pi read natively; Claude Code reads via stow-installed symlink at `~/.claude/skills/...` if added there, otherwise via the agentic-coding-harnesses cross-harness layer).
+
+If Anthropic publishes updates to these skills, manual sync from `https://github.com/anthropics/skills/tree/main/skills` is required (no auto-update mechanism). For `frontend-design-global`, re-apply the rename + harness-neutral language tweaks after pulling a new upstream version.
+
 ### Pending entries
 
 (none)
