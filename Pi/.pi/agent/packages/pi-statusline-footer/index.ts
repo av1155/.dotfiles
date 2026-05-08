@@ -2592,7 +2592,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         }
 
         const bc = (s: string) => `${getFgAnsiCode("sep")}${s}${ansi.reset}`;
-        const promptGlyph = bashModeActive ? "$" : ">";
+        const promptGlyph = bashModeActive ? "$" : "❯";
         const prompt = `${ansi.getFgAnsi(200, 200, 200)}${promptGlyph}${ansi.reset}`;
         const promptPrefix = ` ${prompt} `;
         const contPrefix = "   ";

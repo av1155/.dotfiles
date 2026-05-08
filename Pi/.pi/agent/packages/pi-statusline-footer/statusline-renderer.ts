@@ -3,17 +3,16 @@ import type { SegmentContext } from "./types.js";
 
 const SEP = " │ ";
 const CACHE_ICON = "󰆼";
-const AUTO_COMPACT_ICON = "↯";
 const TIMER_ICON = "⏱";
 
 const COLORS = {
     text: "#949494",
     less: "#595A61",
-    contextHealthyBg: "#404E49",
+    contextHealthyBg: "#3E4E4C",
     contextHealthyFg: "#A6E3A1",
-    contextWarnBg: "#585451",
+    contextWarnBg: "#514F50",
     contextWarnFg: "#F9E2AF",
-    contextErrorBg: "#4F454C",
+    contextErrorBg: "#51394D",
     contextErrorFg: "#F38BA8",
     gitModified: "#F9E2AF",
     gitUntracked: "#93E2D5",
@@ -122,15 +121,14 @@ function contextSegment(ctx: SegmentContext, level: number): string {
     const pctText = `${Math.round(pct)}%`;
     const windowText =
         level >= 3 && ctx.contextWindow > 0 ? `/${formatTokens(ctx.contextWindow)}` : "";
-    const autoText = ctx.autoCompactEnabled && level >= 2 ? ` ${AUTO_COMPACT_ICON}` : "";
-    const textPart = text(`${pctText}${windowText}${autoText}`);
+    const textPart = text(`${pctText}${windowText}`);
     if (level <= 0) return textPart;
 
     const barWidth = contextBarWidth(level);
     const filled = Math.min(barWidth, Math.max(0, Math.floor((pct * barWidth) / 100)));
     const band = contextBand(ctx);
     const [barFg, barBg] = contextBandColors(band);
-    const bar = `${fg(barFg, "█".repeat(filled))}${fg(barBg, "░".repeat(barWidth - filled))}`;
+    const bar = fgBg(barFg, barBg, `${"█".repeat(filled)}${"░".repeat(barWidth - filled)}`);
     return `${bar} ${textPart}`;
 }
 
@@ -287,7 +285,11 @@ function less(value: string): string {
 }
 
 function fg(hex: string, value: string): string {
-    return `${hexToAnsi(hex)}${value}\x1b[0m`;
+    return `${hexToFgAnsi(hex)}${value}\x1b[0m`;
+}
+
+function fgBg(fgHex: string, bgHex: string, value: string): string {
+    return `${hexToFgAnsi(fgHex)}${hexToBgAnsi(bgHex)}${value}\x1b[0m`;
 }
 
 function rainbow(value: string): string {
@@ -298,18 +300,25 @@ function rainbow(value: string): string {
             result += char;
             continue;
         }
-        result += `${hexToAnsi(RAINBOW_COLORS[colorIndex % RAINBOW_COLORS.length])}${char}`;
+        result += `${hexToFgAnsi(RAINBOW_COLORS[colorIndex % RAINBOW_COLORS.length])}${char}`;
         colorIndex++;
     }
     return `${result}\x1b[0m`;
 }
 
-function hexToAnsi(hex: string): string {
-    const h = hex.replace("#", "");
-    const r = parseInt(h.slice(0, 2), 16);
-    const g = parseInt(h.slice(2, 4), 16);
-    const b = parseInt(h.slice(4, 6), 16);
+function hexToFgAnsi(hex: string): string {
+    const [r, g, b] = hexToRgb(hex);
     return `\x1b[38;2;${r};${g};${b}m`;
+}
+
+function hexToBgAnsi(hex: string): string {
+    const [r, g, b] = hexToRgb(hex);
+    return `\x1b[48;2;${r};${g};${b}m`;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+    const h = hex.replace("#", "");
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
 
 function friendlyProvider(provider: string): string {
