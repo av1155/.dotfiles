@@ -1,27 +1,30 @@
 {
-    "lastChangelogVersion": "0.74.0",
-    "defaultProvider": "openai-codex",
-    "defaultModel": "gpt-5.5",
-    "defaultThinkingLevel": "xhigh",
-    "theme": "catppuccin-macchiato",
-    "packages": [
-        "npm:pi-subagents",
-        "npm:pi-web-access",
-        "npm:pi-lens",
-        "packages/pi-statusline-footer",
-        "npm:@juicesharp/rpiv-todo",
-        "npm:@juicesharp/rpiv-ask-user-question",
-        "npm:@juicesharp/rpiv-args",
-        "npm:pi-mcp-adapter",
-        "npm:@aliou/pi-processes",
-        "npm:pi-simplify",
-        "npm:@samfp/pi-memory",
-        "npm:@plannotator/pi-extension",
-        "npm:pi-claude-style-tools"
-    ],
-    "extensions": ["extensions/all-core-tools.ts"],
-    "memory": {
-        "lessonInjection": "selective"
-    },
-    "workingVibe": "star-wars"
+  "lastChangelogVersion": "0.74.0",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "defaultThinkingLevel": "xhigh",
+  "theme": "catppuccin-macchiato",
+  "packages": [
+    "npm:pi-subagents",
+    "npm:pi-web-access",
+    "npm:pi-lens",
+    "packages/pi-statusline-footer",
+    "npm:@juicesharp/rpiv-todo",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@juicesharp/rpiv-args",
+    "npm:pi-mcp-adapter",
+    "npm:@aliou/pi-processes",
+    "npm:pi-simplify",
+    "npm:@samfp/pi-memory",
+    "npm:@plannotator/pi-extension",
+    "npm:pi-claude-style-tools",
+    "npm:@spences10/pi-confirm-destructive"
+  ],
+  "extensions": [
+    "extensions/all-core-tools.ts"
+  ],
+  "memory": {
+    "lessonInjection": "selective"
+  },
+  "workingVibe": "star-wars"
 }
