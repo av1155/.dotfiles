@@ -15,7 +15,8 @@
         "npm:pi-mcp-adapter",
         "npm:@aliou/pi-processes",
         "npm:pi-simplify",
-        "npm:@samfp/pi-memory"
+        "npm:@samfp/pi-memory",
+        "npm:@plannotator/pi-extension"
     ],
     "extensions": ["extensions/all-core-tools.ts"],
     "memory": {

@@ -17,7 +17,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { homedir } from "node:os";
 
-import type { ColorScheme, SegmentContext, StatusLinePreset } from "./types.js";
+import type { ColorScheme, CustomStatusItem, SegmentContext, StatusLinePreset } from "./types.js";
 import type { PowerlineConfig } from "./powerline-config.js";
 import {
     BashCompletionEngine,
@@ -45,7 +45,7 @@ import {
     TerminalSplitCompositor,
 } from "./fixed-editor/terminal-split.ts";
 import { getDefaultColors } from "./theme.js";
-import { renderStatuslineFooter } from "./statusline-renderer.js";
+import { renderModeIndicatorLine, renderStatuslineFooter } from "./statusline-renderer.js";
 import {
     isSupportedSuperShortcut,
     matchesConfiguredShortcut,
@@ -541,6 +541,15 @@ function writePowerlineOptionSetting(
 }
 
 const PRESET_NAMES = Object.keys(PRESETS) as StatusLinePreset[];
+const BUILTIN_HIDDEN_EXTENSION_STATUS_KEYS = ["plannotator"] as const;
+
+function collectPowerlineHiddenExtensionStatusKeys(
+    customItems: readonly CustomStatusItem[],
+): Set<string> {
+    const hidden = collectHiddenExtensionStatusKeys(customItems);
+    for (const key of BUILTIN_HIDDEN_EXTENSION_STATUS_KEYS) hidden.add(key);
+    return hidden;
+}
 
 function isValidPreset(value: unknown): value is StatusLinePreset {
     return typeof value === "string" && Object.hasOwn(PRESETS, value);
@@ -722,14 +731,21 @@ function resolveShortcutConfig(settings: Record<string, unknown>): PowerlineShor
  * When terminal is wide enough, secondary segments move up to top bar.
  * When narrow, top bar segments overflow down to secondary row.
  */
+type ResponsiveLayout = {
+    topContent: string;
+    modeIndicatorContent: string;
+    secondaryContent: string;
+};
+
 function computeResponsiveLayout(
     ctx: SegmentContext,
     presetDef: ReturnType<typeof getPreset>,
     availableWidth: number,
-): { topContent: string; secondaryContent: string } {
+): ResponsiveLayout {
     void presetDef;
     return {
         topContent: renderStatuslineFooter(availableWidth, ctx),
+        modeIndicatorContent: renderModeIndicatorLine(availableWidth, ctx),
         secondaryContent: "",
     };
 }
@@ -766,7 +782,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
 
     // Cache for the top and secondary powerline widgets.
     let lastLayoutWidth = 0;
-    let lastLayoutResult: { topContent: string; secondaryContent: string } | null = null;
+    let lastLayoutResult: ResponsiveLayout | null = null;
     let lastLayoutTimestamp = 0;
     let layoutDirty = true;
     let forceNextLayoutRecompute = false;
@@ -1427,7 +1443,9 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         const gitStatus = getGitStatus(gitBranch);
         const extensionStatuses = footerDataRef?.getExtensionStatuses() ?? new Map();
         const customItemsById = new Map(config.customItems.map((item) => [item.id, item]));
-        const hiddenExtensionStatusKeys = collectHiddenExtensionStatusKeys(config.customItems);
+        const hiddenExtensionStatusKeys = collectPowerlineHiddenExtensionStatusKeys(
+            config.customItems,
+        );
 
         // Check if using OAuth subscription
         const usingSubscription = ctx.model
@@ -1469,10 +1487,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
      * Get cached responsive layout or compute fresh one.
      * The segment context scans session state, so keep it stable across render bursts.
      */
-    function getResponsiveLayout(
-        width: number,
-        theme: Theme,
-    ): { topContent: string; secondaryContent: string } {
+    function getResponsiveLayout(width: number, theme: Theme): ResponsiveLayout {
         const now = Date.now();
         const cacheTtl = isStreaming ? STREAMING_LAYOUT_CACHE_TTL_MS : LAYOUT_CACHE_TTL_MS;
 
@@ -1510,7 +1525,9 @@ export default function powerlineFooter(pi: ExtensionAPI) {
 
         const statuses = footerDataRef.getExtensionStatuses();
         if (!statuses || statuses.size === 0) return [];
-        const hiddenExtensionStatusKeys = collectHiddenExtensionStatusKeys(config.customItems);
+        const hiddenExtensionStatusKeys = collectPowerlineHiddenExtensionStatusKeys(
+            config.customItems,
+        );
 
         const notifications: string[] = [];
         for (const value of getNotificationExtensionStatuses(statuses, hiddenExtensionStatusKeys)) {
@@ -1527,7 +1544,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         if (!currentCtx) return [];
 
         const layout = getResponsiveLayout(width, theme);
-        return layout.topContent ? [layout.topContent] : [];
+        return [layout.topContent, layout.modeIndicatorContent].filter(Boolean);
     }
 
     function renderPowerlineSecondaryLines(width: number, theme: Theme): string[] {
@@ -1650,10 +1667,10 @@ export default function powerlineFooter(pi: ExtensionAPI) {
                         ...renderPowerlineStatusLines(width),
                         ...statusContainerLines,
                     ],
-                    topLines: renderPowerlineTopLines(width, theme),
                     editorLines: fixedEditorContainer
                         ? compositor.renderHidden(fixedEditorContainer, width)
                         : [],
+                    promptFooterLines: renderPowerlineTopLines(width, theme),
                     secondaryLines: [
                         ...renderPowerlineSecondaryLines(width, theme),
                         ...belowWidgetLines,
@@ -1815,6 +1832,8 @@ export default function powerlineFooter(pi: ExtensionAPI) {
             { placement: "aboveEditor" },
         );
 
+        // Non-fixed mode can only use Pi's shared below-editor widget stack;
+        // fixed-editor mode owns ordering and keeps this block sticky under the prompt.
         ctx.ui.setWidget(
             "powerline-top",
             (_tui: any, theme: Theme) => ({
@@ -1826,7 +1845,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
                     return renderPowerlineTopLines(width, theme);
                 },
             }),
-            { placement: "aboveEditor" },
+            { placement: "belowEditor" },
         );
 
         ctx.ui.setWidget(

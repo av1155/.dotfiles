@@ -4,8 +4,8 @@ Pi statusline package with a fixed-editor layout, adaptive footer, one-off shell
 
 ## What it keeps
 
-- Adaptive statusline with context percentage/window, model, thinking level, git state, token usage, billing/subscription state, LSP, MCP, and elapsed time.
-- Fixed editor layout with the chat viewport above the editor/statusline cluster.
+- Adaptive statusline with context percentage/window, model, thinking level, git state, token usage, billing/subscription state, LSP, MCP, elapsed time, and Plannotator plan/auto mode.
+- Fixed editor layout with the chat viewport above the editor, the statusline cluster sticky immediately below the prompt, and other below-editor widgets below the cluster.
 - Existing fixed-editor mouse behavior and keyboard chat shortcuts:
     - `ctrl+alt+m`: jump to the last user prompt.
     - `ctrl+alt+j`: jump back to the chat bottom.

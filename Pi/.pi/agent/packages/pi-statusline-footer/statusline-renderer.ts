@@ -4,6 +4,10 @@ import type { SegmentContext } from "./types.js";
 const SEP = " │ ";
 const CACHE_ICON = "󰆼";
 const TIMER_ICON = "⏱";
+const PLAN_MODE_LABEL = "⏸ plan mode on (ctrl+alt+p to cycle)";
+const AUTO_MODE_LABEL = "⏵⏵ auto mode on (ctrl+alt+p to cycle)";
+const PLAN_MODE_COLOR = "#5FAFAF";
+const AUTO_MODE_COLOR = "#FFD700";
 
 const COLORS = {
     text: "#949494",
@@ -49,6 +53,31 @@ export function renderStatuslineFooter(width: number, ctx: SegmentContext): stri
         width,
         "…",
     );
+}
+
+export function renderModeIndicatorLine(width: number, ctx: SegmentContext): string {
+    if (width <= 0) return "";
+
+    const isPlanMode = isPlannotatorPlanModeActive(ctx);
+    const label = isPlanMode ? PLAN_MODE_LABEL : AUTO_MODE_LABEL;
+    const color = isPlanMode ? PLAN_MODE_COLOR : AUTO_MODE_COLOR;
+    const labelWidth = Math.max(0, width - 1);
+    const visibleLabel =
+        labelWidth <= 0
+            ? ""
+            : visibleWidth(label) <= labelWidth
+              ? label
+              : truncateToWidth(label, labelWidth, "…");
+
+    return ` ${visibleLabel ? fg(color, visibleLabel) : ""}`;
+}
+
+function isPlannotatorPlanModeActive(ctx: SegmentContext): boolean {
+    const raw = stripAnsi(ctx.extensionStatuses.get("plannotator") ?? "")
+        .trim()
+        .toLowerCase();
+
+    return raw.includes("⏸") || raw.includes("plan");
 }
 
 function buildCandidates(width: number, ctx: SegmentContext): string[][] {
