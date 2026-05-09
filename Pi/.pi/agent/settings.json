@@ -16,7 +16,8 @@
         "npm:@aliou/pi-processes",
         "npm:pi-simplify",
         "npm:@samfp/pi-memory",
-        "npm:@plannotator/pi-extension"
+        "npm:@plannotator/pi-extension",
+        "npm:pi-claude-style-tools"
     ],
     "extensions": ["extensions/all-core-tools.ts"],
     "memory": {
