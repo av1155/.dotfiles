@@ -10,6 +10,23 @@ _check_network() {
     curl -s --connect-timeout 2 -o /dev/null https://www.github.com
 }
 
+# Cross-platform clipboard write helper.
+# Picks the right tool per OS and falls back to stdout if none present.
+_clip() {
+    if [[ "$OS" == "Darwin" ]] && command -v pbcopy &>/dev/null; then
+        pbcopy
+    elif grep -qi microsoft /proc/version 2>/dev/null && command -v clip.exe &>/dev/null; then
+        clip.exe
+    elif [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy &>/dev/null; then
+        wl-copy
+    elif command -v xclip &>/dev/null; then
+        xclip -selection clipboard
+    else
+        cat
+        echo "(no clipboard tool found; printed to stdout)" >&2
+    fi
+}
+
 case "$OS" in
 Darwin)
     if ! command -v brew &>/dev/null; then
@@ -87,6 +104,30 @@ Linux)
         fi
         [ -d "/usr/share/oh-my-zsh" ] && export ZSH="/usr/share/oh-my-zsh"
 
+    fi
+    ;;
+esac
+
+
+# <------------------- UV INSTALL ------------------->
+
+case "$OS" in
+Darwin)
+    if ! command -v uv &>/dev/null && command -v brew &>/dev/null; then
+        brew install uv 2>/dev/null || \
+            echo "Warning: uv installation failed" >&2
+    fi
+    ;;
+Linux)
+    if ! command -v uv &>/dev/null \
+        && [ ! -f "$HOME/.uv_install_attempted" ] \
+        && _check_network; then
+        if curl -fsSL https://astral.sh/uv/install.sh | sh 2>/dev/null; then
+            touch "$HOME/.uv_install_attempted"
+        else
+            touch "$HOME/.uv_install_attempted"
+            echo "Warning: uv installation failed" >&2
+        fi
     fi
     ;;
 esac
@@ -247,7 +288,7 @@ alias zen-browser='io.github.zen_browser.zen'
 alias h="history"
 alias pn="pnpm"
 alias wm='workmux'
-alias gcopylog='git log --pretty=format:"%ad | %an%n%s%n%b%n" --date=short | pbcopy'
+alias gcopylog='git log --pretty=format:"%ad | %an%n%s%n%b%n" --date=short | _clip'
 alias gt='git --no-pager log --graph --abbrev-commit --decorate --all --format="%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white) - %an%C(reset)%C(auto) %d%C(reset)"'
 
 gscopy() {
@@ -302,7 +343,7 @@ Tip:
 - Use `git status` to see what changed.
 EOF
     } | {
-      if (( print_only )); then cat; else pbcopy; fi
+      if (( print_only )); then cat; else _clip; fi
     }
     (( print_only )) || echo "No changes: copied a reminder to your clipboard." >&2
     return
@@ -387,7 +428,7 @@ EOF
         git diff --no-color --no-index /dev/null "$f"
     done < <(git ls-files --others --exclude-standard -z)
   } | {
-    if (( print_only )); then cat; else pbcopy; fi
+    if (( print_only )); then cat; else _clip; fi
   }
 
   (( print_only )) || echo "Commit prompt (all changes) copied to clipboard." >&2
@@ -758,30 +799,24 @@ export LESS="-R --mouse"
 export PATH="$PATH:$HOME/.cache/lm-studio/bin"
 export PATH="$PATH:$HOME/.pub-cache/bin"
 
+# pnpm
 export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME/bin:"*) ;;
-  *) export PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH" ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
 esac
+# pnpm end
 
-export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+if [[ "$OS" == "Darwin" ]]; then
+    export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+fi
 
 if grep -qi microsoft /proc/version 2>/dev/null; then
   export GALLIUM_DRIVER=d3d12
   export LIBVA_DRIVER_NAME=d3d12
 fi
 
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/andreaventi/.cache/lm-studio/bin"
-# End of LM Studio CLI section
 
 # Must run after every PATH mutation above so _VENV_PATH_BACKUP captures the full PATH.
 _venv_auto_activate
 
-# pnpm
-export PNPM_HOME="/Users/andreaventi/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end

@@ -510,21 +510,21 @@ phase_aux_symlinks() {
 }
 
 # =============================================================================
-# Phase 7 — Language toolchain (pnpm-managed Node, uv-managed nvim Python, Java)
+# Phase 7 — Language toolchain (Homebrew node + pnpm globals, uv-managed nvim Python, Java)
 # =============================================================================
 
-phase_node_via_pnpm() {
-    if ! command -v pnpm &>/dev/null; then
-        log_warn "pnpm not found. Skipping Node setup."
+phase_node_via_brew() {
+    if ! command -v brew &>/dev/null; then
+        log_warn "Homebrew not found. Skipping Node/pnpm setup."
         return 0
     fi
 
-    if ! confirm "Install Node.js LTS via pnpm?"; then
-        log_info "Skipping pnpm-managed Node install."
+    if ! confirm "Install Node.js + pnpm via Homebrew (skipped silently if already installed)?"; then
+        log_info "Skipping Homebrew Node/pnpm install."
         return 0
     fi
 
-    run pnpm env use --global lts
+    run brew install node pnpm
 }
 
 phase_pnpm_globals() {
@@ -589,9 +589,9 @@ phase_flutter_doctor() {
 }
 
 phase_language_toolchain() {
-    log_step "Language toolchain (pnpm-Node, uv-nvim-Python, openjdk symlink, Flutter)"
+    log_step "Language toolchain (Homebrew node+pnpm, uv-nvim-Python, openjdk symlink, Flutter)"
 
-    phase_node_via_pnpm
+    phase_node_via_brew
     phase_pnpm_globals
     phase_nvim_python_provider
     phase_openjdk_link

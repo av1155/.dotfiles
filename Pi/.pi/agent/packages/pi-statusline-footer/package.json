@@ -1,37 +1,33 @@
 {
-  "name": "pi-statusline-footer",
-  "version": "0.5.1",
-  "description": "Custom Pi fixed-editor statusline footer based on pi-powerline-footer",
-  "type": "module",
-  "files": [
-    "*.ts",
-    "*.md",
-    "*.json",
-    "!progress.md",
-    "bash-mode/**/*.ts",
-    "fixed-editor/**/*.ts"
-  ],
-  "keywords": [
-    "pi-package",
-    "pi",
-    "coding-agent",
-    "powerline",
-    "status-bar",
-    "extension"
-  ],
-  "author": "Based on Nico Bailon",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nicobailon/pi-powerline-footer"
-  },
-  "scripts": {
-    "test": "node --experimental-strip-types --test tests/**/*.test.ts"
-  },
-  "pi": {
-    "extensions": [
-      "./index.ts"
-    ]
-  },
-  "private": true
+    "name": "pi-statusline-footer",
+    "version": "0.5.1",
+    "description": "Pi fixed-editor statusline footer",
+    "type": "module",
+    "files": [
+        "*.ts",
+        "*.md",
+        "*.json",
+        "!progress.md",
+        "bash-mode/**/*.ts",
+        "fixed-editor/**/*.ts"
+    ],
+    "keywords": [
+        "pi-package",
+        "pi",
+        "coding-agent",
+        "powerline",
+        "status-bar",
+        "extension"
+    ],
+    "author": "av1155",
+    "license": "MIT",
+    "scripts": {
+        "test": "node --experimental-strip-types --test tests/**/*.test.ts"
+    },
+    "pi": {
+        "extensions": [
+            "./index.ts"
+        ]
+    },
+    "private": true
 }

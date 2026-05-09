@@ -1,5 +1,5 @@
 model = "gpt-5.5"
-model_reasoning_effort = "high"
+model_reasoning_effort = "xhigh"
 personality = "pragmatic"
 
 [projects."/Users/andreaventi/Desktop/claude-test/cosmos-visualization"]
@@ -22,7 +22,7 @@ gpt-5-codex = "gpt-5.3-codex"
 "gpt-5.3-codex" = "gpt-5.4"
 
 [features]
-codex_hooks = true
+hooks = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
@@ -48,3 +48,20 @@ args = ["-y", "context-mode"]
 startup_timeout_sec = 20
 tool_timeout_sec = 120
 enabled = true
+
+[hooks.state]
+
+[hooks.state."/Users/andreaventi/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:8f6925d492c12da457593d87a49ce4329c77d1c7bb9a613d13a92b9781eb2971"
+
+[hooks.state."/Users/andreaventi/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:5986c7e013f70b9f369ca6e559bee8cb423a5ce91cb2ab0131da53262b18cf88"
+
+[hooks.state."/Users/andreaventi/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:3ca559211f44fa6aecba8b3746a0155a9d154edb54625a73bca591c8a07e36c7"
+
+[hooks.state."/Users/andreaventi/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:29a9cb962d4f0e1def58ecb64a3b7d277a5451ca57e9f3bd7c51baf7febe68f6"
+
+[hooks.state."/Users/andreaventi/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:7ed0c588635367dfa9e7af5d6ea98136e0b7d0a917f9118382371c156083a992"

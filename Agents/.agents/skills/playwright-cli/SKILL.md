@@ -318,7 +318,7 @@ npx --no-install playwright-cli --version
 When local version is available, use `npx playwright-cli` in all commands. Otherwise, install `playwright-cli` as a global command:
 
 ```bash
-npm install -g @playwright/cli@latest
+pnpm add -g @playwright/cli@latest
 ```
 
 ## Example: Form submission

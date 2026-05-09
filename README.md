@@ -53,13 +53,13 @@ exec zsh
 ## Features
 
 - **Universal Shell Environment**: Zsh configuration that adapts to macOS, Arch, Debian, WSL, and Raspberry Pi
-- **Automated Tool Installation**: Homebrew, Oh-My-Zsh, Conda, and platform-specific package managers installed automatically
+- **Automated Tool Installation**: Homebrew, Oh-My-Zsh, uv, and platform-specific package managers installed automatically
 - **Smart Plugin Management**: ZPlug with Pure theme, syntax highlighting, autosuggestions, and async rendering
 - **Self-Healing tmux**: Automatic plugin manager setup with session persistence and custom keybindings
 - **Enhanced Navigation**: FZF fuzzy finder integrated with bat, git, and file browsing
 - **Cross-Harness AI Setup**: Claude Code, OpenAI Codex CLI, OpenCode, and Pi all reading a single canonical AGENTS.md and shared skill pool. Documented in `docs/AGENTIC-CODING-HARNESSES.md`
-- **Python Environment**: Conda/Miniforge auto-setup with Neovim provider configuration
-- **Node.js Management**: NVM lazy-loading for instant shell startup
+- **Python Environment**: uv-managed venvs auto-activated per-project (zsh chpwd hook) with direnv for richer .envrc cases and a dedicated venv for the Neovim provider
+- **Node.js Management**: pnpm-managed globals on top of system-installed node; npm kept for legacy `npx`
 - **Java Development**: Auto-configured classpath with JUnit and common libraries
 - **Modern CLI Tools**: fastfetch, yazi, lazygit, eza, zoxide, ripgrep, and more
 - **Catppuccin Theming**: Consistent color schemes across bat, tmux, and terminal
@@ -362,7 +362,7 @@ The `.zshrc` is designed to work seamlessly across different platforms:
 - **Platform Detection**: Automatically detects macOS, Arch Linux, Debian, WSL, and Raspberry Pi
 - **Oh-My-Zsh**: Managed with automatic installation and plugin support
 - **ZPlug**: Plugin manager with Pure theme, syntax highlighting, and autosuggestions
-- **Performance**: Lazy-loading (NVM), caching (conda config), and optimized PATH management
+- **Performance**: Conditional initialization (only loads tools that are present) and optimized PATH management
 - **Fastfetch**: System information display on new shells
 - **Smart Aliases**: Context-aware shortcuts for common tasks
 
@@ -388,8 +388,8 @@ Automatic setup for platform-specific package managers:
 
 - **macOS**: Homebrew with automatic installation
 - **Arch Linux**: Paru (AUR helper) with auto-compilation
-- **Conda/Miniforge**: Python environment management
-- **NVM**: Node.js version management (lazy-loaded)
+- **uv**: Python toolchain with per-project venv auto-activation
+- **pnpm**: Sole global package manager for Node.js tooling (node from each platform's system package manager)
 
 ### Development Tools
 
