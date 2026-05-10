@@ -971,12 +971,10 @@ export class TerminalSplitCompositor {
             }
         }, CONTEXT_MENU_MOUSE_REPORTING_PAUSE_MS);
 
-        if (
-            typeof this.mouseReportingResumeTimer === "object" &&
-            "unref" in this.mouseReportingResumeTimer
-        ) {
-            this.mouseReportingResumeTimer.unref();
-        }
+        const mouseReportingResumeTimer = this.mouseReportingResumeTimer as {
+            unref?: () => void;
+        } | null;
+        mouseReportingResumeTimer?.unref?.();
 
         const restoreClipboard = this.onCopySelection;
         if (!textToRestoreToClipboard || !restoreClipboard) return;
@@ -998,12 +996,10 @@ export class TerminalSplitCompositor {
                 }
             }, CONTEXT_MENU_CLIPBOARD_RESTORE_INTERVAL_MS);
 
-            if (
-                typeof this.clipboardRestoreTimer === "object" &&
-                "unref" in this.clipboardRestoreTimer
-            ) {
-                this.clipboardRestoreTimer.unref();
-            }
+            const clipboardRestoreTimer = this.clipboardRestoreTimer as {
+                unref?: () => void;
+            } | null;
+            clipboardRestoreTimer?.unref?.();
         };
 
         scheduleClipboardRestore();

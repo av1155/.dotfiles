@@ -145,15 +145,19 @@ export class OneOffShellEditor extends CustomEditor {
         const lines = oneOffBash
             ? this.renderWithHiddenOneOffPrefix(width, oneOffBash)
             : super.render(width);
-        if (!oneOffBash) return lines;
-        if (!this.ghost) return lines;
+        if (!oneOffBash) return this.withAutocompleteBottomSpacer(lines);
+        if (!this.ghost) return this.withAutocompleteBottomSpacer(lines);
 
         const text = this.getText();
-        if (text.includes("\n")) return lines;
+        if (text.includes("\n")) return this.withAutocompleteBottomSpacer(lines);
         const cursor = this.getCursor();
-        if (cursor.line !== 0 || cursor.col !== text.length) return lines;
-        if (!this.ghost.value.startsWith(text) || this.ghost.value === text) return lines;
-        if (lines.length < 3) return lines;
+        if (cursor.line !== 0 || cursor.col !== text.length) {
+            return this.withAutocompleteBottomSpacer(lines);
+        }
+        if (!this.ghost.value.startsWith(text) || this.ghost.value === text) {
+            return this.withAutocompleteBottomSpacer(lines);
+        }
+        if (lines.length < 3) return this.withAutocompleteBottomSpacer(lines);
 
         const displayText = text.slice(oneOffBash.offset);
         const displayGhostValue = this.ghost.value.slice(oneOffBash.offset);
@@ -161,17 +165,24 @@ export class OneOffShellEditor extends CustomEditor {
         const contentLine = 1;
         const cursorBlock = "\x1b[7m \x1b[0m";
         const availableWidth = Math.max(0, width - visibleWidth(displayText) - 1);
-        if (availableWidth === 0) return lines;
+        if (availableWidth === 0) return this.withAutocompleteBottomSpacer(lines);
 
         const shownSuffix = truncateToWidth(suffix, availableWidth, "", true);
-        if (!shownSuffix) return lines;
+        if (!shownSuffix) return this.withAutocompleteBottomSpacer(lines);
 
         const padding = " ".repeat(
             Math.max(0, width - visibleWidth(displayText) - 1 - visibleWidth(shownSuffix)),
         );
         const ghost = `\x1b[38;5;244m${shownSuffix}\x1b[0m`;
         lines[contentLine] = `${displayText}${cursorBlock}${ghost}${padding}`;
-        return lines;
+        return this.withAutocompleteBottomSpacer(lines);
+    }
+
+    private withAutocompleteBottomSpacer(lines: string[]): string[] {
+        const isShowingAutocomplete = Reflect.get(this, "isShowingAutocomplete");
+        return typeof isShowingAutocomplete === "function" && isShowingAutocomplete.call(this)
+            ? [...lines, ""]
+            : lines;
     }
 
     private isOneOffBashCommandContext(): boolean {
@@ -216,18 +227,19 @@ export class OneOffShellEditor extends CustomEditor {
     private moveCursorToEditorBoundary(position: "start" | "end"): void {
         const state = Reflect.get(this, "state");
         const lines = state && typeof state === "object" ? Reflect.get(state, "lines") : null;
-        if (!Array.isArray(lines)) {
+        if (!state || typeof state !== "object" || !Array.isArray(lines)) {
             throw new Error("Editor cursor state is unavailable");
         }
 
+        const editorState = state as Record<string, unknown>;
         if (position === "start") {
-            Reflect.set(state, "cursorLine", 0);
-            Reflect.set(state, "cursorCol", 0);
+            Reflect.set(editorState, "cursorLine", 0);
+            Reflect.set(editorState, "cursorCol", 0);
         } else {
             const lastLine = Math.max(0, lines.length - 1);
-            Reflect.set(state, "cursorLine", lastLine);
+            Reflect.set(editorState, "cursorLine", lastLine);
             Reflect.set(
-                state,
+                editorState,
                 "cursorCol",
                 typeof lines[lastLine] === "string" ? lines[lastLine].length : 0,
             );

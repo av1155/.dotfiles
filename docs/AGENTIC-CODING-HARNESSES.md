@@ -209,18 +209,18 @@ Codex / OpenCode / Pi have no auto-memory equivalent. Cross-session continuity m
 
 User's currently installed Pi packages and local extensions are tracked in `.dotfiles/Pi/.pi/agent/settings.json`.
 
-| Package / extension                  | What it does                                                                                                                                                                                                             |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pi-subagents`                       | Adds 8 built-in subagent personas; supports chains, parallel execution, TUI clarification, git worktree isolation                                                                                                        |
-| `pi-web-access`                      | Adds `web_search` (Exa, Perplexity, Gemini), `code_search` (Exa MCP), `fetch_content` (URL+local with GitHub/YouTube/PDF specialization), `get_search_content`                                                           |
-| `pi-lens`                            | Real-time pipeline on file writes: secrets detection, 26+ formatters, ESLint/Ruff auto-fix, LSP (37 servers), tree-sitter + ast-grep + Semgrep linting, dependency analysis. 35+ languages, 180+ ast-grep security rules |
-| `packages/pi-statusline-footer`      | Local statusline/footer package: editor stash, working vibes, model/tokens/cost segments, bash mode                                                                                                                      |
-| `@juicesharp/rpiv-args` v1.2.0       | **Adds `$ARGUMENTS` / `$1`-`$N` / `$@` / `${@:N}` / `${@:N:L}` substitution to Pi skill bodies.** Hooks `input`, `before_agent_start`, `session_start`                                                                   |
-| `@juicesharp/rpiv-todo`              | Persistent task tracking, `/todos` command, TUI overlay, dependency graph, survives `/reload` and compaction                                                                                                             |
-| `@juicesharp/rpiv-ask-user-question` | Tabbed-question dialog tool: 1-4 questions, 2-4 options each, single/multi-select, optional previews, free-text notes, Submit review tab                                                                                 |
-| `pi-mcp-adapter`                     | Adds MCP support to Pi through a compact proxy tool, lazy server lifecycle, direct-tool promotion, and config discovery from `~/.pi/agent/mcp.json`, `.pi/mcp.json`, `.mcp.json`, and `~/.config/mcp/mcp.json`           |
-| `extensions/all-core-tools.ts`       | Local extension that keeps all official Pi built-in tools active every session: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`                                                                                    |
-| `extensions/inline-skill-invocations.ts` | Local input-transform extension that lets `/skill:<name>` or `/<skill-name>` appear on its own line anywhere in a prompt, then rewrites the prompt so Pi's normal skill expansion runs.                                |
+| Package / extension                      | What it does                                                                                                                                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pi-subagents`                           | Adds 8 built-in subagent personas; supports chains, parallel execution, TUI clarification, git worktree isolation                                                                                                        |
+| `pi-web-access`                          | Adds `web_search` (Exa, Perplexity, Gemini), `code_search` (Exa MCP), `fetch_content` (URL+local with GitHub/YouTube/PDF specialization), `get_search_content`                                                           |
+| `pi-lens`                                | Real-time pipeline on file writes: secrets detection, 26+ formatters, ESLint/Ruff auto-fix, LSP (37 servers), tree-sitter + ast-grep + Semgrep linting, dependency analysis. 35+ languages, 180+ ast-grep security rules |
+| `packages/pi-statusline-footer`          | Local statusline/footer package: editor stash, working vibes, model/tokens/cost segments, bash mode                                                                                                                      |
+| `@juicesharp/rpiv-args` v1.2.0           | **Adds `$ARGUMENTS` / `$1`-`$N` / `$@` / `${@:N}` / `${@:N:L}` substitution to Pi skill bodies.** Hooks `input`, `before_agent_start`, `session_start`                                                                   |
+| `@juicesharp/rpiv-todo`                  | Persistent task tracking, `/todos` command, TUI overlay, dependency graph, survives `/reload` and compaction                                                                                                             |
+| `@juicesharp/rpiv-ask-user-question`     | Tabbed-question dialog tool: 1-4 questions, 2-4 options each, single/multi-select, optional previews, free-text notes, Submit review tab                                                                                 |
+| `pi-mcp-adapter`                         | Adds MCP support to Pi through a compact proxy tool, lazy server lifecycle, direct-tool promotion, and config discovery from `~/.pi/agent/mcp.json`, `.pi/mcp.json`, `.mcp.json`, and `~/.config/mcp/mcp.json`           |
+| `extensions/all-core-tools.ts`           | Local extension that keeps all official Pi built-in tools active every session: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`                                                                                    |
+| `extensions/inline-skill-invocations.ts` | Local input-transform extension that lets `/skill:<name>` or `/<skill-name>` appear on its own line anywhere in a prompt, then rewrites the prompt so Pi's normal skill expansion runs.                                  |
 
 `rpiv` = juicesharp's brand for a suite of Pi enhancements (from monorepo `rpiv-mono`).
 
@@ -277,6 +277,11 @@ Per-item mapping with origin classification and bucket assignment, documented du
 | zoom-out/SKILL.md                           | Matt Pocock                           | C (`disable-model-invocation: true`) | Stay as-is                                                                                                                                                                                |
 | playwright-cli/SKILL.md                     | Matt Pocock-flavored / infrastructure | C                                    | Stay; `allowed-tools` inert outside Claude. No path constraints — description-triggered                                                                                                   |
 | agentic-coding-harnesses/SKILL.md (Stage 1) | user-authored discovery               | C                                    | Stay; description-triggered when env modifications discussed                                                                                                                              |
+| context7-cli/SKILL.md                       | Upstash Context7                      | C                                    | Added 2026-05-10; verbatim from `upstash/context7` commit `78b98266954d35da8aa93ad40c67df33a3ff4443`; skill-symlinked for Claude                                                          |
+| find-docs/SKILL.md                          | Upstash Context7                      | C                                    | Added 2026-05-10; verbatim from `upstash/context7` commit `78b98266954d35da8aa93ad40c67df33a3ff4443`; replaces unmanaged live Claude copy and restores universal availability             |
+| firecrawl-cli/SKILL.md                      | Firecrawl CLI                         | C                                    | Added 2026-05-10 from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; frontmatter name changed to `firecrawl-cli` to match directory; skill-symlinked for Claude       |
+| firecrawl-scrape/SKILL.md                   | Firecrawl CLI                         | C                                    | Added 2026-05-10; verbatim from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; skill-symlinked for Claude                                                             |
+| firecrawl-map/SKILL.md                      | Firecrawl CLI                         | C                                    | Added 2026-05-10; verbatim from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; skill-symlinked for Claude                                                             |
 
 #### Skills currently in `.dotfiles/Claude/.claude/skills/` (16 personal-workflow)
 
@@ -445,7 +450,6 @@ Per Q4. Live as real directories at `~/.agents/skills/` and `~/.claude/skills/`,
 | -------------------------------- | --------------------------------------------- |
 | deploy-to-vercel                 | Vercel plugin or setup-script                 |
 | doc-coauthoring                  | Claude.ai desktop chat app                    |
-| find-docs                        | utility (origin unattributed)                 |
 | find-skills                      | utility (origin unattributed)                 |
 | frontend-design                  | Claude Code plugin (claude-plugins-official)  |
 | supabase                         | Supabase plugin                               |
@@ -601,14 +605,14 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 
 Per-harness diagnostic flow:
 
-| Harness     | Symptom                                              | Check                                                                                                                                                                                                                                                            |
-| ----------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pi          | Skill is invisible to model                          | (1) Does SKILL.md have a non-empty `description:` field? Pi hard-skips skills without one. (2) Is the skill in a Pi-discoverable path? Run `pi list-skills` if available; verify `skills:` array in `~/.pi/agent/settings.json` includes the skill's parent dir. |
-| Pi          | `/skill:<name>` only works when it is the whole first token | Core Pi only expands skill commands when the prompt starts with `/skill:`. This setup includes `extensions/inline-skill-invocations.ts`; reload Pi, then put `/skill:<name>` or `/<skill-name>` on its own line anywhere in the message. |
-| Claude Code | Skill doesn't auto-load on path match                | Verify `paths:` frontmatter is correct YAML. Use the `InstructionsLoaded` hook to log what loaded.                                                                                                                                                               |
-| Codex       | Skill not in slash menu / `$<name>` invocation fails | Verify SKILL.md is at `~/.agents/skills/<name>/SKILL.md` (canonical) or `~/.codex/skills/<name>/SKILL.md` (deprecated). Ensure name is lowercase-alphanumeric-hyphens.                                                                                           |
-| OpenCode    | Skill not surfaced                                   | OpenCode validates name regex `^[a-z0-9]+(-[a-z0-9]+)*$`. Capital letters or underscores cause silent skip.                                                                                                                                                      |
-| All         | Description-discovery failing                        | The model picks skills based on description trigger words. If the description is generic ("Helps with X"), the model won't reach for it. Rewrite description as "Use when X. Triggers on Y/Z. Skip if Q."                                                        |
+| Harness     | Symptom                                                     | Check                                                                                                                                                                                                                                                            |
+| ----------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pi          | Skill is invisible to model                                 | (1) Does SKILL.md have a non-empty `description:` field? Pi hard-skips skills without one. (2) Is the skill in a Pi-discoverable path? Run `pi list-skills` if available; verify `skills:` array in `~/.pi/agent/settings.json` includes the skill's parent dir. |
+| Pi          | `/skill:<name>` only works when it is the whole first token | Core Pi only expands skill commands when the prompt starts with `/skill:`. This setup includes `extensions/inline-skill-invocations.ts`; reload Pi, then put `/skill:<name>` or `/<skill-name>` on its own line anywhere in the message.                         |
+| Claude Code | Skill doesn't auto-load on path match                       | Verify `paths:` frontmatter is correct YAML. Use the `InstructionsLoaded` hook to log what loaded.                                                                                                                                                               |
+| Codex       | Skill not in slash menu / `$<name>` invocation fails        | Verify SKILL.md is at `~/.agents/skills/<name>/SKILL.md` (canonical) or `~/.codex/skills/<name>/SKILL.md` (deprecated). Ensure name is lowercase-alphanumeric-hyphens.                                                                                           |
+| OpenCode    | Skill not surfaced                                          | OpenCode validates name regex `^[a-z0-9]+(-[a-z0-9]+)*$`. Capital letters or underscores cause silent skip.                                                                                                                                                      |
+| All         | Description-discovery failing                               | The model picks skills based on description trigger words. If the description is generic ("Helps with X"), the model won't reach for it. Rewrite description as "Use when X. Triggers on Y/Z. Skip if Q."                                                        |
 
 ### Verify each harness loads correctly
 
@@ -692,12 +696,12 @@ After cleanup, `~/.agents/skills/` count: 44 → 30. All 30 remaining entries ar
 
 **Brought back** (4 official Anthropic skills from [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills) repo, version-tracked in dotfiles):
 
-| Skill | Path | Modifications |
-|---|---|---|
-| `skill-creator` | `Agents/.agents/skills/skill-creator/` (248 KB with `scripts/`, `references/`, `assets/`) | None (verbatim copy) |
-| `webapp-testing` | `Agents/.agents/skills/webapp-testing/` (32 KB with `scripts/`) | None (verbatim copy) |
-| `doc-coauthoring` | `Agents/.agents/skills/doc-coauthoring/` (16 KB) | None (verbatim copy) |
-| `frontend-design-global` | `Agents/.agents/skills/frontend-design-global/` (20 KB) | **Renamed** from `frontend-design` to avoid namespace collision with the `frontend-design@claude-plugins-official` plugin's bundled skill. **Generalized** language: replaced "Claude is capable of extraordinary creative work" → "a frontier LLM is capable of extraordinary creative work". Added `metadata.origin: anthropics/skills (frontend-design)` and `metadata.fork-reason: Cross-harness availability and harness-neutral language` |
+| Skill                    | Path                                                                                      | Modifications                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `skill-creator`          | `Agents/.agents/skills/skill-creator/` (248 KB with `scripts/`, `references/`, `assets/`) | None (verbatim copy)                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `webapp-testing`         | `Agents/.agents/skills/webapp-testing/` (32 KB with `scripts/`)                           | None (verbatim copy)                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `doc-coauthoring`        | `Agents/.agents/skills/doc-coauthoring/` (16 KB)                                          | None (verbatim copy)                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `frontend-design-global` | `Agents/.agents/skills/frontend-design-global/` (20 KB)                                   | **Renamed** from `frontend-design` to avoid namespace collision with the `frontend-design@claude-plugins-official` plugin's bundled skill. **Generalized** language: replaced "Claude is capable of extraordinary creative work" → "a frontier LLM is capable of extraordinary creative work". Added `metadata.origin: anthropics/skills (frontend-design)` and `metadata.fork-reason: Cross-harness availability and harness-neutral language` |
 
 All 4 are now visible globally to all 4 harnesses via `~/.agents/skills/` (Codex / OpenCode / Pi read natively; Claude Code reads via stow-installed symlink at `~/.claude/skills/...` if added there, otherwise via the agentic-coding-harnesses cross-harness layer).
 
@@ -708,6 +712,33 @@ If Anthropic publishes updates to these skills, manual sync from `https://github
 Added `Pi/.pi/agent/extensions/inline-skill-invocations.ts`, a user-owned Pi input-transform extension. It detects `/skill:<name>` or `/<skill-name>` on its own non-fenced line anywhere in the user's prompt, rewrites the message to start with `/skill:<name>`, and preserves the surrounding text as skill arguments. This works around core Pi's documented behavior: skill command expansion only happens when the raw prompt starts with `/skill:`.
 
 Validation performed with a Node unit test for explicit, bare, inline-argument, fenced-code, unknown-command, and already-wrapped cases, plus Pi's `loadExtensions()` loader against the new extension file.
+
+### 2026-05-10: Upstash Context7 skills added
+
+Added two Upstash Context7 skills from `https://github.com/upstash/context7/tree/master/skills` at commit `78b98266954d35da8aa93ad40c67df33a3ff4443`:
+
+| Skill          | Path                                                     | Modifications       |
+| -------------- | -------------------------------------------------------- | ------------------- |
+| `context7-cli` | `Agents/.agents/skills/context7-cli/` with `references/` | None, verbatim copy |
+| `find-docs`    | `Agents/.agents/skills/find-docs/`                       | None, verbatim copy |
+
+Both skills are visible through the canonical cross-harness path at `~/.agents/skills/`. Claude Code also gets directory symlinks at `Claude/.claude/skills/context7-cli` and `Claude/.claude/skills/find-docs`. A pre-existing unmanaged live Claude copy of `~/.claude/skills/find-docs` was byte-identical to the upstream copy, so it was removed before `stow --restow Agents Claude` replaced it with the tracked symlink.
+
+If Upstash publishes updates, sync manually from the same repository and re-run `stow --restow Agents Claude`.
+
+### 2026-05-10: Firecrawl CLI skills added
+
+Added three Firecrawl CLI skills from `https://github.com/firecrawl/cli/tree/main/skills` at commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`:
+
+| Skill              | Path                                                 | Modifications                                                                                                                  |
+| ------------------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `firecrawl-cli`    | `Agents/.agents/skills/firecrawl-cli/` with `rules/` | Changed frontmatter `name` from upstream `firecrawl` to `firecrawl-cli` so Pi's skill loader accepts the directory-name match. |
+| `firecrawl-scrape` | `Agents/.agents/skills/firecrawl-scrape/`            | None, verbatim copy                                                                                                            |
+| `firecrawl-map`    | `Agents/.agents/skills/firecrawl-map/`               | None, verbatim copy                                                                                                            |
+
+All three are visible through the canonical cross-harness path at `~/.agents/skills/`. Claude Code also gets directory symlinks at `Claude/.claude/skills/firecrawl-cli`, `Claude/.claude/skills/firecrawl-scrape`, and `Claude/.claude/skills/firecrawl-map`.
+
+If Firecrawl publishes updates, sync manually from the same repository and re-run `stow --restow Agents Claude`.
 
 ### Pending entries
 
@@ -775,7 +806,7 @@ Single wiring per skill — never both rule-symlink and skill-symlink for the sa
 
 ### Q4 — Imported skills
 
-The 14 plugin-installed / Claude.ai-app-installed / setup-script-installed skills (vercel-_, supabase-_, deploy-to-vercel, doc-coauthoring, find-docs, find-skills, frontend-design, web-design-guidelines, webapp-testing) are NOT version-tracked. They stay outside dotfiles. Documented as external in section 14.
+The plugin-installed / Claude.ai-app-installed / setup-script-installed skills (vercel-_, supabase-_, deploy-to-vercel, doc-coauthoring, find-skills, frontend-design, web-design-guidelines, webapp-testing) are NOT version-tracked. They stay outside dotfiles. Documented as external in section 14. `find-docs` moved into the canonical dotfiles pool on 2026-05-10 alongside `context7-cli`.
 
 ### Q5 — Bucket A migration disposition
 

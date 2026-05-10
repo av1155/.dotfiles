@@ -311,7 +311,7 @@ gscopy() {
 
   git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "Not a git repo." >&2; return 1; }
 
-  local branch files ins dels
+  local branch files ins dels f target
   branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 
   files=$(
@@ -327,7 +327,11 @@ $(
     git diff --cached --numstat
     git diff --numstat
     while IFS= read -r -d '' f; do
-      git diff --no-index --numstat /dev/null "$f"
+      if [[ -L "$f" ]]; then
+        printf '1\t0\t%s\n' "$f"
+      else
+        git diff --no-index --numstat -- /dev/null "$f"
+      fi
     done < <(git ls-files --others --exclude-standard -z)
   } | awk '{a+=$1; d+=$2} END {if (a=="") a=0; if (d=="") d=0; print a, d}'
 )
@@ -425,7 +429,17 @@ EOF
 
     while IFS= read -r -d '' f; do
         echo
-        git diff --no-color --no-index /dev/null "$f"
+        if [[ -L "$f" ]]; then
+            target=$(readlink "$f")
+            printf 'diff --git a/%s b/%s\n' "$f" "$f"
+            printf '%s\n' 'new file mode 120000'
+            printf '%s\n' '--- /dev/null'
+            printf '+++ b/%s\n' "$f"
+            printf '%s\n' '@@ -0,0 +1 @@'
+            printf '+%s\n' "$target"
+        else
+            git diff --no-color --no-index -- /dev/null "$f"
+        fi
     done < <(git ls-files --others --exclude-standard -z)
   } | {
     if (( print_only )); then cat; else _clip; fi
@@ -480,12 +494,6 @@ if command -v bat &>/dev/null; then
         fi
     fi
     export BAT_THEME="Catppuccin Macchiato"
-fi
-
-if command -v zoxide &>/dev/null; then
-    export _ZO_DOCTOR=0
-    eval "$(zoxide init zsh)"
-    alias cd="z"
 fi
 
 alias ls='eza -1 -A --git --icons=auto --sort=name --group-directories-first'
@@ -622,7 +630,7 @@ if command -v fd &>/dev/null && command -v fzf &>/dev/null && command -v eza &>/
             --exclude 'Trash' \
             --exclude '.Trash' \
             --follow \
-            . 2>/dev/null | fzf --preview 'eza --tree --level 2 --color=always {}' +m) && z "$dir" || return
+            . 2>/dev/null | fzf --preview 'eza --tree --level 2 --color=always {}' +m) && cd "$dir" || return
     }
 fi
 
@@ -819,4 +827,11 @@ fi
 
 # Must run after every PATH mutation above so _VENV_PATH_BACKUP captures the full PATH.
 _venv_auto_activate
+
+# <-------------------- ZOXIDE -------------------->
+
+if command -v zoxide &>/dev/null; then
+    export _ZO_DOCTOR=0
+    eval "$(zoxide init zsh --cmd cd)"
+fi
 

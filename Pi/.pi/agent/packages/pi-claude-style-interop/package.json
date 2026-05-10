@@ -1,0 +1,22 @@
+{
+    "name": "pi-claude-style-interop",
+    "version": "0.1.0",
+    "description": "Local Pi interop shim for Claude-style tools",
+    "type": "module",
+    "private": true,
+    "files": [
+        "index.ts",
+        "README.md"
+    ],
+    "keywords": [
+        "pi-package",
+        "pi",
+        "extension",
+        "claude-style"
+    ],
+    "pi": {
+        "extensions": [
+            "./index.ts"
+        ]
+    }
+}

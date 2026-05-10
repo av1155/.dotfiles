@@ -18,6 +18,7 @@
     "npm:@samfp/pi-memory",
     "npm:@plannotator/pi-extension",
     "npm:pi-claude-style-tools",
+    "packages/pi-claude-style-interop",
     "npm:@spences10/pi-confirm-destructive"
   ],
   "extensions": [
@@ -27,7 +28,7 @@
   "memory": {
     "lessonInjection": "selective"
   },
-  "workingVibe": "star-wars",
+  "workingVibe": "off",
   "quietStartup": true,
   "startupScreen": {
     "enabled": true
@@ -39,12 +40,14 @@
     "widgetBudgets": {
       "widgets": {
         "pi-lens": {
+          "mode": "actionable",
           "maxLines": 8
         },
         "rpiv-todos": {
-          "maxLines": 5
+          "mode": "native"
         },
         "plannotator-progress": {
+          "mode": "remaining",
           "maxLines": 4
         }
       }

@@ -8,6 +8,7 @@ import {
 import type { AssistantMessage } from "@mariozechner/pi-ai";
 import {
     isKeyRelease,
+    Text,
     type AutocompleteProvider,
     truncateToWidth,
     TUI_KEYBINDINGS,
@@ -210,7 +211,7 @@ const APP_RESERVED_SHORTCUTS = [
 ] as const;
 const EXTRA_RESERVED_SHORTCUTS = [] as const;
 const SHORTCUT_MODIFIER_ORDER = ["ctrl", "alt", "super", "shift"] as const;
-const SHORTCUT_MODIFIERS = new Set(SHORTCUT_MODIFIER_ORDER);
+const SHORTCUT_MODIFIERS: ReadonlySet<string> = new Set(SHORTCUT_MODIFIER_ORDER);
 const SHORTCUT_NAMED_KEYS = new Set([
     "escape",
     "esc",
@@ -577,7 +578,7 @@ function normalizeShortcut(value: string): string {
     const parts = value.trim().toLowerCase().split("+");
     if (parts.length <= 1) return parts[0] ?? "";
 
-    const modifierRank = new Map(
+    const modifierRank = new Map<string, number>(
         SHORTCUT_MODIFIER_ORDER.map((modifier, index) => [modifier, index]),
     );
     const modifiers = parts
@@ -591,7 +592,9 @@ function reservedShortcuts(): Set<string> {
         [...EXTRA_RESERVED_SHORTCUTS, ...APP_RESERVED_SHORTCUTS].map(normalizeShortcut),
     );
 
-    for (const definition of Object.values(TUI_KEYBINDINGS)) {
+    for (const definition of Object.values(
+        TUI_KEYBINDINGS as Record<string, { defaultKeys?: string | string[] }>,
+    )) {
         const defaultKeys = definition.defaultKeys;
         const keys =
             defaultKeys === undefined
@@ -781,7 +784,11 @@ function hasConfiguredWidgetBudgets(): boolean {
 }
 
 function compactWidgetOverflowLine(hiddenCount: number, width?: number): string {
-    const line = ` ${getFgAnsiCode("sep")}… +${hiddenCount} more${ansi.reset}`;
+    return compactWidgetSummaryLine(`+${hiddenCount} more`, width);
+}
+
+function compactWidgetSummaryLine(summary: string, width?: number): string {
+    const line = ` ${getFgAnsiCode("sep")}… ${summary}${ansi.reset}`;
     if (typeof width !== "number" || width <= 0 || visibleWidth(line) <= width) {
         return line;
     }
@@ -789,24 +796,165 @@ function compactWidgetOverflowLine(hiddenCount: number, width?: number): string 
     return truncateToWidth(line, width, "…");
 }
 
+function stripWidgetAnsi(line: string): string {
+    return line
+        .replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, "")
+        .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "");
+}
+
+function visibleWidgetText(line: string): string {
+    return stripWidgetAnsi(line).replace(/\s+/g, " ").trim();
+}
+
+function isVisibleWidgetLine(line: string): boolean {
+    return visibleWidth(line) > 0 && visibleWidgetText(line).length > 0;
+}
+
 function capWidgetLineArray(
     lines: readonly string[],
     budget: WidgetLineBudget,
     width?: number,
 ): string[] {
+    const visibleLines = lines.filter(isVisibleWidgetLine);
     const maxLines = Math.max(1, Math.floor(budget.maxLines));
-    if (lines.length <= maxLines) return [...lines];
+    if (visibleLines.length <= maxLines) return [...visibleLines];
 
     const keptLineCount = Math.max(0, maxLines - 1);
-    const hiddenCount = lines.length - keptLineCount;
-    return [...lines.slice(0, keptLineCount), compactWidgetOverflowLine(hiddenCount, width)];
+    const hiddenCount = visibleLines.length - keptLineCount;
+    return [...visibleLines.slice(0, keptLineCount), compactWidgetOverflowLine(hiddenCount, width)];
+}
+
+function transformPlannotatorProgressLines(
+    lines: readonly string[],
+    budget: WidgetLineBudget,
+    width?: number,
+): string[] {
+    const visibleLines = lines.filter(isVisibleWidgetLine);
+    const completed = visibleLines.filter((line) => visibleWidgetText(line).startsWith("☑"));
+    const pending = visibleLines.filter((line) => visibleWidgetText(line).startsWith("☐"));
+    const other = visibleLines.filter((line) => {
+        const text = visibleWidgetText(line);
+        return !text.startsWith("☑") && !text.startsWith("☐");
+    });
+
+    if (completed.length === 0 && pending.length === 0) {
+        return capWidgetLineArray(visibleLines, budget, width);
+    }
+
+    const maxLines = Math.max(1, Math.floor(budget.maxLines));
+    if (pending.length === 0) {
+        return [];
+    }
+
+    if (maxLines === 1) {
+        const parts = [`${pending.length} remaining`];
+        if (completed.length > 0) parts.push(`${completed.length} done`);
+        return [compactWidgetSummaryLine(parts.join(" · "), width)];
+    }
+
+    const summaryNeeded = completed.length > 0 || pending.length + other.length > maxLines;
+    const reservedSummaryLines = summaryNeeded ? 1 : 0;
+    const taskSlots = Math.max(1, maxLines - reservedSummaryLines);
+    const candidateLines = [...other, ...pending];
+    const kept = candidateLines.slice(0, taskSlots);
+    const hiddenPending = Math.max(
+        0,
+        pending.length - kept.filter((line) => visibleWidgetText(line).startsWith("☐")).length,
+    );
+
+    if (!summaryNeeded) return kept;
+
+    const parts: string[] = [];
+    if (hiddenPending > 0) parts.push(`+${hiddenPending} remaining`);
+    if (completed.length > 0) parts.push(`${completed.length} done`);
+    kept.push(compactWidgetSummaryLine(parts.join(" · "), width));
+    return kept;
+}
+
+function transformPiLensActionableLines(
+    lines: readonly string[],
+    budget: WidgetLineBudget,
+    width?: number,
+): string[] {
+    const visibleLines = lines.filter(isVisibleWidgetLine);
+    if (visibleLines.length === 0) return [];
+
+    const plainLines = visibleLines.map(visibleWidgetText);
+    const hasActionableLine = plainLines.some(
+        (line) =>
+            line.includes("●") ||
+            line.includes("▲") ||
+            /\b\d+[EW]\b/.test(line) ||
+            /\bLSP spawning:/i.test(line),
+    );
+
+    if (!hasActionableLine) return [];
+    return capWidgetLineArray(visibleLines, budget, width);
+}
+
+function parseExistingTodoSummaryCount(line: string): number {
+    const match = visibleWidgetText(line).match(/\+(\d+)\s+more\b/i);
+    return match ? Number(match[1]) : 0;
+}
+
+function transformTodoLines(
+    lines: readonly string[],
+    budget: WidgetLineBudget,
+    width?: number,
+): string[] {
+    const visibleLines = lines.filter(isVisibleWidgetLine);
+    const maxLines = Math.max(1, Math.floor(budget.maxLines));
+    if (visibleLines.length <= maxLines) return [...visibleLines];
+    if (maxLines === 1) return [visibleLines[0]];
+
+    const heading = visibleLines[0];
+    const body = visibleLines.slice(1);
+    const existingSummary = body.find((line) => /\+\d+\s+more\b/i.test(visibleWidgetText(line)));
+    const taskLines = body.filter((line) => line !== existingSummary);
+    const active = taskLines.filter((line) => visibleWidgetText(line).includes("◐"));
+    const pending = taskLines.filter((line) => visibleWidgetText(line).includes("○"));
+    const completed = taskLines.filter((line) => visibleWidgetText(line).includes("✓"));
+    const other = taskLines.filter((line) => {
+        const text = visibleWidgetText(line);
+        return !text.includes("◐") && !text.includes("○") && !text.includes("✓");
+    });
+
+    const ordered = [...active, ...pending, ...other, ...completed];
+    const slots = maxLines - 2;
+    const kept = ordered.slice(0, Math.max(0, slots));
+    const hiddenCount =
+        Math.max(0, ordered.length - kept.length) +
+        (existingSummary ? parseExistingTodoSummaryCount(existingSummary) : 0);
+
+    return [heading, ...kept, compactWidgetSummaryLine(`+${hiddenCount} more`, width)];
+}
+
+function transformWidgetLineArray(
+    _widgetId: string,
+    lines: readonly string[],
+    budget: WidgetLineBudget,
+    width?: number,
+): string[] {
+    switch (budget.mode) {
+        case "native":
+            return lines.filter(isVisibleWidgetLine);
+        case "remaining":
+            return transformPlannotatorProgressLines(lines, budget, width);
+        case "actionable":
+            return transformPiLensActionableLines(lines, budget, width);
+        case "todo":
+            return transformTodoLines(lines, budget, width);
+        case "truncate":
+        default:
+            return capWidgetLineArray(lines, budget, width);
+    }
 }
 
 function capWidgetRenderResult(widgetId: string, rendered: unknown, width?: number): unknown {
     const budget = getConfiguredWidgetBudget(widgetId);
     if (!budget || !Array.isArray(rendered)) return rendered;
 
-    return capWidgetLineArray(rendered as string[], budget, width);
+    return transformWidgetLineArray(widgetId, rendered as string[], budget, width);
 }
 
 function wrapBudgetedWidgetComponent(widgetId: string, component: unknown): unknown {
@@ -913,11 +1061,42 @@ function installWidgetBudgetPatch(ctx: any): (() => void) | null {
     return patchState.restore;
 }
 
+function getCustomMessageText(content: unknown): string {
+    if (typeof content === "string") return content;
+    if (!Array.isArray(content)) return "";
+    return content
+        .filter(
+            (part) =>
+                typeof part === "object" && part !== null && Reflect.get(part, "type") === "text",
+        )
+        .map((part) => String(Reflect.get(part, "text") ?? ""))
+        .join("\n");
+}
+
+function countMarkdownCompletedTasks(text: string): number {
+    return text.split(/\r?\n/).filter((line) => /^\s*-\s*\[x\]/i.test(stripWidgetAnsi(line)))
+        .length;
+}
+
+function registerCompactPlannotatorCompleteRenderer(pi: ExtensionAPI): void {
+    pi.registerMessageRenderer(
+        "plannotator-complete",
+        (message: any, _options: any, theme: Theme) => {
+            const text = getCustomMessageText(message.content);
+            const completedCount = countMarkdownCompletedTasks(text);
+            const suffix = completedCount > 0 ? ` · ${completedCount} steps` : "";
+            return new Text(theme.fg("success", `✓ Plan complete${suffix}`), 0, 0);
+        },
+    );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Extension
 // ═══════════════════════════════════════════════════════════════════════════
 
 export default function powerlineFooter(pi: ExtensionAPI) {
+    registerCompactPlannotatorCompleteRenderer(pi);
+
     const startupSettings = readSettings();
     config = parsePowerlineConfig(startupSettings.powerline, PRESET_NAMES);
     let resolvedShortcuts = resolveShortcutConfig(startupSettings);

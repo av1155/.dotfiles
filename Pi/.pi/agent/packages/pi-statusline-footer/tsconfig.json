@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "strict": false,
+        "skipLibCheck": true,
+        "typeRoots": ["./types"],
+        "types": ["pi-runtime"]
+    },
+    "include": ["**/*.ts", "types/**/*.d.ts"],
+    "exclude": ["node_modules"]
+}

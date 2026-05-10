@@ -23,6 +23,7 @@ const SKILL_COMMAND_PREFIX = "skill:";
 const EXPLICIT_SKILL_COMMAND = /^\/skill:([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:[ \t]+(.*))?$/;
 const BARE_SKILL_COMMAND = /^\/([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:[ \t]+(.*))?$/;
 const FENCE_START = /^\s*(```|~~~)/;
+const INDENTED_CODE_LINE = /^(?: {4,}| {0,3}\t)/;
 const WRAPPED_SKILL_PREFIX = "<skill ";
 
 const BUILTIN_COMMANDS = new Set([
@@ -123,7 +124,10 @@ function findInlineSkillCandidate(
     let inFence = false;
 
     for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
-        const trimmed = stripTrailingCarriageReturn(lines[lineIndex] ?? "").trim();
+        const line = stripTrailingCarriageReturn(lines[lineIndex] ?? "");
+        const trimmed = line.trim();
+
+        if (INDENTED_CODE_LINE.test(line)) continue;
 
         if (FENCE_START.test(trimmed)) {
             inFence = !inFence;

@@ -8,8 +8,11 @@ import type {
     StatusLineSegmentId,
 } from "./types.ts";
 
+export type WidgetDisplayMode = "truncate" | "native" | "remaining" | "actionable" | "todo";
+
 export interface WidgetLineBudget {
     maxLines: number;
+    mode: WidgetDisplayMode;
 }
 
 export interface PowerlineWidgetBudgets {
@@ -26,7 +29,14 @@ export interface PowerlineConfig {
 
 const DEFAULT_WIDGET_BUDGET_MAX_LINES = 4;
 const MAX_WIDGET_BUDGET_LINES = 100;
-const WIDGET_BUDGET_CONTAINER_KEYS = new Set(["widgets", "defaultMaxLines", "maxLines"]);
+const WIDGET_BUDGET_CONTAINER_KEYS = new Set(["widgets", "defaultMaxLines", "maxLines", "mode"]);
+const WIDGET_DISPLAY_MODES = new Set<WidgetDisplayMode>([
+    "truncate",
+    "native",
+    "remaining",
+    "actionable",
+    "todo",
+]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -72,22 +82,45 @@ function normalizeLineCount(value: unknown): number | null {
     return Math.min(normalized, MAX_WIDGET_BUDGET_LINES);
 }
 
+function normalizeWidgetDisplayMode(value: unknown): WidgetDisplayMode | null {
+    if (typeof value !== "string") return null;
+    const normalized = value.trim().toLowerCase();
+    return WIDGET_DISPLAY_MODES.has(normalized as WidgetDisplayMode)
+        ? (normalized as WidgetDisplayMode)
+        : null;
+}
+
+function widgetBudget(maxLines: number, mode: WidgetDisplayMode = "truncate"): WidgetLineBudget {
+    return { maxLines, mode };
+}
+
+function normalizeDirectWidgetBudgetEntry(
+    raw: unknown,
+    defaultMaxLines: number,
+): WidgetLineBudget | null | undefined {
+    if (raw === false || raw === null) return null;
+    if (raw === true || raw === undefined) return widgetBudget(defaultMaxLines);
+
+    const directLineCount = normalizeLineCount(raw);
+    if (directLineCount !== null) return widgetBudget(directLineCount);
+
+    const directMode = normalizeWidgetDisplayMode(raw);
+    return directMode ? widgetBudget(defaultMaxLines, directMode) : undefined;
+}
+
 function normalizeWidgetBudgetEntry(
     raw: unknown,
     defaultMaxLines: number = DEFAULT_WIDGET_BUDGET_MAX_LINES,
 ): WidgetLineBudget | null {
-    if (raw === false || raw === null) return null;
-    if (raw === true || raw === undefined) return { maxLines: defaultMaxLines };
+    const directBudget = normalizeDirectWidgetBudgetEntry(raw, defaultMaxLines);
+    if (directBudget !== undefined) return directBudget;
+    if (!isRecord(raw) || raw.enabled === false) return null;
 
-    const directLineCount = normalizeLineCount(raw);
-    if (directLineCount !== null) return { maxLines: directLineCount };
-
-    if (!isRecord(raw)) return null;
-    if (raw.enabled === false) return null;
-
-    return {
-        maxLines: normalizeLineCount(raw.maxLines ?? raw.lines ?? raw.limit) ?? defaultMaxLines,
-    };
+    return widgetBudget(
+        normalizeLineCount(raw.maxLines ?? raw.lines ?? raw.limit) ?? defaultMaxLines,
+        normalizeWidgetDisplayMode(raw.mode ?? raw.behavior ?? raw.policy ?? raw.strategy) ??
+            "truncate",
+    );
 }
 
 function addWidgetBudgetEntry(
@@ -279,16 +312,25 @@ export function isNotificationExtensionStatus(value: string): boolean {
     return value.trimStart().startsWith("[");
 }
 
+function shouldShowNotificationStatus(
+    statusKey: string,
+    value: string,
+    hiddenKeys: ReadonlySet<string>,
+): boolean {
+    if (hiddenKeys.has(statusKey)) return false;
+    if (!value) return false;
+    return isNotificationExtensionStatus(value);
+}
+
 export function getNotificationExtensionStatuses(
     statuses: ReadonlyMap<string, string>,
     hiddenKeys: ReadonlySet<string>,
 ): string[] {
     const notifications: string[] = [];
     for (const [statusKey, value] of statuses.entries()) {
-        if (hiddenKeys.has(statusKey) || !value || !isNotificationExtensionStatus(value)) {
-            continue;
+        if (shouldShowNotificationStatus(statusKey, value, hiddenKeys)) {
+            notifications.push(value);
         }
-        notifications.push(value);
     }
     return notifications;
 }
