@@ -730,8 +730,16 @@ command -v workmux &>/dev/null && eval "$(workmux completions zsh)"
 
 export PRETTIERD_DEFAULT_CONFIG="$HOME/.dotfiles/Formatting-Files/.prettierrc.json"
 
-if [[ "$OS" == "Darwin" ]]; then
-    export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+if [[ "$OS" == "Darwin" && -S "$HOME/.colima/default/docker.sock" ]]; then
+    # Use /var/run/docker.sock so socket bind mounts work inside the Colima VM.
+    if [[ ! -e /var/run/docker.sock ]]; then
+        sudo ln -sf "$HOME/.colima/default/docker.sock" /var/run/docker.sock 2>/dev/null
+    fi
+    if [[ -e /var/run/docker.sock ]]; then
+        export DOCKER_HOST="unix:///var/run/docker.sock"
+    else
+        export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+    fi
 fi
 
 if [[ "$OS" == "Darwin" && "$ARCHITECTURE" == "arm64" ]]; then
