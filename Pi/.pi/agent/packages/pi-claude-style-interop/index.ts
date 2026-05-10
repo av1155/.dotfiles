@@ -2,9 +2,15 @@ const WORKED_DURATION_KEY = "_piClaudeStyleWorkedDurationMs";
 const WORKED_DURATION_MARKER = "Worked for";
 const WORKED_LINE_RE = /^✻ Worked for [^\r\n]+$/;
 const ANSI_RE = /\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))/g;
+const RENDER_PATCH_FLAG = Symbol.for("pi-claude-style-interop:final-duration-row-patch");
+const RENDER_PATCH_VERSION = 1;
 
 interface ExtensionAPI {
     on(event: "message_end", handler: (event: MessageEndEvent) => Promise<void> | void): void;
+    on(
+        event: "session_start" | "turn_start",
+        handler: (event?: unknown, ctx?: unknown) => Promise<void> | void,
+    ): void;
 }
 
 interface MessageEndEvent {
@@ -22,6 +28,20 @@ type AssistantMessage = {
     stopReason?: unknown;
     content?: unknown;
     [WORKED_DURATION_KEY]?: unknown;
+};
+
+type UpdateContentFunction = (this: unknown, message: unknown) => void;
+
+type AssistantMessageComponentCtor = {
+    prototype: {
+        updateContent?: UpdateContentFunction;
+        [key: symbol]: unknown;
+    };
+};
+
+type RenderPatchMeta = {
+    wrapped?: UpdateContentFunction;
+    version?: number;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -50,6 +70,110 @@ export function stripWorkedDurationLinesFromText(text: string): string {
         .filter((line) => !isWorkedDurationLine(line))
         .join("\n")
         .replace(/\n{3,}/g, "\n\n");
+}
+
+function hasFinalWorkedDuration(message: unknown): boolean {
+    return isRecord(message) && typeof message[WORKED_DURATION_KEY] === "number";
+}
+
+function getContentChildren(component: unknown): unknown[] | null {
+    if (!isRecord(component)) {
+        return null;
+    }
+
+    const contentContainer = component.contentContainer;
+    if (!isRecord(contentContainer) || !Array.isArray(contentContainer.children)) {
+        return null;
+    }
+
+    return contentContainer.children;
+}
+
+function isSingleLineSpacerComponent(value: unknown): boolean {
+    return isRecord(value) && value.lines === 1;
+}
+
+function isWorkedDurationTextComponent(value: unknown): boolean {
+    return isRecord(value) && typeof value.text === "string" && isWorkedDurationLine(value.text);
+}
+
+export function removeTrailingLiveWorkedDurationRow(component: unknown, message: unknown): boolean {
+    if (!isRecord(message) || message.role !== "assistant" || hasFinalWorkedDuration(message)) {
+        return false;
+    }
+
+    const children = getContentChildren(component);
+    if (!children || children.length === 0) {
+        return false;
+    }
+
+    const lastChild = children[children.length - 1];
+    if (!isWorkedDurationTextComponent(lastChild)) {
+        return false;
+    }
+
+    children.pop();
+    if (isSingleLineSpacerComponent(children[children.length - 1])) {
+        children.pop();
+    }
+
+    return true;
+}
+
+export function installFinalDurationRowPatch(
+    AssistantMessageComponent: AssistantMessageComponentCtor,
+): boolean {
+    const proto = AssistantMessageComponent.prototype;
+    if (typeof proto.updateContent !== "function") {
+        return false;
+    }
+
+    const meta = proto[RENDER_PATCH_FLAG] as RenderPatchMeta | undefined;
+    if (
+        isRecord(meta) &&
+        meta.wrapped === proto.updateContent &&
+        meta.version === RENDER_PATCH_VERSION
+    ) {
+        return false;
+    }
+
+    const originalUpdateContent = proto.updateContent;
+    const wrapped: UpdateContentFunction = function patchedFinalDurationRow(
+        message: unknown,
+    ): void {
+        originalUpdateContent.call(this, message);
+        removeTrailingLiveWorkedDurationRow(this, message);
+    };
+
+    proto.updateContent = wrapped;
+    proto[RENDER_PATCH_FLAG] = { wrapped, version: RENDER_PATCH_VERSION } satisfies RenderPatchMeta;
+    return true;
+}
+
+let componentPromise: Promise<AssistantMessageComponentCtor | null> | null = null;
+
+async function loadAssistantMessageComponent(): Promise<AssistantMessageComponentCtor | null> {
+    for (const specifier of ["@mariozechner/pi-coding-agent", "@earendil-works/pi-coding-agent"]) {
+        try {
+            const module = (await import(specifier)) as {
+                AssistantMessageComponent?: AssistantMessageComponentCtor;
+            };
+            if (module.AssistantMessageComponent?.prototype) {
+                return module.AssistantMessageComponent;
+            }
+        } catch {
+            // Try the next package name. Pi has used both names across versions.
+        }
+    }
+    return null;
+}
+
+async function installAssistantDurationPatch(): Promise<void> {
+    componentPromise ??= loadAssistantMessageComponent();
+    const AssistantMessageComponent = await componentPromise;
+    if (AssistantMessageComponent) {
+        installFinalDurationRowPatch(AssistantMessageComponent);
+    }
 }
 
 export function cleanAssistantMessage(message: unknown): boolean {
@@ -89,7 +213,10 @@ export function cleanAssistantMessage(message: unknown): boolean {
     return changed;
 }
 
-export default function piClaudeStyleInterop(pi: ExtensionAPI): void {
+export default async function piClaudeStyleInterop(pi: ExtensionAPI): Promise<void> {
+    await installAssistantDurationPatch();
+    pi.on("session_start", installAssistantDurationPatch);
+    pi.on("turn_start", installAssistantDurationPatch);
     pi.on("message_end", async (event) => {
         cleanAssistantMessage(event.message);
     });
