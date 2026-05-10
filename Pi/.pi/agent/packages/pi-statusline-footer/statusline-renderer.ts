@@ -4,10 +4,23 @@ import type { SegmentContext } from "./types.js";
 const SEP = " │ ";
 const CACHE_ICON = "󰆼";
 const TIMER_ICON = "⏱";
-const PLAN_MODE_LABEL = "⏸ plan mode on (ctrl+alt+p to cycle)";
-const AUTO_MODE_LABEL = "⏵⏵ auto mode on (ctrl+alt+p to cycle)";
+const MODE_SHORTCUT_LABEL = "(ctrl+alt+p to cycle)";
+const PLAN_MODE_LABEL = "⏸ plan mode on";
+const AUTO_MODE_LABEL = "⏵⏵ auto mode on";
 const PLAN_MODE_COLOR = "#5FAFAF";
 const AUTO_MODE_COLOR = "#FFD700";
+const STATUS_HEALTHY = "healthy";
+const STATUS_PARTIAL = "partial";
+const STATUS_INACTIVE = "inactive";
+const BAND_WARN = "warn";
+const BAND_ERROR = "error";
+const PROVIDER_OPENAI_CODEX = "openai-codex";
+const PROVIDER_GITHUB_COPILOT = "github-copilot";
+const SUBSCRIPTION_BACKED_OAUTH_PROVIDERS = new Set([
+    PROVIDER_OPENAI_CODEX,
+    PROVIDER_GITHUB_COPILOT,
+]);
+const LOCAL_PROVIDER_PATTERN = /ollama|lmstudio|lm-studio|vllm|local/i;
 
 const COLORS = {
     text: "#949494",
@@ -35,9 +48,10 @@ const RAINBOW_COLORS = [
     "#b281d6",
 ] as const;
 
-type InfraStatus = { kind: "healthy" | "partial" | "inactive"; label: string; count?: string };
+type InfraStatusKind = typeof STATUS_HEALTHY | typeof STATUS_PARTIAL | typeof STATUS_INACTIVE;
+type InfraStatus = { kind: InfraStatusKind; label: string; count?: string };
 
-type ContextBand = "healthy" | "warn" | "error";
+type ContextBand = typeof STATUS_HEALTHY | typeof BAND_WARN | typeof BAND_ERROR;
 
 export function renderStatuslineFooter(width: number, ctx: SegmentContext): string {
     const budget = Math.max(20, width - 2);
@@ -59,8 +73,9 @@ export function renderModeIndicatorLine(width: number, ctx: SegmentContext): str
     if (width <= 0) return "";
 
     const isPlanMode = isPlannotatorPlanModeActive(ctx);
-    const label = isPlanMode ? PLAN_MODE_LABEL : AUTO_MODE_LABEL;
+    const modeLabel = isPlanMode ? PLAN_MODE_LABEL : AUTO_MODE_LABEL;
     const color = isPlanMode ? PLAN_MODE_COLOR : AUTO_MODE_COLOR;
+    const label = `${modeLabel} ${MODE_SHORTCUT_LABEL}`;
     const labelWidth = Math.max(0, width - 1);
     const visibleLabel =
         labelWidth <= 0
@@ -69,7 +84,14 @@ export function renderModeIndicatorLine(width: number, ctx: SegmentContext): str
               ? label
               : truncateToWidth(label, labelWidth, "…");
 
-    return ` ${visibleLabel ? fg(color, visibleLabel) : ""}`;
+    return ` ${visibleLabel ? styleModeLabel(visibleLabel, modeLabel, color) : ""}`;
+}
+
+function styleModeLabel(visibleLabel: string, modeLabel: string, color: string): string {
+    if (!visibleLabel.startsWith(modeLabel)) return fg(color, visibleLabel);
+
+    const shortcutLabel = visibleLabel.slice(modeLabel.length);
+    return `${fg(color, modeLabel)}${text(shortcutLabel)}`;
 }
 
 function isPlannotatorPlanModeActive(ctx: SegmentContext): boolean {
@@ -80,68 +102,173 @@ function isPlannotatorPlanModeActive(ctx: SegmentContext): boolean {
     return raw.includes("⏸") || raw.includes("plan");
 }
 
+const TIER_COMPACT = 0;
+const TIER_NARROW = 1;
+const TIER_MEDIUM = 2;
+const TIER_ROOMY = 3;
+const TIER_FULL = 4;
+
+type WidthTier =
+    | typeof TIER_COMPACT
+    | typeof TIER_NARROW
+    | typeof TIER_MEDIUM
+    | typeof TIER_ROOMY
+    | typeof TIER_FULL;
+
+interface CandidateParts {
+    contextFull: string;
+    contextCompact: string;
+    contextZero: string;
+    modelFull: string;
+    modelCompact: string;
+    modelZero: string;
+    gitFull: string;
+    gitCompact: string;
+    gitZero: string;
+    tokensFull: string;
+    tokensCompact: string;
+    tokenLevel1: string;
+    tokenLevel2: string;
+    billing: string;
+    duration: string;
+    lsp: string;
+    mcp: string;
+}
+
+const CONTEXT_FULL_LEVELS = [0, 1, 2, 2, 3] as const;
+const MODEL_FULL_LEVELS = [0, 1, 1, 2, 2] as const;
+const GIT_FULL_LEVELS = [0, 1, 2, 2, 3] as const;
+const TOKEN_FULL_LEVELS = [0, 1, 2, 2, 3] as const;
+const COMPACT_LEVELS = [0, 1, 1, 1, 1] as const;
+const CANDIDATE_BUILDERS = [
+    compactCandidateSets,
+    narrowCandidateSets,
+    mediumCandidateSets,
+    roomyCandidateSets,
+    fullCandidateSets,
+] as const;
+
 function buildCandidates(width: number, ctx: SegmentContext): string[][] {
-    const full = width >= 110;
-    const roomy = width >= 90;
-    const medium = width >= 75;
-    const narrow = width >= 50;
+    const tier = widthTier(width);
+    return CANDIDATE_BUILDERS[tier](buildCandidateParts(tier, ctx));
+}
 
-    const contextFull = contextSegment(ctx, full ? 3 : medium ? 2 : narrow ? 1 : 0);
-    const contextCompact = contextSegment(ctx, narrow ? 1 : 0);
-    const modelFull = modelSegment(ctx, full || roomy ? 2 : narrow ? 1 : 0);
-    const modelCompact = modelSegment(ctx, narrow ? 1 : 0);
-    const gitFull = gitSegment(ctx, full ? 3 : medium ? 2 : narrow ? 1 : 0);
-    const gitCompact = gitSegment(ctx, narrow ? 1 : 0);
-    const tokensFull = tokenSegment(ctx, full ? 3 : medium || roomy ? 2 : narrow ? 1 : 0);
-    const tokensCompact = tokenSegment(ctx, narrow ? 1 : 0);
-    const billing = billingSegment(ctx);
-    const duration = roomy
-        ? less(`${TIMER_ICON} ${formatDuration(Date.now() - ctx.sessionStartTime)}`)
-        : "";
-    const lsp = infraSegment(parseLspStatus(ctx.extensionStatuses), full) ?? "";
-    const mcp = infraSegment(parseMcpStatus(ctx.extensionStatuses), full) ?? "";
+function widthTier(width: number): WidthTier {
+    if (width >= 110) return TIER_FULL;
+    if (width >= 90) return TIER_ROOMY;
+    if (width >= 75) return TIER_MEDIUM;
+    if (width >= 50) return TIER_NARROW;
+    return TIER_COMPACT;
+}
 
-    if (full) {
-        return [
-            [contextFull, modelFull, gitFull, tokensFull, billing, lsp, mcp, duration],
-            [contextFull, modelFull, gitFull, tokensFull, billing, duration],
-            [contextFull, modelFull, gitFull, tokenSegment(ctx, 2), billing, duration],
-            [contextCompact, modelFull, gitFull, tokenSegment(ctx, 2), billing],
-            [contextCompact, modelCompact, gitCompact, tokensCompact],
-            [contextSegment(ctx, 0), modelSegment(ctx, 0), gitSegment(ctx, 0)],
-        ];
-    }
+function buildCandidateParts(tier: WidthTier, ctx: SegmentContext): CandidateParts {
+    const compactLevel = COMPACT_LEVELS[tier];
+    const fullInfraOnly = tier === TIER_FULL;
+    const duration =
+        tier >= TIER_ROOMY
+            ? less(`${TIMER_ICON} ${formatDuration(Date.now() - ctx.sessionStartTime)}`)
+            : "";
 
-    if (roomy) {
-        return [
-            [contextFull, modelFull, gitFull, tokensFull, billing, duration],
-            [contextFull, modelFull, gitFull, tokenSegment(ctx, 1), billing, duration],
-            [contextCompact, modelFull, gitCompact, tokenSegment(ctx, 1), billing],
-            [contextCompact, modelCompact, gitCompact, tokensCompact],
-            [contextSegment(ctx, 0), modelSegment(ctx, 0), gitSegment(ctx, 0)],
-        ];
-    }
+    return {
+        contextFull: contextSegment(ctx, CONTEXT_FULL_LEVELS[tier]),
+        contextCompact: contextSegment(ctx, compactLevel),
+        contextZero: contextSegment(ctx, 0),
+        modelFull: modelSegment(ctx, MODEL_FULL_LEVELS[tier]),
+        modelCompact: modelSegment(ctx, compactLevel),
+        modelZero: modelSegment(ctx, 0),
+        gitFull: gitSegment(ctx, GIT_FULL_LEVELS[tier]),
+        gitCompact: gitSegment(ctx, compactLevel),
+        gitZero: gitSegment(ctx, 0),
+        tokensFull: tokenSegment(ctx, TOKEN_FULL_LEVELS[tier]),
+        tokensCompact: tokenSegment(ctx, compactLevel),
+        tokenLevel1: tokenSegment(ctx, 1),
+        tokenLevel2: tokenSegment(ctx, 2),
+        billing: billingSegment(ctx),
+        duration,
+        lsp: infraSegment(parseLspStatus(ctx.extensionStatuses), fullInfraOnly) ?? "",
+        mcp: infraSegment(parseMcpStatus(ctx.extensionStatuses), fullInfraOnly) ?? "",
+    };
+}
 
-    if (medium) {
-        return [
-            [contextFull, modelFull, gitFull, tokensFull, billing],
-            [contextFull, modelFull, gitFull, tokenSegment(ctx, 1), billing],
-            [contextCompact, modelCompact, gitCompact, tokensCompact],
-            [contextSegment(ctx, 0), modelSegment(ctx, 0), gitSegment(ctx, 0)],
-        ];
-    }
-
-    if (narrow) {
-        return [
-            [contextFull, gitFull, modelFull, tokensFull],
-            [contextCompact, gitCompact, modelCompact, tokensCompact],
-            [contextSegment(ctx, 0), gitSegment(ctx, 0), modelSegment(ctx, 0)],
-        ];
-    }
-
+function fullCandidateSets(parts: CandidateParts): string[][] {
     return [
-        [contextFull, gitFull, modelFull],
-        [contextSegment(ctx, 0), gitSegment(ctx, 0)],
+        [
+            parts.contextFull,
+            parts.modelFull,
+            parts.gitFull,
+            parts.tokensFull,
+            parts.billing,
+            parts.lsp,
+            parts.mcp,
+            parts.duration,
+        ],
+        [
+            parts.contextFull,
+            parts.modelFull,
+            parts.gitFull,
+            parts.tokensFull,
+            parts.billing,
+            parts.duration,
+        ],
+        [
+            parts.contextFull,
+            parts.modelFull,
+            parts.gitFull,
+            parts.tokenLevel2,
+            parts.billing,
+            parts.duration,
+        ],
+        [parts.contextCompact, parts.modelFull, parts.gitFull, parts.tokenLevel2, parts.billing],
+        [parts.contextCompact, parts.modelCompact, parts.gitCompact, parts.tokensCompact],
+        [parts.contextZero, parts.modelZero, parts.gitZero],
+    ];
+}
+
+function roomyCandidateSets(parts: CandidateParts): string[][] {
+    return [
+        [
+            parts.contextFull,
+            parts.modelFull,
+            parts.gitFull,
+            parts.tokensFull,
+            parts.billing,
+            parts.duration,
+        ],
+        [
+            parts.contextFull,
+            parts.modelFull,
+            parts.gitFull,
+            parts.tokenLevel1,
+            parts.billing,
+            parts.duration,
+        ],
+        [parts.contextCompact, parts.modelFull, parts.gitCompact, parts.tokenLevel1, parts.billing],
+        [parts.contextCompact, parts.modelCompact, parts.gitCompact, parts.tokensCompact],
+        [parts.contextZero, parts.modelZero, parts.gitZero],
+    ];
+}
+
+function mediumCandidateSets(parts: CandidateParts): string[][] {
+    return [
+        [parts.contextFull, parts.modelFull, parts.gitFull, parts.tokensFull, parts.billing],
+        [parts.contextFull, parts.modelFull, parts.gitFull, parts.tokenLevel1, parts.billing],
+        [parts.contextCompact, parts.modelCompact, parts.gitCompact, parts.tokensCompact],
+        [parts.contextZero, parts.modelZero, parts.gitZero],
+    ];
+}
+
+function narrowCandidateSets(parts: CandidateParts): string[][] {
+    return [
+        [parts.contextFull, parts.gitFull, parts.modelFull, parts.tokensFull],
+        [parts.contextCompact, parts.gitCompact, parts.modelCompact, parts.tokensCompact],
+        [parts.contextZero, parts.gitZero, parts.modelZero],
+    ];
+}
+
+function compactCandidateSets(parts: CandidateParts): string[][] {
+    return [
+        [parts.contextFull, parts.gitFull, parts.modelFull],
+        [parts.contextZero, parts.gitZero],
     ];
 }
 
@@ -169,27 +296,26 @@ function contextBarWidth(level: number): number {
 }
 
 function contextBand(ctx: SegmentContext): ContextBand {
-    if (!ctx.contextWindow || ctx.contextWindow <= 0) return "healthy";
-    const reserveTokens =
-        typeof (ctx as any).reserveTokens === "number" ? (ctx as any).reserveTokens : 16_384;
+    if (!ctx.contextWindow || ctx.contextWindow <= 0) return STATUS_HEALTHY;
+    const reserveTokens = ctx.reserveTokens ?? 16_384;
     const autoPct = ctx.autoCompactEnabled
         ? ((ctx.contextWindow - reserveTokens) / ctx.contextWindow) * 100
         : 100;
     const warnPct = Math.max(0, autoPct - 20);
     const errorPct = Math.max(0, autoPct - 10);
-    if (ctx.contextPercent >= errorPct) return "error";
-    if (ctx.contextPercent >= warnPct) return "warn";
-    return "healthy";
+    if (ctx.contextPercent >= errorPct) return BAND_ERROR;
+    if (ctx.contextPercent >= warnPct) return BAND_WARN;
+    return STATUS_HEALTHY;
 }
 
 function contextBandColors(band: ContextBand): [string, string] {
-    if (band === "error") return [COLORS.contextErrorFg, COLORS.contextErrorBg];
-    if (band === "warn") return [COLORS.contextWarnFg, COLORS.contextWarnBg];
+    if (band === BAND_ERROR) return [COLORS.contextErrorFg, COLORS.contextErrorBg];
+    if (band === BAND_WARN) return [COLORS.contextWarnFg, COLORS.contextWarnBg];
     return [COLORS.contextHealthyFg, COLORS.contextHealthyBg];
 }
 
 function modelSegment(ctx: SegmentContext, level: number): string {
-    const model = ctx.model as any;
+    const model = ctx.model;
     if (!model) return less("no-model");
     const provider = friendlyProvider(model.provider ?? model.providerId ?? "");
     const modelName = shortenModelName(model);
@@ -205,28 +331,46 @@ function modelSegment(ctx: SegmentContext, level: number): string {
     return `${baseText}${text(" · ")}${styledThinking}`;
 }
 
+interface GitStatusPart {
+    minimumLevel: number;
+    count?: number;
+    color: string;
+    prefix: string;
+}
+
 function gitSegment(ctx: SegmentContext, level: number): string {
-    const git = ctx.git as any;
-    if (!git?.branch) return "";
+    const git = ctx.git;
+    if (!git.branch) return "";
     const icon = git.isWorktree ? "🔀" : "🌿";
     const maxBranchWidth = level >= 3 ? 38 : level >= 2 ? 28 : level >= 1 ? 18 : 12;
     const branch = truncateToWidth(git.branch, maxBranchWidth, "…");
-    const parts = [text(`${icon} ${branch}`)];
-    if (level >= 1 && git.staged > 0) parts.push(fg(COLORS.gitGood, `+${git.staged}`));
-    if (level >= 1 && git.unstaged > 0) parts.push(fg(COLORS.gitModified, `~${git.unstaged}`));
-    if (level >= 2 && git.untracked > 0) parts.push(fg(COLORS.gitUntracked, `?${git.untracked}`));
-    if (level >= 3 && git.ahead > 0) parts.push(fg(COLORS.gitGood, `↑${git.ahead}`));
-    if (level >= 3 && git.behind > 0) parts.push(fg(COLORS.red, `↓${git.behind}`));
-    return parts.join(" ");
+    return [text(`${icon} ${branch}`), ...gitStatusParts(ctx, level)].join(" ");
+}
+
+function gitStatusParts(ctx: SegmentContext, level: number): string[] {
+    const git = ctx.git;
+    const parts: GitStatusPart[] = [
+        { minimumLevel: 1, count: git.staged, color: COLORS.gitGood, prefix: "+" },
+        { minimumLevel: 1, count: git.unstaged, color: COLORS.gitModified, prefix: "~" },
+        { minimumLevel: 2, count: git.untracked, color: COLORS.gitUntracked, prefix: "?" },
+        { minimumLevel: 3, count: git.ahead, color: COLORS.gitGood, prefix: "↑" },
+        { minimumLevel: 3, count: git.behind, color: COLORS.red, prefix: "↓" },
+    ];
+
+    return parts
+        .filter((part) => level >= part.minimumLevel && (part.count ?? 0) > 0)
+        .map((part) => fg(part.color, `${part.prefix}${part.count}`));
 }
 
 function tokenSegment(ctx: SegmentContext, level: number): string {
-    const usage = ctx.usageStats as any;
+    const usage = ctx.usageStats;
     const cache = usage.cacheRead + usage.cacheWrite;
     const parts: string[] = [];
     if (level <= 0) {
-        if (!usage.input && !usage.output) return "";
-        return text(`${formatTokens(usage.input)}/${formatTokens(usage.output)}`);
+        if (usage.input || usage.output) {
+            return text(`${formatTokens(usage.input)}/${formatTokens(usage.output)}`);
+        }
+        return "";
     }
     if (usage.input > 0) parts.push(`↓${formatTokens(usage.input)}`);
     if (usage.output > 0) parts.push(`↑${formatTokens(usage.output)}`);
@@ -235,28 +379,29 @@ function tokenSegment(ctx: SegmentContext, level: number): string {
 }
 
 function billingSegment(ctx: SegmentContext): string {
-    const model = ctx.model as any;
+    const model = ctx.model;
     if (!model) return "";
     const provider = model.provider ?? model.providerId ?? "";
     const cost = ctx.usageStats.cost;
+    const subscriptionBackedOauth =
+        ctx.usingSubscription && SUBSCRIPTION_BACKED_OAUTH_PROVIDERS.has(provider);
 
     // Codex and Copilot OAuth usage is subscription-backed even when pi's
     // provider metadata exposes estimated token cost. Show cost for API-key
     // billing and for metered OAuth providers such as Claude extra usage.
-    if (ctx.usingSubscription && (provider === "openai-codex" || provider === "github-copilot"))
-        return less("♢ sub");
-    if (isLocalProvider(provider)) return less("local");
+    if (subscriptionBackedOauth) return less("♢ sub");
+    if (LOCAL_PROVIDER_PATTERN.test(provider)) return less("local");
     if (cost > 0) return less(formatCost(cost));
     return less("api");
 }
 
 function infraSegment(status: InfraStatus, showInactive: boolean): string | null {
-    if (status.kind === "inactive" && !showInactive) return null;
-    const dot = status.kind === "healthy" ? "●" : status.kind === "partial" ? "◌" : "○";
+    if (status.kind === STATUS_INACTIVE && !showInactive) return null;
+    const dot = status.kind === STATUS_HEALTHY ? "●" : status.kind === STATUS_PARTIAL ? "◌" : "○";
     const dotColor =
-        status.kind === "healthy"
+        status.kind === STATUS_HEALTHY
             ? COLORS.gitGood
-            : status.kind === "partial"
+            : status.kind === STATUS_PARTIAL
               ? COLORS.contextWarnFg
               : COLORS.less;
     const count = status.count ? ` ${status.count}` : "";
@@ -266,17 +411,17 @@ function infraSegment(status: InfraStatus, showInactive: boolean): string | null
 function parseLspStatus(statuses: ReadonlyMap<string, string>): InfraStatus {
     const raw = stripAnsi(statuses.get("pi-lens-lsp") ?? "").trim();
     const activeCount = raw.match(/\bLSP\s+Active\s*\((\d+)\)/i)?.[1];
-    if (activeCount) return { kind: "healthy", label: "LSP", count: activeCount };
-    if (/\bactive\b/i.test(raw)) return { kind: "healthy", label: "LSP" };
+    if (activeCount) return { kind: STATUS_HEALTHY, label: "LSP", count: activeCount };
+    if (/\bactive\b/i.test(raw)) return { kind: STATUS_HEALTHY, label: "LSP" };
     if (/inactive|disabled|off|unavailable/i.test(raw) || !raw)
-        return { kind: "inactive", label: "LSP" };
+        return { kind: STATUS_INACTIVE, label: "LSP" };
 
-    return { kind: "partial", label: "LSP" };
+    return { kind: STATUS_PARTIAL, label: "LSP" };
 }
 
 function parseMcpStatus(statuses: ReadonlyMap<string, string>): InfraStatus {
     const raw = stripAnsi(statuses.get("mcp") ?? "").trim();
-    if (/\bconnecting\b/i.test(raw)) return { kind: "partial", label: "MCP" };
+    if (/\bconnecting\b/i.test(raw)) return { kind: STATUS_PARTIAL, label: "MCP" };
 
     const ratio =
         raw.match(/\bMCP:\s*(\d+)\s*\/\s*(\d+)\s+servers\b/i) ??
@@ -284,17 +429,18 @@ function parseMcpStatus(statuses: ReadonlyMap<string, string>): InfraStatus {
     if (ratio) {
         const connected = Number(ratio[1]);
         const total = Number(ratio[2]);
-        if (connected <= 0) return { kind: "inactive", label: "MCP" };
+        if (connected <= 0) return { kind: STATUS_INACTIVE, label: "MCP" };
         return {
-            kind: connected === total ? "healthy" : "partial",
+            kind: connected === total ? STATUS_HEALTHY : STATUS_PARTIAL,
             label: "MCP",
             count: String(connected),
         };
     }
 
-    if (/needs-auth|failed|error|degraded/i.test(raw)) return { kind: "partial", label: "MCP" };
-    if (/connected|active|ready|enabled/i.test(raw)) return { kind: "healthy", label: "MCP" };
-    return { kind: "inactive", label: "MCP" };
+    if (/needs-auth|failed|error|degraded/i.test(raw))
+        return { kind: STATUS_PARTIAL, label: "MCP" };
+    if (/connected|active|ready|enabled/i.test(raw)) return { kind: STATUS_HEALTHY, label: "MCP" };
+    return { kind: STATUS_INACTIVE, label: "MCP" };
 }
 
 function stripAnsi(value: string): string {
@@ -352,8 +498,8 @@ function hexToRgb(hex: string): [number, number, number] {
 
 function friendlyProvider(provider: string): string {
     const labels: Record<string, string> = {
-        "openai-codex": "Codex",
-        "github-copilot": "Copilot",
+        [PROVIDER_OPENAI_CODEX]: "Codex",
+        [PROVIDER_GITHUB_COPILOT]: "Copilot",
         anthropic: "Claude",
         google: "Google",
         "google-vertex": "Google",
@@ -366,7 +512,7 @@ function friendlyProvider(provider: string): string {
         "vercel-ai-gateway": "Vercel",
     };
     if (labels[provider]) return labels[provider];
-    if (isLocalProvider(provider)) return "Local";
+    if (LOCAL_PROVIDER_PATTERN.test(provider)) return "Local";
     return provider
         .split("-")
         .filter(Boolean)
@@ -386,10 +532,6 @@ function shortenModelName(model: { id?: string; name?: string }): string {
 
 function shortThinkingLevel(level: string): string {
     return level === "medium" ? "med" : level;
-}
-
-function isLocalProvider(provider: string): boolean {
-    return /ollama|lmstudio|lm-studio|vllm|local/i.test(provider);
 }
 
 function formatTokens(value: number): string {
