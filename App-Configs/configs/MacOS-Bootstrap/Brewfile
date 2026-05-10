@@ -7,6 +7,7 @@ tap "oven-sh/bun"
 tap "raine/workmux"
 tap "samtay/tui"
 tap "sst/tap"
+tap "steipete/tap"
 tap "stripe/stripe-cli"
 tap "teamookla/speedtest"
 # Static checker for GitHub Actions workflow files
@@ -141,6 +142,8 @@ brew "neovim"
 brew "neovim-remote"
 # Port scanning utility for large networks
 brew "nmap"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
 # Libraries for security-enabled client and server applications
 brew "nss"
 # Package for scientific computing with Python
@@ -165,6 +168,8 @@ brew "pkgconf"
 brew "pngpaste"
 # PNG image optimizing utility
 brew "pngquant"
+# Fast, disk space efficient package manager
+brew "pnpm"
 # Bundle a Python application and all its dependencies
 brew "pyinstaller"
 # Generic machine emulator and virtualizer
@@ -199,6 +204,8 @@ brew "viddy"
 brew "viu"
 # Pager/text based browser
 brew "w3m"
+# Executes a program periodically, showing output fullscreen
+brew "watch"
 # Internet file retriever
 brew "wget"
 # Utilities to create and convert Web Open Font File (WOFF) files
@@ -257,6 +264,8 @@ cask "claude"
 cask "claude-code@latest"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
+# Menu bar usage monitor for Codex and Claude
+cask "steipete/tap/codexbar"
 # Brings the power of Copilot coding agent directly to your terminal
 cask "copilot-cli"
 # UI for creating Windows installer ISO from UUPDump
