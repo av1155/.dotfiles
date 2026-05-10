@@ -208,7 +208,7 @@ function modelSegment(ctx: SegmentContext, level: number): string {
 function gitSegment(ctx: SegmentContext, level: number): string {
     const git = ctx.git as any;
     if (!git?.branch) return "";
-    const icon = git.isWorktree || git.branch !== "main" ? "🔀" : "🌿";
+    const icon = git.isWorktree ? "🔀" : "🌿";
     const maxBranchWidth = level >= 3 ? 38 : level >= 2 ? 28 : level >= 1 ? 18 : 12;
     const branch = truncateToWidth(git.branch, maxBranchWidth, "…");
     const parts = [text(`${icon} ${branch}`)];
