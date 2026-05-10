@@ -7,8 +7,8 @@
   "packages": [
     "npm:pi-subagents",
     "npm:pi-web-access",
-    "npm:pi-lens",
     "packages/pi-statusline-footer",
+    "npm:pi-lens",
     "npm:@juicesharp/rpiv-todo",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@juicesharp/rpiv-args",
@@ -21,10 +21,33 @@
     "npm:@spences10/pi-confirm-destructive"
   ],
   "extensions": [
-    "extensions/all-core-tools.ts"
+    "extensions/all-core-tools.ts",
+    "extensions/startup-screen.ts"
   ],
   "memory": {
     "lessonInjection": "selective"
   },
-  "workingVibe": "star-wars"
+  "workingVibe": "star-wars",
+  "quietStartup": true,
+  "startupScreen": {
+    "enabled": true
+  },
+  "showLastPrompt": false,
+  "powerline": {
+    "fixedEditor": true,
+    "mouseScroll": true,
+    "widgetBudgets": {
+      "widgets": {
+        "pi-lens": {
+          "maxLines": 8
+        },
+        "rpiv-todos": {
+          "maxLines": 5
+        },
+        "plannotator-progress": {
+          "maxLines": 4
+        }
+      }
+    }
+  }
 }

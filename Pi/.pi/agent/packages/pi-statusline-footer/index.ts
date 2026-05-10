@@ -18,7 +18,7 @@ import { join, dirname } from "node:path";
 import { homedir } from "node:os";
 
 import type { ColorScheme, CustomStatusItem, SegmentContext, StatusLinePreset } from "./types.js";
-import type { PowerlineConfig } from "./powerline-config.js";
+import type { PowerlineConfig, WidgetLineBudget } from "./powerline-config.js";
 import {
     BashCompletionEngine,
     getOneOffBashCommandContext,
@@ -74,6 +74,7 @@ let config: PowerlineConfig = {
     customItems: [],
     mouseScroll: true,
     fixedEditor: true,
+    widgetBudgets: { widgets: {} },
 };
 
 const CUSTOM_COMPACTION_STATUS_KEY = "compact-policy";
@@ -751,6 +752,168 @@ function computeResponsiveLayout(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Widget line budgets
+// ═══════════════════════════════════════════════════════════════════════════
+
+type WidgetSetWidget = (id: string, widget?: unknown, ...args: unknown[]) => unknown;
+
+type WidgetBudgetSetWidgetPatchState = {
+    originalSetWidget: WidgetSetWidget;
+    patchedSetWidget: WidgetSetWidget;
+    restore: () => void;
+};
+
+const WIDGET_BUDGET_SET_WIDGET_PATCH_KEY = Symbol.for("powerlineFooter.widgetBudgetSetWidgetPatch");
+
+let widgetBudgetCappingEnabled = true;
+
+function setWidgetBudgetCappingEnabled(enabled: boolean): void {
+    widgetBudgetCappingEnabled = enabled;
+}
+
+function getConfiguredWidgetBudget(widgetId: string): WidgetLineBudget | undefined {
+    if (!widgetBudgetCappingEnabled) return undefined;
+    return config.widgetBudgets.widgets[widgetId];
+}
+
+function hasConfiguredWidgetBudgets(): boolean {
+    return Object.keys(config.widgetBudgets.widgets).length > 0;
+}
+
+function compactWidgetOverflowLine(hiddenCount: number, width?: number): string {
+    const line = ` ${getFgAnsiCode("sep")}… +${hiddenCount} more${ansi.reset}`;
+    if (typeof width !== "number" || width <= 0 || visibleWidth(line) <= width) {
+        return line;
+    }
+
+    return truncateToWidth(line, width, "…");
+}
+
+function capWidgetLineArray(
+    lines: readonly string[],
+    budget: WidgetLineBudget,
+    width?: number,
+): string[] {
+    const maxLines = Math.max(1, Math.floor(budget.maxLines));
+    if (lines.length <= maxLines) return [...lines];
+
+    const keptLineCount = Math.max(0, maxLines - 1);
+    const hiddenCount = lines.length - keptLineCount;
+    return [...lines.slice(0, keptLineCount), compactWidgetOverflowLine(hiddenCount, width)];
+}
+
+function capWidgetRenderResult(widgetId: string, rendered: unknown, width?: number): unknown {
+    const budget = getConfiguredWidgetBudget(widgetId);
+    if (!budget || !Array.isArray(rendered)) return rendered;
+
+    return capWidgetLineArray(rendered as string[], budget, width);
+}
+
+function wrapBudgetedWidgetComponent(widgetId: string, component: unknown): unknown {
+    if (typeof component !== "object" || component === null) return component;
+
+    const originalRender = Reflect.get(component, "render");
+    if (typeof originalRender !== "function") return component;
+
+    return new Proxy(component as Record<PropertyKey, unknown>, {
+        get(target, prop, receiver) {
+            if (prop !== "render") return Reflect.get(target, prop, receiver);
+
+            return function renderWithPowerlineWidgetBudget(width: number, ...args: unknown[]) {
+                const rendered = originalRender.apply(target, [width, ...args]);
+                return capWidgetRenderResult(
+                    widgetId,
+                    rendered,
+                    typeof width === "number" ? width : undefined,
+                );
+            };
+        },
+    });
+}
+
+function wrapBudgetedWidgetRegistration(widgetId: string, widget: unknown): unknown {
+    if (!getConfiguredWidgetBudget(widgetId) || widget === undefined || widget === null) {
+        return widget;
+    }
+
+    if (Array.isArray(widget)) {
+        return capWidgetRenderResult(widgetId, widget);
+    }
+
+    if (typeof widget === "function") {
+        return function powerlineBudgetedWidgetFactory(this: unknown, ...args: unknown[]) {
+            const component = widget.apply(this, args);
+            return wrapBudgetedWidgetComponent(widgetId, component);
+        };
+    }
+
+    return wrapBudgetedWidgetComponent(widgetId, widget);
+}
+
+function getWidgetBudgetPatchState(ui: unknown): WidgetBudgetSetWidgetPatchState | null {
+    if (typeof ui !== "object" || ui === null) return null;
+    const state = Reflect.get(ui, WIDGET_BUDGET_SET_WIDGET_PATCH_KEY);
+    if (typeof state !== "object" || state === null) return null;
+
+    const maybeState = state as Partial<WidgetBudgetSetWidgetPatchState>;
+    return typeof maybeState.originalSetWidget === "function" &&
+        typeof maybeState.patchedSetWidget === "function" &&
+        typeof maybeState.restore === "function"
+        ? (maybeState as WidgetBudgetSetWidgetPatchState)
+        : null;
+}
+
+function restoreExistingWidgetBudgetPatch(ui: unknown): void {
+    const state = getWidgetBudgetPatchState(ui);
+    state?.restore();
+}
+
+function installWidgetBudgetPatch(ctx: any): (() => void) | null {
+    const ui = ctx?.ui;
+    if (typeof ui !== "object" || ui === null || typeof ui.setWidget !== "function") {
+        return null;
+    }
+
+    restoreExistingWidgetBudgetPatch(ui);
+    if (!hasConfiguredWidgetBudgets()) return null;
+
+    const originalSetWidget = ui.setWidget as WidgetSetWidget;
+    const patchedSetWidget: WidgetSetWidget = function powerlineBudgetedSetWidget(
+        widgetId: string,
+        widget?: unknown,
+        ...args: unknown[]
+    ) {
+        return originalSetWidget.call(
+            ui,
+            widgetId,
+            wrapBudgetedWidgetRegistration(widgetId, widget),
+            ...args,
+        );
+    };
+
+    const patchState: WidgetBudgetSetWidgetPatchState = {
+        originalSetWidget,
+        patchedSetWidget,
+        restore: () => {
+            if (Reflect.get(ui, "setWidget") === patchedSetWidget) {
+                Reflect.set(ui, "setWidget", originalSetWidget);
+            }
+            if (Reflect.get(ui, WIDGET_BUDGET_SET_WIDGET_PATCH_KEY) === patchState) {
+                Reflect.deleteProperty(ui, WIDGET_BUDGET_SET_WIDGET_PATCH_KEY);
+            }
+        },
+    };
+
+    Object.defineProperty(ui, WIDGET_BUDGET_SET_WIDGET_PATCH_KEY, {
+        value: patchState,
+        configurable: true,
+    });
+    Reflect.set(ui, "setWidget", patchedSetWidget);
+
+    return patchState.restore;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Extension
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -769,6 +932,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     let isStreaming = false;
     let tuiRef: any = null;
     let restoreFooterStatusRepaintHook: (() => void) | null = null;
+    let restoreWidgetBudgetPatch: (() => void) | null = null;
     let fixedEditorCompositor: TerminalSplitCompositor | null = null;
     let fixedStatusContainer: any = null;
     let fixedEditorContainer: any = null;
@@ -887,6 +1051,13 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         config = parsePowerlineConfig(settings.powerline, PRESET_NAMES);
         bashCompletionEngine = new BashCompletionEngine();
 
+        restoreWidgetBudgetPatch?.();
+        restoreWidgetBudgetPatch = null;
+        setWidgetBudgetCappingEnabled(enabled);
+        if (enabled && ctx.hasUI) {
+            restoreWidgetBudgetPatch = installWidgetBudgetPatch(ctx);
+        }
+
         getThinkingLevelFn =
             typeof ctx.getThinkingLevel === "function" ? () => ctx.getThinkingLevel() : null;
         currentThinkingLevel = getThinkingLevelFn?.() ?? null;
@@ -902,6 +1073,9 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         statusRenderScheduler.cancel();
         restoreFooterStatusRepaintHook?.();
         restoreFooterStatusRepaintHook = null;
+        restoreWidgetBudgetPatch?.();
+        restoreWidgetBudgetPatch = null;
+        setWidgetBudgetCappingEnabled(false);
         teardownFixedEditorCompositor({ resetExtendedKeyboardModes: true });
         shortcutInputUnsubscribe?.();
         shortcutInputUnsubscribe = null;
@@ -1154,10 +1328,16 @@ export default function powerlineFooter(pi: ExtensionAPI) {
                 // Toggle
                 enabled = !enabled;
                 if (enabled) {
+                    restoreWidgetBudgetPatch?.();
+                    setWidgetBudgetCappingEnabled(true);
+                    restoreWidgetBudgetPatch = ctx.hasUI ? installWidgetBudgetPatch(ctx) : null;
                     setupCustomEditor(ctx);
                     ctx.ui.notify("Powerline enabled", "info");
                 } else {
                     getPromptHistoryState().savedPromptHistory = [];
+                    restoreWidgetBudgetPatch?.();
+                    restoreWidgetBudgetPatch = null;
+                    setWidgetBudgetCappingEnabled(false);
                     restoreFooterStatusRepaintHook?.();
                     restoreFooterStatusRepaintHook = null;
                     teardownFixedEditorCompositor();

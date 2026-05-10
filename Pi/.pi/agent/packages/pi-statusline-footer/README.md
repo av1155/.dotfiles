@@ -46,12 +46,24 @@ Global settings live in `~/.pi/agent/settings.json`.
 ```json
 {
     "workingVibe": "star-wars",
+    "showLastPrompt": false,
     "powerline": {
         "fixedEditor": true,
-        "mouseScroll": true
+        "mouseScroll": true,
+        "widgetBudgets": {
+            "widgets": {
+                "pi-lens": { "maxLines": 8 },
+                "rpiv-todos": { "maxLines": 5 },
+                "plannotator-progress": { "maxLines": 4 }
+            }
+        }
     }
 }
 ```
+
+`powerline.widgetBudgets.widgets` maps Pi widget IDs to maximum rendered line counts. When a widget renders more lines than its budget, the final visible row becomes a compact `… +N more` summary, so `maxLines` is the total space the widget occupies. Omit `widgetBudgets` to preserve Pi's default widget rendering. Each widget entry may be `{ "maxLines": 8 }`, a positive number, or `true` to use the default of 4 lines. Use `false` or remove the entry to leave that widget uncapped.
+
+The wrapper only sees registrations that happen after this package patches `ctx.ui.setWidget`. Load `packages/pi-statusline-footer` before widgets that register during `session_start`, such as `npm:pi-lens`. `/lens-widget-toggle` still fully hides or shows the Pi Lens widget.
 
 Pi-native keybindings live in `~/.pi/agent/keybindings.json`. Queued-message editing uses `ctrl+alt+k` as the primary Ghostty/tmux-safe shortcut, with `alt+up` retained as a secondary binding.
 
