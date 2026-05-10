@@ -127,8 +127,8 @@ async function fetchGitStatus(): Promise<{ staged: number; unstaged: number; unt
   if (output === null) return null;
   const parsed = parseGitStatusOutput(output);
   const [gitDir, commonDir] = await Promise.all([
-    runGit(["rev-parse", "--git-dir"], 200),
-    runGit(["rev-parse", "--git-common-dir"], 200),
+    runGit(["rev-parse", "--path-format=absolute", "--git-dir"], 200),
+    runGit(["rev-parse", "--path-format=absolute", "--git-common-dir"], 200),
   ]);
   return { ...parsed, isWorktree: Boolean(gitDir && commonDir && gitDir !== commonDir) };
 }
