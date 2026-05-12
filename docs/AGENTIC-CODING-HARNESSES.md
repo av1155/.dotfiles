@@ -586,6 +586,14 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 5. Verify the live file is a symlink: `ls -l ~/.pi/agent/settings.json`.
 6. If adding MCP config later, track `mcp.json` only when it uses command/env-var references rather than literal tokens.
 
+### Customize Pi Plannotator phase prompts
+
+1. Edit the tracked config at `Pi/.pi/agent/plannotator.json`, not the installed package under Homebrew or npm paths.
+2. Keep Plannotator template variables such as `${planFilePath}` and `${todoList}` when overriding the executing prompt. The variable name `${todoList}` is internal Plannotator prompt plumbing, not the external `todo` tool.
+3. In Plannotator's code, plan checkboxes are parsed into `checklistItems`, rendered to the model as Remaining steps, and marked complete only when the assistant emits `[DONE:n]` for item `n`.
+4. Validate after edits with `python3 -m json.tool Pi/.pi/agent/plannotator.json >/dev/null`.
+5. Verify the live file is still the stow-managed symlink: `ls -l ~/.pi/agent/plannotator.json`.
+
 ### Track Pi extensions safely
 
 1. Store non-secret global Pi extensions under `Pi/.pi/agent/extensions/`.
