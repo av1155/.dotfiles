@@ -2,10 +2,11 @@
 name: find-docs
 description: >-
   Retrieves up-to-date documentation, API references, and code examples for any
-  developer technology. Use this skill whenever the user asks about a specific
-  library, framework, SDK, CLI tool, or cloud service -- even for well-known ones
-  like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. Your
-  training data may not reflect recent API changes or version updates.
+  developer technology via the ctx7 (Context7) CLI. Use this skill whenever the
+  user mentions "ctx7" or "context7", or asks about a specific library, framework,
+  SDK, CLI tool, or cloud service -- even for well-known ones like React, Next.js,
+  Prisma, Express, Tailwind, Django, or Spring Boot. Your training data may not
+  reflect recent API changes or version updates.
 
   Always use for: API syntax questions, configuration options, version migration
   issues, "how do I" questions mentioning a library name, debugging that involves
@@ -125,26 +126,9 @@ Use the user's full question as the query when possible, vague one-word queries 
 
 The output contains two types of content: **code snippets** (titled, with language-tagged blocks) and **info snippets** (prose explanations with breadcrumb context).
 
-## Authentication
-
-Works without authentication. For higher rate limits:
-
-```bash
-# Option A: environment variable
-export CONTEXT7_API_KEY=your_key
-
-# Option B: OAuth login
-ctx7 login
-```
-
 ## Error Handling
 
-If a command fails with a quota error ("Monthly quota reached" or "quota exceeded"):
-1. Inform the user their Context7 quota is exhausted
-2. Suggest they authenticate for higher limits: `ctx7 login`
-3. If they cannot or choose not to authenticate, answer from training knowledge and clearly note it may be outdated
-
-Do not silently fall back to training data — always tell the user why Context7 was not used.
+If a command fails with a quota error, tell the user the Context7 quota is exhausted. Do not retry. Do not silently fall back to training data — always say why Context7 was not used.
 
 ## Common Mistakes
 

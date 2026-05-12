@@ -2,25 +2,25 @@
 
 Date: 2026-05-02 (revised). Source of truth for "what should match": **Claude Code**, since you use it most. Each finding cites the official docs that produced it. Research notes are at `~/.dotfiles/docs/cross-tool-standardization/research/{claude-code,codex-cli,opencode,agents-md-standard}-*.md`. The dotfiles repo manages all three configs via GNU Stow; `~/.dotfiles/` is the canonical source of truth (per `~/.dotfiles/README.md`).
 
-**Revision note (added after live verification with `codex exec`):** Codex *does* read `~/.codex/skills/` despite that path being absent from the public docs page. The bundled `skill-installer` SKILL.md documents `$CODEX_HOME/skills` (= `~/.codex/skills/`) as the canonical install path, and a non-interactive `codex exec` query confirmed all 11 user skills plus the `~/.agents/skills/` cross-tool symlinks plus plugin-bundled skills are loaded. The "skills are in the wrong place" finding from the original report was wrong; the actual gap is **content drift between the two manually-curated copies**.
+**Revision note (added after live verification with `codex exec`):** Codex _does_ read `~/.codex/skills/` despite that path being absent from the public docs page. The bundled `skill-installer` SKILL.md documents `$CODEX_HOME/skills` (= `~/.codex/skills/`) as the canonical install path, and a non-interactive `codex exec` query confirmed all 11 user skills plus the `~/.agents/skills/` cross-tool symlinks plus plugin-bundled skills are loaded. The "skills are in the wrong place" finding from the original report was wrong; the actual gap is **content drift between the two manually-curated copies**.
 
 ---
 
 ## TL;DR scorecard
 
-| Capability | Claude Code | Codex CLI | OpenCode | Cross-tool grade |
-| --- | --- | --- | --- | --- |
-| Project instruction file | CLAUDE.md (no AGENTS.md fallback) | AGENTS.md (root → cwd, 32 KiB cap) | AGENTS.md (CLAUDE.md fallback) | ⚠️ Partial — only Houndarr uses the canonical interop pattern |
-| Path-conditional rules | `.claude/rules/*.md` with `paths:` frontmatter (auto-load) | None equivalent | None equivalent | ❌ CC-only |
-| Skills location | `~/.claude/skills/`, `.claude/skills/`, plugin skills | `$CODEX_HOME/skills` (= `~/.codex/skills/`) ✓ verified, `~/.agents/skills/`, `$REPO_ROOT/.agents/skills/`, `/etc/codex/skills` | `.opencode/skills/`, `.claude/skills/`, `.agents/skills/`, plus globals | ✅ Each tool reads its own dir; `~/.agents/skills/` shared cross-tool |
-| Skill content | 14 personal skills | 11 personal skills loaded (`~/.codex/skills/` stow target) — manually-curated copies of CC's | 0 local; reads `~/.claude/skills/` natively | ⚠️ Drift risk between CC and Codex copies (frontmatter and prose manually swapped) |
-| Hooks events used | 7 events configured (Notification, PostToolUse, PreToolUse, Stop, UserPromptSubmit, SessionStart, SessionEnd) | 3 events configured (PostToolUse, Stop, UserPromptSubmit) | 4 events via TS plugin | ⚠️ Codex parity gap |
-| MCP global | Plugin-bundled (context7, firecrawl, semgrep, supabase, vercel, plus claude-in-chrome) | TOML: context7, firecrawl + 3 disabled | JSON: context7 + 4 disabled | ⚠️ OpenCode/Codex thinner than CC |
-| MCP project-level | `.mcp.json` | `.codex/config.toml [mcp_servers.X]` | `opencode.jsonc "mcp"` | ✅ All three configured per repo, contents aligned |
-| Plugins ecosystem | Marketplace, 14 enabled across 5 sources | Marketplace `openai-curated`, 4 enabled | TS file plugins; no marketplace concept | ❌ Structurally different |
-| Subagents (custom) | Built-ins only (no custom files) | Built-ins only (no `~/.codex/agents/*.toml`) | Built-ins only (no `~/.config/opencode/agents/*.md`) | ✅ Consistent (all empty) |
-| Permissions baseline | Detailed allow/deny/ask | `default.rules` shell prefix allowlist + sandbox modes | `permission.{read,edit,bash,...}` allow/ask/deny | ⚠️ Same intent, divergent shape |
-| Status-line / activity | `workmux` via `statusline.sh` and 5 hooks | `workmux` via 3 hooks | `workmux` via TS plugin | ✅ Functional parity |
+| Capability               | Claude Code                                                                                                   | Codex CLI                                                                                                                      | OpenCode                                                                | Cross-tool grade                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Project instruction file | CLAUDE.md (no AGENTS.md fallback)                                                                             | AGENTS.md (root → cwd, 32 KiB cap)                                                                                             | AGENTS.md (CLAUDE.md fallback)                                          | ⚠️ Partial — only Houndarr uses the canonical interop pattern                      |
+| Path-conditional rules   | `.claude/rules/*.md` with `paths:` frontmatter (auto-load)                                                    | None equivalent                                                                                                                | None equivalent                                                         | ❌ CC-only                                                                         |
+| Skills location          | `~/.claude/skills/`, `.claude/skills/`, plugin skills                                                         | `$CODEX_HOME/skills` (= `~/.codex/skills/`) ✓ verified, `~/.agents/skills/`, `$REPO_ROOT/.agents/skills/`, `/etc/codex/skills` | `.opencode/skills/`, `.claude/skills/`, `.agents/skills/`, plus globals | ✅ Each tool reads its own dir; `~/.agents/skills/` shared cross-tool              |
+| Skill content            | 14 personal skills                                                                                            | 11 personal skills loaded (`~/.codex/skills/` stow target) — manually-curated copies of CC's                                   | 0 local; reads `~/.claude/skills/` natively                             | ⚠️ Drift risk between CC and Codex copies (frontmatter and prose manually swapped) |
+| Hooks events used        | 7 events configured (Notification, PostToolUse, PreToolUse, Stop, UserPromptSubmit, SessionStart, SessionEnd) | 3 events configured (PostToolUse, Stop, UserPromptSubmit)                                                                      | 4 events via TS plugin                                                  | ⚠️ Codex parity gap                                                                |
+| MCP global               | Plugin-bundled (context7, firecrawl, semgrep, supabase, vercel, plus claude-in-chrome)                        | TOML: context7, firecrawl + 3 disabled                                                                                         | JSON: context7 + 4 disabled                                             | ⚠️ OpenCode/Codex thinner than CC                                                  |
+| MCP project-level        | `.mcp.json`                                                                                                   | `.codex/config.toml [mcp_servers.X]`                                                                                           | `opencode.jsonc "mcp"`                                                  | ✅ All three configured per repo, contents aligned                                 |
+| Plugins ecosystem        | Marketplace, 14 enabled across 5 sources                                                                      | Marketplace `openai-curated`, 4 enabled                                                                                        | TS file plugins; no marketplace concept                                 | ❌ Structurally different                                                          |
+| Subagents (custom)       | Built-ins only (no custom files)                                                                              | Built-ins only (no `~/.codex/agents/*.toml`)                                                                                   | Built-ins only (no `~/.config/opencode/agents/*.md`)                    | ✅ Consistent (all empty)                                                          |
+| Permissions baseline     | Detailed allow/deny/ask                                                                                       | `default.rules` shell prefix allowlist + sandbox modes                                                                         | `permission.{read,edit,bash,...}` allow/ask/deny                        | ⚠️ Same intent, divergent shape                                                    |
+| Status-line / activity   | `workmux` via `statusline.sh` and 5 hooks                                                                     | `workmux` via 3 hooks                                                                                                          | `workmux` via TS plugin                                                 | ✅ Functional parity                                                               |
 
 Legend: ✅ aligned, ⚠️ aligned in spirit only, ❌ structural gap.
 
@@ -71,11 +71,11 @@ This is the only **shared** dir read by all three. Codex also reads `$CODEX_HOME
 
 ### 1.2 Per-repo configs observed
 
-| Repo | CLAUDE.md | AGENTS.md | `.claude/` | `.codex/` | `.agents/` | `.opencode/` | `.mcp.json` | `opencode.jsonc` |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **Houndarr** | `@AGENTS.md` only (1 line) | 1102 lines, primary | settings.json, commands/, rules/, settings.local.json | empty dir | absent | bun.lock + package.json | absent | absent |
-| **wedding-site** | 204 lines, primary | absent | settings.local.json, rules/, skills/ (3 symlinks) | config.toml (small) | skills/ (3 dirs) | absent | shadcn/next-devtools/stripe | supabase, vercel, shadcn, next-devtools, stripe |
-| **invest-platform** | full project doc | absent | settings.json, settings.local.json, commands/, rules/, skills/ | config.toml (small) | absent | absent | cloudflare/grafana/sentry/shadcn | supabase, vercel, cloudflare, sentry, grafana, shadcn |
+| Repo                | CLAUDE.md                  | AGENTS.md           | `.claude/`                                                     | `.codex/`           | `.agents/`       | `.opencode/`            | `.mcp.json`                      | `opencode.jsonc`                                      |
+| ------------------- | -------------------------- | ------------------- | -------------------------------------------------------------- | ------------------- | ---------------- | ----------------------- | -------------------------------- | ----------------------------------------------------- |
+| **Houndarr**        | `@AGENTS.md` only (1 line) | 1102 lines, primary | settings.json, commands/, rules/, settings.local.json          | empty dir           | absent           | bun.lock + package.json | absent                           | absent                                                |
+| **wedding-site**    | 204 lines, primary         | absent              | settings.local.json, rules/, skills/ (3 symlinks)              | config.toml (small) | skills/ (3 dirs) | absent                  | shadcn/next-devtools/stripe      | supabase, vercel, shadcn, next-devtools, stripe       |
+| **invest-platform** | full project doc           | absent              | settings.json, settings.local.json, commands/, rules/, skills/ | config.toml (small) | absent           | absent                  | cloudflare/grafana/sentry/shadcn | supabase, vercel, cloudflare, sentry, grafana, shadcn |
 
 Houndarr is the only repo using the canonical Claude Code → AGENTS.md interop pattern documented at https://code.claude.com/docs/en/memory: `@AGENTS.md` as the first line of `CLAUDE.md`. The other two repos duplicate intent across CLAUDE.md and tool-specific configs.
 
@@ -92,6 +92,7 @@ Houndarr is the only repo using the canonical Claude Code → AGENTS.md interop 
 ### 2.2 Your global files
 
 All three globals are near-clones (the writing/code/principles sections match line-for-line). Only the tool-specific bits differ:
+
 - CC mentions `Skill Agent` in tool-order; Codex mentions `skill`; OpenCode adds `lsp`/`question`/`todoread/todowrite`.
 - CC paths point at `~/.claude/rules/<name>/`; Codex/OpenCode point at `~/.agents/skills/<name>/`.
 - CC has the broader "MCP servers" list (9 entries); Codex/OpenCode list 5 globals plus a project-scoped section.
@@ -100,11 +101,11 @@ This is acceptable convergence given each tool's vocabulary. The intent is ident
 
 ### 2.3 Your project files
 
-| Repo | Pattern observed | Recommended pattern (Anthropic docs) |
-| --- | --- | --- |
-| Houndarr | `CLAUDE.md` is `@AGENTS.md` only; AGENTS.md holds everything | ✅ Already canonical |
-| wedding-site | `CLAUDE.md` 204 lines; no AGENTS.md | ❌ Codex sees nothing; OpenCode sees only via CLAUDE.md fallback |
-| invest-platform | Full `CLAUDE.md`; no AGENTS.md | ❌ Same as wedding-site |
+| Repo            | Pattern observed                                             | Recommended pattern (Anthropic docs)                             |
+| --------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Houndarr        | `CLAUDE.md` is `@AGENTS.md` only; AGENTS.md holds everything | ✅ Already canonical                                             |
+| wedding-site    | `CLAUDE.md` 204 lines; no AGENTS.md                          | ❌ Codex sees nothing; OpenCode sees only via CLAUDE.md fallback |
+| invest-platform | Full `CLAUDE.md`; no AGENTS.md                               | ❌ Same as wedding-site                                          |
 
 **The Houndarr pattern is the standard Anthropic recommends.** Apply it to the other two: rename each `CLAUDE.md` to `AGENTS.md`, then drop a one-line `CLAUDE.md` containing `@AGENTS.md`. Result: Codex reads AGENTS.md natively (https://developers.openai.com/codex/guides/agents-md), OpenCode reads AGENTS.md natively (https://opencode.ai/docs/rules), and Claude Code reads it via the import (https://code.claude.com/docs/en/memory). One source, three readers.
 
@@ -114,15 +115,15 @@ This is acceptable convergence given each tool's vocabulary. The intent is ident
 
 ### 3.1 Storage paths each tool actually scans
 
-| Tool | Personal | Project | Notes |
-| --- | --- | --- | --- |
-| Claude Code | `~/.claude/skills/<name>/SKILL.md` (also auto-loaded `.claude/rules/<name>.md` with `paths:` frontmatter) | `.claude/skills/<name>/SKILL.md`, `.claude/rules/<name>.md` | https://code.claude.com/docs/en/skills, https://code.claude.com/docs/en/memory |
-| Codex CLI | `$CODEX_HOME/skills` (= `~/.codex/skills/`, documented in bundled `skill-installer` SKILL.md), `$HOME/.agents/skills/<name>/SKILL.md`, `/etc/codex/skills` | `.agents/skills/<name>/SKILL.md` (current dir), `../.agents/skills`, `$REPO_ROOT/.agents/skills` | https://developers.openai.com/codex/skills, plus `$CODEX_HOME/skills` (verified live) |
-| OpenCode | `~/.config/opencode/skills/<name>/SKILL.md` plus equivalents under `~/.claude/` and `~/.agents/` | `.opencode/skills/`, `.claude/skills/`, `.agents/skills/` | https://opencode.ai/docs/skills/ |
+| Tool        | Personal                                                                                                                                                   | Project                                                                                          | Notes                                                                                 |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Claude Code | `~/.claude/skills/<name>/SKILL.md` (also auto-loaded `.claude/rules/<name>.md` with `paths:` frontmatter)                                                  | `.claude/skills/<name>/SKILL.md`, `.claude/rules/<name>.md`                                      | https://code.claude.com/docs/en/skills, https://code.claude.com/docs/en/memory        |
+| Codex CLI   | `$CODEX_HOME/skills` (= `~/.codex/skills/`, documented in bundled `skill-installer` SKILL.md), `$HOME/.agents/skills/<name>/SKILL.md`, `/etc/codex/skills` | `.agents/skills/<name>/SKILL.md` (current dir), `../.agents/skills`, `$REPO_ROOT/.agents/skills` | https://developers.openai.com/codex/skills, plus `$CODEX_HOME/skills` (verified live) |
+| OpenCode    | `~/.config/opencode/skills/<name>/SKILL.md` plus equivalents under `~/.claude/` and `~/.agents/`                                                           | `.opencode/skills/`, `.claude/skills/`, `.agents/skills/`                                        | https://opencode.ai/docs/skills/                                                      |
 
 **Verified live with `codex exec --skip-git-repo-check`** (Codex 0.128.0): Codex sees all 11 of your `~/.codex/skills/` user skills (catchup, coordinator, deep-audit, fix-issue, merge, open-pr, rebase, review, ship, workmux, worktree), plus all 13 entries in `~/.agents/skills/` (commenting, deploy-to-vercel, doc-coauthoring, find-skills, frontend-design, playwright-cli, python, scalability, security, supabase, supabase-postgres-best-practices, typescript, vercel-cli-with-tokens, vercel-composition-patterns, vercel-react-best-practices, vercel-react-native-skills, vercel-react-view-transitions, web-design-guidelines, webapp-testing), plus the 5 auto-installed `.system` skills, plus plugin-bundled namespaced skills (`build-web-apps:*`, `linear:*`, `vercel:*` totaling ~50). 80+ skills total — Codex actually has the **broadest** skill surface of the three.
 
-So `$CODEX_HOME/skills` IS the canonical user-install path for Codex (per the bundled `skill-installer`); the public skills doc just doesn't list it explicitly. Andrea's stow setup is correct: `~/.dotfiles/Codex/.codex/skills/` → `~/.codex/skills/` works as designed.
+So `$CODEX_HOME/skills` IS the canonical user-install path for Codex (per the bundled `skill-installer`); the public skills doc just doesn't list it explicitly. This stow setup is correct: `~/.dotfiles/Codex/.codex/skills/` → `~/.codex/skills/` works as designed.
 
 ### 3.2 Skill content drift between CC and Codex
 
@@ -144,7 +145,7 @@ This is a **Claude-Code-only feature**. Per https://code.claude.com/docs/en/memo
 ```yaml
 ---
 paths:
-  - "src/api/**/*.ts"
+    - "src/api/**/*.ts"
 ---
 ```
 
@@ -191,23 +192,21 @@ Update `~/.dotfiles/Codex/.codex/hooks.json` to add SessionStart (mirrors CC's "
 
 ```json
 {
-  "hooks": {
-    "SessionStart": [
-      { "hooks": [{ "type": "command", "command": "workmux set-window-status working" }] }
-    ],
-    "PermissionRequest": [
-      { "hooks": [{ "type": "command", "command": "workmux set-window-status waiting" }] }
-    ],
-    "PostToolUse": [
-      { "hooks": [{ "type": "command", "command": "workmux set-window-status working" }] }
-    ],
-    "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "workmux set-window-status working" }] }
-    ],
-    "Stop": [
-      { "hooks": [{ "type": "command", "command": "workmux set-window-status done" }] }
-    ]
-  }
+    "hooks": {
+        "SessionStart": [
+            { "hooks": [{ "type": "command", "command": "workmux set-window-status working" }] }
+        ],
+        "PermissionRequest": [
+            { "hooks": [{ "type": "command", "command": "workmux set-window-status waiting" }] }
+        ],
+        "PostToolUse": [
+            { "hooks": [{ "type": "command", "command": "workmux set-window-status working" }] }
+        ],
+        "UserPromptSubmit": [
+            { "hooks": [{ "type": "command", "command": "workmux set-window-status working" }] }
+        ],
+        "Stop": [{ "hooks": [{ "type": "command", "command": "workmux set-window-status done" }] }]
+    }
 }
 ```
 
@@ -219,11 +218,11 @@ Confirm `[features] codex_hooks = true` is in `~/.codex/config.toml` (it already
 
 ### 5.1 Configuration shapes (different but composable)
 
-| Tool | File | Schema |
-| --- | --- | --- |
-| Claude Code | `.mcp.json` (project), `~/.claude.json` (user/local) | `mcpServers.<name>.{command,args,env,type,url,headers}`; `${VAR}` and `${VAR:-default}` expansion (https://code.claude.com/docs/en/mcp) |
-| Codex CLI | `~/.codex/config.toml` `[mcp_servers.<name>]` | `command/args/cwd/env/env_vars/oauth/...` for STDIO; `url/http_headers/env_http_headers/bearer_token_env_var` for HTTP (https://developers.openai.com/codex/mcp) |
-| OpenCode | `opencode.jsonc` `mcp.<name>` | `type: "local"` with `command[]/environment{}/timeout`; `type: "remote"` with `url/headers{}/timeout/oauth{}` (https://opencode.ai/docs/mcp-servers/) |
+| Tool        | File                                                 | Schema                                                                                                                                                           |
+| ----------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | `.mcp.json` (project), `~/.claude.json` (user/local) | `mcpServers.<name>.{command,args,env,type,url,headers}`; `${VAR}` and `${VAR:-default}` expansion (https://code.claude.com/docs/en/mcp)                          |
+| Codex CLI   | `~/.codex/config.toml` `[mcp_servers.<name>]`        | `command/args/cwd/env/env_vars/oauth/...` for STDIO; `url/http_headers/env_http_headers/bearer_token_env_var` for HTTP (https://developers.openai.com/codex/mcp) |
+| OpenCode    | `opencode.jsonc` `mcp.<name>`                        | `type: "local"` with `command[]/environment{}/timeout`; `type: "remote"` with `url/headers{}/timeout/oauth{}` (https://opencode.ai/docs/mcp-servers/)            |
 
 ### 5.2 Your global state
 
@@ -257,24 +256,24 @@ These are not interchangeable. The closest cross-tool primitive is "the official
 
 ### 6.2 Your enabled plugins
 
-| Service | Claude Code | Codex CLI | OpenCode |
-| --- | --- | --- | --- |
-| context7 | plugin (claude-plugins-official) | mcp_servers entry | mcp entry |
-| firecrawl | plugin | mcp_servers entry | mcp entry |
-| supabase | plugin | (project only) | (project only) |
-| vercel | plugin (vercel-vercel-plugin) | plugin (openai-curated) | (project only) |
-| semgrep | plugin | n/a | n/a |
-| playwright | plugin (via code-review chain) | n/a | n/a |
-| github | plugin disabled | plugin disabled | mcp disabled |
-| linear | (claude.ai built-in) | plugin enabled | n/a |
-| frontend-design | plugin | n/a | n/a |
-| ui-ux-pro-max | plugin | n/a | n/a |
-| skill-codex | plugin | n/a | n/a |
-| build-web-apps | n/a | plugin enabled | n/a |
-| pyright-lsp | plugin | n/a (Codex doesn't ship LSP plugins) | (built-in LSP server) |
-| typescript-lsp | plugin | n/a | (built-in LSP server) |
-| lua-lsp | plugin | n/a | (built-in LSP server) |
-| claude-notifications-go | plugin | n/a | workmux plugin (TS) |
+| Service                 | Claude Code                      | Codex CLI                            | OpenCode              |
+| ----------------------- | -------------------------------- | ------------------------------------ | --------------------- |
+| context7                | plugin (claude-plugins-official) | mcp_servers entry                    | mcp entry             |
+| firecrawl               | plugin                           | mcp_servers entry                    | mcp entry             |
+| supabase                | plugin                           | (project only)                       | (project only)        |
+| vercel                  | plugin (vercel-vercel-plugin)    | plugin (openai-curated)              | (project only)        |
+| semgrep                 | plugin                           | n/a                                  | n/a                   |
+| playwright              | plugin (via code-review chain)   | n/a                                  | n/a                   |
+| github                  | plugin disabled                  | plugin disabled                      | mcp disabled          |
+| linear                  | (claude.ai built-in)             | plugin enabled                       | n/a                   |
+| frontend-design         | plugin                           | n/a                                  | n/a                   |
+| ui-ux-pro-max           | plugin                           | n/a                                  | n/a                   |
+| skill-codex             | plugin                           | n/a                                  | n/a                   |
+| build-web-apps          | n/a                              | plugin enabled                       | n/a                   |
+| pyright-lsp             | plugin                           | n/a (Codex doesn't ship LSP plugins) | (built-in LSP server) |
+| typescript-lsp          | plugin                           | n/a                                  | (built-in LSP server) |
+| lua-lsp                 | plugin                           | n/a                                  | (built-in LSP server) |
+| claude-notifications-go | plugin                           | n/a                                  | workmux plugin (TS)   |
 
 The takeaway: OpenCode and Codex are a strict subset of CC's plugin-driven feature surface. That's structural — neither tool has Claude-Code-equivalent plugin distribution. The best you can do is keep the **shared MCP servers** in lock-step (already in good shape).
 
@@ -282,11 +281,11 @@ The takeaway: OpenCode and Codex are a strict subset of CC's plugin-driven featu
 
 ## 7. Subagents
 
-| Tool | Built-ins | Custom location | Format |
-| --- | --- | --- | --- |
-| Claude Code | `Explore` (Haiku, read-only), `Plan`, `general-purpose`, `statusline-setup`, `Claude Code Guide` (https://code.claude.com/docs/en/sub-agents) | `~/.claude/agents/<name>.md` (user), `.claude/agents/<name>.md` (project) | YAML frontmatter + Markdown system prompt |
-| Codex CLI | `default`, `worker`, `explorer` (https://developers.openai.com/codex/subagents) | `~/.codex/agents/<name>.toml` (user), `<repo>/.codex/agents/<name>.toml` (project) | TOML, requires `name`, `description`, `developer_instructions` |
-| OpenCode | `build` (primary), `plan` (primary), `general` (subagent), `explore` (subagent) (https://opencode.ai/docs/agents/) | `~/.config/opencode/agents/<name>.md` (user), `.opencode/agents/<name>.md` (project) | YAML frontmatter + Markdown system prompt |
+| Tool        | Built-ins                                                                                                                                     | Custom location                                                                      | Format                                                         |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Claude Code | `Explore` (Haiku, read-only), `Plan`, `general-purpose`, `statusline-setup`, `Claude Code Guide` (https://code.claude.com/docs/en/sub-agents) | `~/.claude/agents/<name>.md` (user), `.claude/agents/<name>.md` (project)            | YAML frontmatter + Markdown system prompt                      |
+| Codex CLI   | `default`, `worker`, `explorer` (https://developers.openai.com/codex/subagents)                                                               | `~/.codex/agents/<name>.toml` (user), `<repo>/.codex/agents/<name>.toml` (project)   | TOML, requires `name`, `description`, `developer_instructions` |
+| OpenCode    | `build` (primary), `plan` (primary), `general` (subagent), `explore` (subagent) (https://opencode.ai/docs/agents/)                            | `~/.config/opencode/agents/<name>.md` (user), `.opencode/agents/<name>.md` (project) | YAML frontmatter + Markdown system prompt                      |
 
 Your current state: **no custom subagents anywhere**. That's fine and consistent. If you ever want one (e.g. a "review" agent), the pattern would be:
 
@@ -318,7 +317,7 @@ Keep the system prompt body identical, adjust frontmatter to each schema.
 
 - **Houndarr** (`.claude/settings.json`): full CC-style allow/deny/ask, with explicit deny for `git push --force*`, `git push -f*`, `git push origin main*`, `git push origin master*`, `git push origin :*`. Solid.
 - **invest-platform** (`.claude/settings.json`): same shape, plus `Bash(npx supabase db reset*)` deny. Adds `pnpm install/add/remove` asks. Solid.
-- **wedding-site** (`.claude/settings.local.json`): only contains additive allows for tools the user accepted during sessions (mcp__plugin_playwright_*, etc.) — no denylist of its own. Inherits the global. That's by design (settings.local.json is per-developer transient state, https://code.claude.com/docs/en/settings).
+- **wedding-site** (`.claude/settings.local.json`): only contains additive allows for tools the user accepted during sessions (mcp\__plugin_playwright_\*, etc.) — no denylist of its own. Inherits the global. That's by design (settings.local.json is per-developer transient state, https://code.claude.com/docs/en/settings).
 
 The CC-level baseline is solid and well-replicated in OpenCode. The Codex side is the structural odd one out: its policy lives in a completely different layer (sandbox + trust + prefix-rule), so there is no clean way to mirror the CC denylist into Codex. Acceptable, because Codex's sandbox enforces by default.
 
@@ -336,11 +335,11 @@ Your `.claude/commands/` (Houndarr: bump.md, check.md, test.md; invest-platform:
 
 ## 10. Status line and notifications
 
-| Tool | Mechanism | Your config |
-| --- | --- | --- |
+| Tool        | Mechanism                                                                                                 | Your config                                  |
+| ----------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | Claude Code | `statusLine.{type,command,refreshInterval}` in settings.json (https://code.claude.com/docs/en/statusline) | `~/.claude/statusline.sh`, refreshInterval 2 |
-| Codex CLI | `/statusline` slash command + agent-level `subagentStatusLine` settings | (no custom statusline shipped) |
-| OpenCode | `tui.json` keybinds + theme; no per-line custom statusline documented | tui.json with custom keybinds |
+| Codex CLI   | `/statusline` slash command + agent-level `subagentStatusLine` settings                                   | (no custom statusline shipped)               |
+| OpenCode    | `tui.json` keybinds + theme; no per-line custom statusline documented                                     | tui.json with custom keybinds                |
 
 Status-line is largely a CC-only customization surface. Notification-wise, the workmux integration is the consistent thread across all three — see §4.
 
@@ -351,29 +350,29 @@ Status-line is largely a CC-only customization surface. Notification-wise, the w
 ### High impact
 
 1. **Apply the Houndarr CLAUDE.md → @AGENTS.md pattern to wedding-site and invest-platform.**
-   - Move the current `CLAUDE.md` content into `AGENTS.md`.
-   - Replace `CLAUDE.md` with one line: `@AGENTS.md`, plus any Claude-only sections after.
-   - Effect: Codex finally sees your full project doc; OpenCode prefers AGENTS.md natively; CC continues to read it via the documented import (https://code.claude.com/docs/en/memory).
+    - Move the current `CLAUDE.md` content into `AGENTS.md`.
+    - Replace `CLAUDE.md` with one line: `@AGENTS.md`, plus any Claude-only sections after.
+    - Effect: Codex finally sees your full project doc; OpenCode prefers AGENTS.md natively; CC continues to read it via the documented import (https://code.claude.com/docs/en/memory).
 
 2. **Decide whether you want one shared skill set or two intentional variants.** Live verification confirmed Codex DOES load `~/.codex/skills/`. Today you have two manually-curated copies (one in `~/.dotfiles/Claude/.claude/skills/`, another in `~/.dotfiles/Codex/.codex/skills/`) that drift. Two paths:
-   - **Option A — single source.** Symlink CC's skills into `~/.agents/skills/` (which Codex AND OpenCode read), delete `~/.dotfiles/Codex/.codex/skills/`. Codex silently ignores CC's extra frontmatter (`allowed-tools`, `disable-model-invocation`) per https://developers.openai.com/codex/skills, so the same SKILL.md works for both.
-     ```bash
-     cd ~/.agents/skills
-     for s in catchup coordinator deep-audit fix-issue merge open-pr rebase review ship workmux worktree; do
-       ln -sfn "$HOME/.dotfiles/Claude/.claude/skills/$s" "$s"
-     done
-     # then drop the stowed Codex copies:
-     cd ~/.dotfiles/Codex/.codex && rm -r skills && cd ~/.dotfiles && stow --restow Codex
-     ```
-   - **Option B — keep two variants intentionally.** If the Codex versions are deliberately stripped (no frontmatter, prose instead of slash-command references), commit to that explicitly: add a top-of-file `# Codex variant of ../../Claude/.claude/skills/<name>/SKILL.md — keep in sync` header so future-you remembers which is the source. Either way, document the choice somewhere in `~/.dotfiles/README.md`.
+    - **Option A — single source.** Symlink CC's skills into `~/.agents/skills/` (which Codex AND OpenCode read), delete `~/.dotfiles/Codex/.codex/skills/`. Codex silently ignores CC's extra frontmatter (`allowed-tools`, `disable-model-invocation`) per https://developers.openai.com/codex/skills, so the same SKILL.md works for both.
+        ```bash
+        cd ~/.agents/skills
+        for s in catchup coordinator deep-audit fix-issue merge open-pr rebase review ship workmux worktree; do
+          ln -sfn "$HOME/.dotfiles/Claude/.claude/skills/$s" "$s"
+        done
+        # then drop the stowed Codex copies:
+        cd ~/.dotfiles/Codex/.codex && rm -r skills && cd ~/.dotfiles && stow --restow Codex
+        ```
+    - **Option B — keep two variants intentionally.** If the Codex versions are deliberately stripped (no frontmatter, prose instead of slash-command references), commit to that explicitly: add a top-of-file `# Codex variant of ../../Claude/.claude/skills/<name>/SKILL.md — keep in sync` header so future-you remembers which is the source. Either way, document the choice somewhere in `~/.dotfiles/README.md`.
 
 3. **Expand Codex `hooks.json` to mirror CC's status events.** Add `SessionStart` and `PermissionRequest` per the snippet in §4.3.
 
 ### Medium impact
 
 4. **Mirror the global MCP set across tools.** Today CC gets `supabase` / `vercel` / `semgrep` / `playwright` for free via plugins; Codex and OpenCode see only `context7` + `firecrawl` globally. Either:
-   - Enable Codex curated plugins for parity (`vercel@openai-curated` already enabled; check whether `supabase@openai-curated` exists), OR
-   - Add explicit `[mcp_servers.supabase]`, `[mcp_servers.vercel]`, `[mcp_servers.playwright]` blocks to `~/.codex/config.toml` and `mcp.supabase`, `mcp.vercel`, `mcp.playwright` blocks to `~/.config/opencode/opencode.jsonc`.
+    - Enable Codex curated plugins for parity (`vercel@openai-curated` already enabled; check whether `supabase@openai-curated` exists), OR
+    - Add explicit `[mcp_servers.supabase]`, `[mcp_servers.vercel]`, `[mcp_servers.playwright]` blocks to `~/.codex/config.toml` and `mcp.supabase`, `mcp.vercel`, `mcp.playwright` blocks to `~/.config/opencode/opencode.jsonc`.
 
 5. **Mirror your `.claude/commands/` into OpenCode `.opencode/commands/`.** Mechanical translation: `.md` → `.md`, frontmatter `description` stays, body becomes `template:` key. See https://opencode.ai/docs/commands/ for the schema.
 
@@ -416,6 +415,7 @@ That's a lot of agreement. The misalignments are concentrated in three places: d
 ## 13. Source index
 
 ### Claude Code
+
 - Overview · https://code.claude.com/docs/en/overview
 - Memory (CLAUDE.md) · https://code.claude.com/docs/en/memory
 - Settings · https://code.claude.com/docs/en/settings
@@ -429,6 +429,7 @@ That's a lot of agreement. The misalignments are concentrated in three places: d
 - Settings JSON schema · https://json.schemastore.org/claude-code-settings.json
 
 ### Codex CLI
+
 - Codex CLI overview · https://developers.openai.com/codex/cli
 - AGENTS.md guide · https://developers.openai.com/codex/guides/agents-md
 - Configuration reference · https://developers.openai.com/codex/config-reference
@@ -441,6 +442,7 @@ That's a lot of agreement. The misalignments are concentrated in three places: d
 - GitHub repo · https://github.com/openai/codex
 
 ### OpenCode
+
 - Docs root · https://opencode.ai/docs/
 - Config · https://opencode.ai/docs/config/
 - Rules (AGENTS.md handling) · https://opencode.ai/docs/rules/
@@ -456,5 +458,6 @@ That's a lot of agreement. The misalignments are concentrated in three places: d
 - GitHub repo · https://github.com/sst/opencode
 
 ### Cross-tool
+
 - AGENTS.md spec · https://agents.md
 - Agent Skills standard · https://agentskills.io

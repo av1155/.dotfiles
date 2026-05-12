@@ -273,11 +273,9 @@ Per-item mapping with origin classification and bucket assignment, documented du
 | to-issues/SKILL.md                          | Matt Pocock                           | C                                    | Stay as-is                                                                                                                                                                                |
 | to-prd/SKILL.md                             | Matt Pocock                           | C                                    | Stay as-is                                                                                                                                                                                |
 | triage/SKILL.md                             | Matt Pocock                           | C                                    | Stay as-is                                                                                                                                                                                |
-| write-a-skill/SKILL.md                      | Matt Pocock                           | C                                    | Stay as-is                                                                                                                                                                                |
 | zoom-out/SKILL.md                           | Matt Pocock                           | C (`disable-model-invocation: true`) | Stay as-is                                                                                                                                                                                |
 | playwright-cli/SKILL.md                     | Matt Pocock-flavored / infrastructure | C                                    | Stay; `allowed-tools` inert outside Claude. No path constraints — description-triggered                                                                                                   |
 | agentic-coding-harnesses/SKILL.md (Stage 1) | user-authored discovery               | C                                    | Stay; description-triggered when env modifications discussed                                                                                                                              |
-| context7-cli/SKILL.md                       | Upstash Context7                      | C                                    | Added 2026-05-10; verbatim from `upstash/context7` commit `78b98266954d35da8aa93ad40c67df33a3ff4443`; skill-symlinked for Claude                                                          |
 | find-docs/SKILL.md                          | Upstash Context7                      | C                                    | Added 2026-05-10; verbatim from `upstash/context7` commit `78b98266954d35da8aa93ad40c67df33a3ff4443`; replaces unmanaged live Claude copy and restores universal availability             |
 | firecrawl-cli/SKILL.md                      | Firecrawl CLI                         | C                                    | Added 2026-05-10 from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; frontmatter name changed to `firecrawl-cli` to match directory; skill-symlinked for Claude       |
 | firecrawl-scrape/SKILL.md                   | Firecrawl CLI                         | C                                    | Added 2026-05-10; verbatim from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; skill-symlinked for Claude                                                             |
@@ -481,7 +479,7 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 │           ├── deep-audit/                 (R, Stage 5 migration)
 │           ├── ship/, merge/, rebase/, ...  (Stage 5 migrations)
 │           ├── python/, typescript/, scalability/, security/, commenting/
-│           └── ...                         (12 Matt Pocock + 5 conventions + 11 personal workflow + 1 discovery = 29 canonical skills)
+│           └── ...                         (11 Matt Pocock + 5 conventions + 11 personal workflow + 1 discovery = 28 canonical skills before later additions)
 ├── Claude/
 │   └── .claude/
 │       ├── CLAUDE.md       S→ ../../Agents/.agents/AGENTS.md
@@ -702,16 +700,17 @@ Cleanup performed in Stage 9: `for skill in catchup coordinator deep-audit fix-i
 
 After cleanup, `~/.agents/skills/` count: 44 → 30. All 30 remaining entries are stow-managed symlinks pointing into `.dotfiles/Agents/.agents/skills/`. The `supabase` and `supabase-postgres-best-practices` skills remain available via the project-scoped `supabase@claude-plugins-official` plugin (newer v0.1.6, namespaced as `supabase:supabase`). The `frontend-design` skill remains available via the globally-enabled `frontend-design@claude-plugins-official` plugin (namespaced as `frontend-design:frontend-design`).
 
-**Brought back** (4 official Anthropic skills from [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills) repo, version-tracked in dotfiles):
+**Brought back** (4 official Anthropic skills from [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills) repo, version-tracked in dotfiles at the time):
 
-| Skill                    | Path                                                                                      | Modifications                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `skill-creator`          | `Agents/.agents/skills/skill-creator/` (248 KB with `scripts/`, `references/`, `assets/`) | None (verbatim copy)                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `webapp-testing`         | `Agents/.agents/skills/webapp-testing/` (32 KB with `scripts/`)                           | None (verbatim copy)                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `doc-coauthoring`        | `Agents/.agents/skills/doc-coauthoring/` (16 KB)                                          | None (verbatim copy)                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `frontend-design-global` | `Agents/.agents/skills/frontend-design-global/` (20 KB)                                   | **Renamed** from `frontend-design` to avoid namespace collision with the `frontend-design@claude-plugins-official` plugin's bundled skill. **Generalized** language: replaced "Claude is capable of extraordinary creative work" → "a frontier LLM is capable of extraordinary creative work". Added `metadata.origin: anthropics/skills (frontend-design)` and `metadata.fork-reason: Cross-harness availability and harness-neutral language` |
+| Skill                    | Path                                            | Modifications                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `webapp-testing`         | `Agents/.agents/skills/webapp-testing/`         | None, verbatim copy                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `doc-coauthoring`        | `Agents/.agents/skills/doc-coauthoring/`        | None, verbatim copy                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `frontend-design-global` | `Agents/.agents/skills/frontend-design-global/` | **Renamed** from `frontend-design` to avoid namespace collision with the `frontend-design@claude-plugins-official` plugin's bundled skill. **Generalized** language: replaced "Claude is capable of extraordinary creative work" → "a frontier LLM is capable of extraordinary creative work". Added `metadata.origin: anthropics/skills (frontend-design)` and `metadata.fork-reason: Cross-harness availability and harness-neutral language` |
 
-All 4 are now visible globally to all 4 harnesses via `~/.agents/skills/` (Codex / OpenCode / Pi read natively; Claude Code reads via stow-installed symlink at `~/.claude/skills/...` if added there, otherwise via the agentic-coding-harnesses cross-harness layer).
+`skill-creator` was also brought back here initially, then removed on 2026-05-12 after `skill-creator-global` became the canonical skill-authoring craft skill.
+
+The remaining skills are visible globally via `~/.agents/skills/` (Codex / OpenCode / Pi read natively; Claude Code reads via stow-installed symlink at `~/.claude/skills/...` if added there, otherwise via the agentic-coding-harnesses cross-harness layer).
 
 If Anthropic publishes updates to these skills, manual sync from `https://github.com/anthropics/skills/tree/main/skills` is required (no auto-update mechanism). For `frontend-design-global`, re-apply the rename + harness-neutral language tweaks after pulling a new upstream version.
 
@@ -721,16 +720,15 @@ Added `Pi/.pi/agent/extensions/inline-skill-invocations.ts`, a user-owned Pi inp
 
 Validation performed with a Node unit test for explicit, bare, inline-argument, fenced-code, unknown-command, and already-wrapped cases, plus Pi's `loadExtensions()` loader against the new extension file.
 
-### 2026-05-10: Upstash Context7 skills added
+### 2026-05-10: Upstash Context7 skill added
 
-Added two Upstash Context7 skills from `https://github.com/upstash/context7/tree/master/skills` at commit `78b98266954d35da8aa93ad40c67df33a3ff4443`:
+Added the Upstash Context7 `find-docs` skill from `https://github.com/upstash/context7/tree/master/skills` at commit `78b98266954d35da8aa93ad40c67df33a3ff4443`:
 
-| Skill          | Path                                                     | Modifications       |
-| -------------- | -------------------------------------------------------- | ------------------- |
-| `context7-cli` | `Agents/.agents/skills/context7-cli/` with `references/` | None, verbatim copy |
-| `find-docs`    | `Agents/.agents/skills/find-docs/`                       | None, verbatim copy |
+| Skill       | Path                               | Modifications       |
+| ----------- | ---------------------------------- | ------------------- |
+| `find-docs` | `Agents/.agents/skills/find-docs/` | None, verbatim copy |
 
-Both skills are visible through the canonical cross-harness path at `~/.agents/skills/`. Claude Code also gets directory symlinks at `Claude/.claude/skills/context7-cli` and `Claude/.claude/skills/find-docs`. A pre-existing unmanaged live Claude copy of `~/.claude/skills/find-docs` was byte-identical to the upstream copy, so it was removed before `stow --restow Agents Claude` replaced it with the tracked symlink.
+The skill is visible through the canonical cross-harness path at `~/.agents/skills/`. Claude Code also gets a directory symlink at `Claude/.claude/skills/find-docs`. A pre-existing unmanaged live Claude copy of `~/.claude/skills/find-docs` was byte-identical to the upstream copy, so it was removed before `stow --restow Agents Claude` replaced it with the tracked symlink.
 
 If Upstash publishes updates, sync manually from the same repository and re-run `stow --restow Agents Claude`.
 
@@ -747,6 +745,18 @@ Added three Firecrawl CLI skills from `https://github.com/firecrawl/cli/tree/mai
 All three are visible through the canonical cross-harness path at `~/.agents/skills/`. Claude Code also gets directory symlinks at `Claude/.claude/skills/firecrawl-cli`, `Claude/.claude/skills/firecrawl-scrape`, and `Claude/.claude/skills/firecrawl-map`.
 
 If Firecrawl publishes updates, sync manually from the same repository and re-run `stow --restow Agents Claude`.
+
+### 2026-05-12: Removed legacy `write-a-skill`
+
+Removed the Matt Pocock `write-a-skill` skill from `Agents/.agents/skills/` and its Claude-facing symlink at `Claude/.claude/skills/write-a-skill`. The skill was superseded by the user-authored `skill-creator-global` skill, which now owns skill-authoring craft, description quality, and progressive-disclosure guidance. Live Stow symlinks at `~/.agents/skills/write-a-skill` and `~/.claude/skills/write-a-skill` were also removed to avoid orphaned skill entries.
+
+### 2026-05-12: Removed `context7-cli`
+
+Removed the deleted `context7-cli` skill's stale symlinks from `Claude/.claude/skills/context7-cli`, `~/.agents/skills/context7-cli`, and `~/.claude/skills/context7-cli`. `find-docs` remains the canonical Context7 docs skill.
+
+### 2026-05-12: Removed upstream `skill-creator`
+
+Removed the tracked upstream Anthropic `skill-creator` skill from `Agents/.agents/skills/skill-creator/` and the live `~/.agents/skills/skill-creator` symlink. It was not visible in Claude Code because no Claude-facing symlink or enabled plugin exposed it. The user-authored `skill-creator-global` skill is now the canonical skill-authoring craft skill.
 
 ### Pending entries
 
@@ -814,7 +824,7 @@ Single wiring per skill — never both rule-symlink and skill-symlink for the sa
 
 ### Q4 — Imported skills
 
-The plugin-installed / Claude.ai-app-installed / setup-script-installed skills (vercel-_, supabase-_, deploy-to-vercel, doc-coauthoring, find-skills, frontend-design, web-design-guidelines, webapp-testing) are NOT version-tracked. They stay outside dotfiles. Documented as external in section 14. `find-docs` moved into the canonical dotfiles pool on 2026-05-10 alongside `context7-cli`.
+The plugin-installed / Claude.ai-app-installed / setup-script-installed skills (vercel-_, supabase-_, deploy-to-vercel, doc-coauthoring, find-skills, frontend-design, web-design-guidelines, webapp-testing) are NOT version-tracked. They stay outside dotfiles. Documented as external in section 14. `find-docs` moved into the canonical dotfiles pool on 2026-05-10.
 
 ### Q5 — Bucket A migration disposition
 

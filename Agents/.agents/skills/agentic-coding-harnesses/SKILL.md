@@ -1,8 +1,6 @@
 ---
 name: agentic-coding-harnesses
-description: Use when modifying the user's agentic environment — skills, rules, AGENTS.md, dotfiles structure, or harness wiring across Claude Code, Codex, OpenCode, and Pi. Loads the runbook to follow canonical procedures and avoid breaking the cross-harness setup. Triggers on prompts about editing or adding skills, fixing rules, AGENTS.md size or content changes, plugin overwrote my skill, setting up the agentic environment, re-stow, or re-doing architecture work.
-metadata:
-  author: andrea
+description: Use when modifying the agentic coding environment, including dotfiles, skills/rules wiring, AGENTS.md/CLAUDE.md loading, Stow symlinks, Claude/Codex/OpenCode/Pi config, plugins, MCP, hooks, or harness compatibility. Loads the runbook to avoid breaking cross-harness setup. Defer to skill-creator-global for skill authoring craft, description quality, and progressive disclosure.
 ---
 
 # Agentic Coding Harnesses Reference
