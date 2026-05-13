@@ -23,6 +23,7 @@
   ],
   "extensions": [
     "extensions/all-core-tools.ts",
+    "extensions/inline-skill-invocations.ts",
     "extensions/startup-screen.ts"
   ],
   "memory": {

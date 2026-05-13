@@ -28,6 +28,7 @@ import {
 } from "./bash-mode/completion.ts";
 import { OneOffShellEditor } from "./bash-mode/editor.ts";
 import { appendProjectHistory } from "./bash-mode/history.ts";
+import type { GhostSuggestion } from "./bash-mode/types.ts";
 import { getPreset, PRESETS } from "./presets.js";
 import {
     collectHiddenExtensionStatusKeys,
@@ -79,6 +80,8 @@ let config: PowerlineConfig = {
 };
 
 const CUSTOM_COMPACTION_STATUS_KEY = "compact-policy";
+const SKILL_COMMAND_PREFIX = "skill:";
+const SKILL_GHOST_COLOR = "#595A61";
 let customCompactionEnabled = false;
 
 interface PowerlineShortcuts {
@@ -1076,6 +1079,58 @@ function getCustomMessageText(content: unknown): string {
 function countMarkdownCompletedTasks(text: string): number {
     return text.split(/\r?\n/).filter((line) => /^\s*-\s*\[x\]/i.test(stripWidgetAnsi(line)))
         .length;
+}
+
+interface TrailingMidPromptSkillToken {
+    start: number;
+    token: string;
+    prefix: string;
+}
+
+interface SkillCommandCandidate {
+    name: string;
+    description?: string;
+}
+
+function findTrailingMidPromptSkillToken(text: string): TrailingMidPromptSkillToken | null {
+    let tokenStart = text.length;
+    while (tokenStart > 0 && !/\s/.test(text[tokenStart - 1] ?? "")) {
+        tokenStart -= 1;
+    }
+
+    const token = text.slice(tokenStart);
+    if (!token.startsWith("/")) return null;
+    if (!/^\/[a-z0-9-]*$/.test(token)) return null;
+    // First-character slash stays reserved for Pi's normal slash-command menu.
+    if (tokenStart <= 0) return null;
+
+    return { start: tokenStart, token, prefix: token.slice(1) };
+}
+
+function getSortedSkillCandidates(pi: ExtensionAPI, prefix: string): SkillCommandCandidate[] {
+    return pi
+        .getCommands()
+        .filter((command) => command.source === "skill")
+        .filter((command) => command.name.startsWith(SKILL_COMMAND_PREFIX))
+        .map((command) => ({
+            name: command.name.slice(SKILL_COMMAND_PREFIX.length),
+            description: command.description,
+        }))
+        .filter((skill) => skill.name.startsWith(prefix))
+        .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function resolveSkillGhostSuggestion(text: string, pi: ExtensionAPI): GhostSuggestion | null {
+    const token = findTrailingMidPromptSkillToken(text);
+    if (!token || token.prefix.length === 0) return null;
+
+    const [skill] = getSortedSkillCandidates(pi, token.prefix);
+    if (!skill) return null;
+
+    const value = `${text.slice(0, token.start)}/${skill.name}`;
+    if (!value.startsWith(text) || value === text) return null;
+
+    return { value, source: "skill", color: SKILL_GHOST_COLOR };
 }
 
 function registerCompactPlannotatorCompleteRenderer(pi: ExtensionAPI): void {
@@ -2289,7 +2344,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
                             : null;
                     }
 
-                    return null;
+                    return resolveSkillGhostSuggestion(text, pi);
                 },
             });
 

@@ -1,6 +1,55 @@
 interface ExtensionAPI {
     on(event: "input", handler: (event: InputEvent) => InputEventResult): void;
+    on(
+        event: "session_start",
+        handler: (event: SessionStartEvent, ctx: ExtensionContext) => Promise<void> | void,
+    ): void;
     getCommands(): SlashCommandInfo[];
+}
+
+interface SessionStartEvent {
+    reason: "startup" | "reload" | "new" | "resume" | "fork";
+}
+
+interface ExtensionContext {
+    hasUI?: boolean;
+    ui?: {
+        addAutocompleteProvider?: (factory: AutocompleteProviderFactory) => void;
+    };
+}
+
+type AutocompleteProviderFactory = (current: AutocompleteProvider) => AutocompleteProvider;
+
+interface AutocompleteItem {
+    value: string;
+    label: string;
+    description?: string;
+}
+
+interface AutocompleteSuggestions {
+    items: AutocompleteItem[];
+    prefix: string;
+}
+
+interface AutocompleteProvider {
+    getSuggestions(
+        lines: string[],
+        cursorLine: number,
+        cursorCol: number,
+        options: { signal: AbortSignal; force?: boolean },
+    ): Promise<AutocompleteSuggestions | null> | AutocompleteSuggestions | null;
+    applyCompletion(
+        lines: string[],
+        cursorLine: number,
+        cursorCol: number,
+        item: AutocompleteItem,
+        prefix: string,
+    ): {
+        lines: string[];
+        cursorLine: number;
+        cursorCol: number;
+    };
+    shouldTriggerFileCompletion?(lines: string[], cursorLine: number, cursorCol: number): boolean;
 }
 
 interface InputEvent {
@@ -16,6 +65,7 @@ type InputEventResult =
 
 interface SlashCommandInfo {
     name: string;
+    description?: string;
     source: "extension" | "prompt" | "skill";
 }
 
@@ -61,6 +111,14 @@ interface SkillCandidate {
     inlineArgs: string;
 }
 
+interface MidPromptSlashToken {
+    promptIndex: number;
+    lineStart: number;
+    lineEnd: number;
+    token: string;
+    prefix: string;
+}
+
 export function transformInlineSkillInvocation(
     text: string,
     commands: SlashCommandInfo[],
@@ -83,6 +141,14 @@ export function transformInlineSkillInvocation(
 }
 
 export default function inlineSkillInvocations(pi: ExtensionAPI): void {
+    pi.on("session_start", async (_event, ctx) => {
+        if (!ctx?.hasUI || typeof ctx.ui?.addAutocompleteProvider !== "function") return;
+
+        ctx.ui.addAutocompleteProvider(
+            (provider) => new InlineSkillAutocompleteProvider(provider, () => pi.getCommands()),
+        );
+    });
+
     pi.on("input", (event: InputEvent): InputEventResult => {
         if (event.source === "extension") return { action: "continue" };
 
@@ -97,6 +163,94 @@ export default function inlineSkillInvocations(pi: ExtensionAPI): void {
     });
 }
 
+class InlineSkillAutocompleteProvider implements AutocompleteProvider {
+    private readonly defaultProvider: AutocompleteProvider;
+    private readonly getCommands: () => SlashCommandInfo[];
+    private skillCompletionActive = false;
+
+    constructor(defaultProvider: AutocompleteProvider, getCommands: () => SlashCommandInfo[]) {
+        this.defaultProvider = defaultProvider;
+        this.getCommands = getCommands;
+    }
+
+    getSuggestions(
+        lines: string[],
+        cursorLine: number,
+        cursorCol: number,
+        options: { signal: AbortSignal; force?: boolean },
+    ): Promise<AutocompleteSuggestions | null> | AutocompleteSuggestions | null {
+        const token = findMidPromptSlashToken(lines, cursorLine, cursorCol);
+        if (!token) {
+            if (this.skillCompletionActive) {
+                this.skillCompletionActive = false;
+                return null;
+            }
+            return this.defaultProvider.getSuggestions(lines, cursorLine, cursorCol, options);
+        }
+
+        this.skillCompletionActive = true;
+        const items = getSkillCompletionItems(this.getCommands(), token.prefix);
+        if (items.length === 0) return null;
+        return { items, prefix: token.token };
+    }
+
+    applyCompletion(
+        lines: string[],
+        cursorLine: number,
+        cursorCol: number,
+        item: AutocompleteItem,
+        prefix: string,
+    ): {
+        lines: string[];
+        cursorLine: number;
+        cursorCol: number;
+    } {
+        const token = findMidPromptSlashToken(lines, cursorLine, cursorCol);
+        if (!token) {
+            this.skillCompletionActive = false;
+            return this.defaultProvider.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
+        }
+
+        this.skillCompletionActive = false;
+        const replacement = item.value.startsWith("/") ? item.value : `/${item.value}`;
+        const currentLine = lines[cursorLine] ?? "";
+        const nextLines = [...lines];
+        nextLines[cursorLine] =
+            currentLine.slice(0, token.lineStart) + replacement + currentLine.slice(token.lineEnd);
+
+        return {
+            lines: nextLines,
+            cursorLine,
+            cursorCol: token.lineStart + replacement.length,
+        };
+    }
+
+    shouldTriggerFileCompletion(lines: string[], cursorLine: number, cursorCol: number): boolean {
+        if (findMidPromptSlashToken(lines, cursorLine, cursorCol)) return true;
+        return (
+            this.defaultProvider.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ??
+            false
+        );
+    }
+}
+
+function getSkillCompletionItems(commands: SlashCommandInfo[], prefix: string): AutocompleteItem[] {
+    return commands
+        .filter((command) => command.source === "skill")
+        .filter((command) => command.name.startsWith(SKILL_COMMAND_PREFIX))
+        .map((command) => ({
+            name: command.name.slice(SKILL_COMMAND_PREFIX.length),
+            description: command.description,
+        }))
+        .filter((skill) => skill.name.startsWith(prefix))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((skill) => ({
+            value: `/${skill.name}`,
+            label: skill.name,
+            ...(skill.description ? { description: skill.description } : {}),
+        }));
+}
+
 function collectSkillNames(commands: SlashCommandInfo[]): Set<string> {
     const skillNames = new Set<string>();
     for (const command of commands) {
@@ -105,6 +259,44 @@ function collectSkillNames(commands: SlashCommandInfo[]): Set<string> {
         skillNames.add(command.name.slice(SKILL_COMMAND_PREFIX.length));
     }
     return skillNames;
+}
+
+function findMidPromptSlashToken(
+    lines: string[],
+    cursorLine: number,
+    cursorCol: number,
+): MidPromptSlashToken | null {
+    if (cursorLine < 0 || cursorLine >= lines.length) return null;
+
+    const line = lines[cursorLine] ?? "";
+    const safeCursorCol = Math.max(0, Math.min(cursorCol, line.length));
+    const beforeCursor = line.slice(0, safeCursorCol);
+    const delimiterIndex = Math.max(beforeCursor.lastIndexOf(" "), beforeCursor.lastIndexOf("\t"));
+    const lineStart = delimiterIndex + 1;
+    const token = line.slice(lineStart, safeCursorCol);
+
+    if (!token.startsWith("/")) return null;
+    if (!/^\/[a-z0-9-]*$/.test(token)) return null;
+
+    const promptIndex = getPromptIndex(lines, cursorLine, lineStart);
+    // Index 0 is reserved for Pi's normal slash-command menu.
+    if (promptIndex <= 0) return null;
+
+    return {
+        promptIndex,
+        lineStart,
+        lineEnd: safeCursorCol,
+        token,
+        prefix: token.slice(1),
+    };
+}
+
+function getPromptIndex(lines: string[], cursorLine: number, lineCol: number): number {
+    let index = Math.max(0, lineCol);
+    for (let lineIndex = 0; lineIndex < cursorLine; lineIndex += 1) {
+        index += (lines[lineIndex] ?? "").length + 1;
+    }
+    return index;
 }
 
 function collectNonSkillCommandNames(commands: SlashCommandInfo[]): Set<string> {

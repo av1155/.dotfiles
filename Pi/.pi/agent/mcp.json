@@ -2,7 +2,12 @@
     "mcpServers": {
         "context-mode": {
             "command": "npx",
-            "args": ["-y", "context-mode"]
+            "args": ["-y", "context-mode"],
+            "directTools": ["ctx_execute", "ctx_execute_file"]
+        },
+        "codegraph": {
+            "command": "codegraph",
+            "args": ["serve", "--mcp"]
         }
     }
 }

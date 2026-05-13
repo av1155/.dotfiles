@@ -138,6 +138,11 @@
             "enabled": true,
             "command": ["npx", "-y", "context-mode"],
         },
+        "codegraph": {
+            "type": "local",
+            "enabled": true,
+            "command": ["codegraph", "serve", "--mcp"],
+        },
     },
 
     "agent": {
@@ -152,6 +157,7 @@
                 "magic*": "allow",
                 "stitch*": "allow",
                 "context-mode*": "allow",
+                "codegraph*": "allow",
                 "supabase*": "ask",
                 "vercel*": "ask",
             },
@@ -167,6 +173,7 @@
                 "magic*": "allow",
                 "stitch*": "allow",
                 "context-mode*": "allow",
+                "codegraph*": "allow",
                 "supabase*": "ask",
                 "vercel*": "ask",
             },

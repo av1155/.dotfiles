@@ -108,4 +108,5 @@ build/
 .opencode/
 .plannotator/
 .pi-lens/
+.codegraph/
 .claude/scheduled_tasks.lock

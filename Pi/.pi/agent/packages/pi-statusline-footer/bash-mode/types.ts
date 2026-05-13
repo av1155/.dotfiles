@@ -1,6 +1,15 @@
+export type CompletionSource =
+    | "project-history"
+    | "global-history"
+    | "git"
+    | "path"
+    | "executable"
+    | "skill";
+
 export interface GhostSuggestion {
     value: string;
-    source: "project-history" | "global-history" | "git" | "path" | "executable";
+    source: CompletionSource;
+    color?: string;
 }
 
 export interface ExtendedCompletionItem {
@@ -10,6 +19,6 @@ export interface ExtendedCompletionItem {
     replacement: string;
     startCol: number;
     endCol: number;
-    source: "project-history" | "global-history" | "git" | "path" | "executable";
+    source: CompletionSource;
     score: number;
 }

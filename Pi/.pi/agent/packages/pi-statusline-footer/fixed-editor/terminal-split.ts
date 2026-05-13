@@ -101,8 +101,13 @@ export function moveCursor(row: number, col: number): string {
     return `\x1b[${row};${col}H`;
 }
 
+const RESET = "\x1b[0m";
+const CLEAR_LINE = "\x1b[2K";
+const BACKGROUND_COLOR_RE = /\x1b\[(?:48;2;\d{1,3};\d{1,3};\d{1,3}|48;5;\d{1,3})m/;
+const LINE_BOUNDARY_MARKERS = ["\r", "\n", "\x1b[?2026h", "\x1b[?2026l"];
+
 function clearLine(): string {
-    return "\x1b[2K";
+    return CLEAR_LINE;
 }
 
 function hideCursor(): string {
@@ -289,6 +294,39 @@ function sanitizeOverlayBaseLine(line: string, width: number): string {
 
 function normalizeOverlayCompositionLine(line: string): string {
     return line.includes("\t") ? line.replace(/\t/g, "   ") : line;
+}
+
+function nextLineBoundary(data: string, start: number): number {
+    let boundary = data.length;
+    for (const marker of LINE_BOUNDARY_MARKERS) {
+        const index = data.indexOf(marker, start);
+        if (index !== -1 && index < boundary) boundary = index;
+    }
+    return boundary;
+}
+
+function preserveClearBackgrounds(data: string): string {
+    let cursor = 0;
+    let result = "";
+
+    while (cursor < data.length) {
+        const clearIndex = data.indexOf(CLEAR_LINE, cursor);
+        if (clearIndex === -1) {
+            result += data.slice(cursor);
+            break;
+        }
+
+        const lineStart = clearIndex + CLEAR_LINE.length;
+        const lineEnd = nextLineBoundary(data, lineStart);
+        const line = data.slice(lineStart, lineEnd);
+        const background = line.match(BACKGROUND_COLOR_RE)?.[0];
+
+        result += data.slice(cursor, clearIndex);
+        result += background ? `${background}${CLEAR_LINE}${RESET}` : CLEAR_LINE;
+        cursor = lineStart;
+    }
+
+    return result;
 }
 
 export function buildFixedClusterPaint(
@@ -1091,7 +1129,7 @@ export class TerminalSplitCompositor {
                 beginSynchronizedOutput() +
                 setScrollRegion(1, scrollBottom) +
                 moveCursor(screenRow, 1) +
-                data +
+                preserveClearBackgrounds(data) +
                 buildFixedClusterPaint(
                     this.decorateCluster(cluster),
                     rawRows,

@@ -807,6 +807,9 @@ export_from_file "LINEAR_API_KEY" "$HOME/.config/linear/api_key"
 
 export OLLAMA_API_BASE="http://127.0.0.1:11434"
 
+# Keep pi-lens startup non-blocking. Use PI_LENS_STARTUP_MODE=full pi for
+# one-off sessions where proactive startup scans and warmups are preferred.
+export PI_LENS_STARTUP_MODE="quick"
 
 # <-------------------- GENERAL CONFIGURATIONS -------------------->
 

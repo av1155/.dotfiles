@@ -1,7 +1,8 @@
 import { CustomEditor } from "@mariozechner/pi-coding-agent";
-import { isKeyRelease, matchesKey, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
+import { isKeyRelease, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import type { KeybindingsManager } from "@mariozechner/pi-coding-agent/dist/core/keybindings.js";
 import type { AutocompleteProvider } from "@mariozechner/pi-tui";
+import { ansi } from "../colors.js";
 import { matchesConfiguredShortcut } from "../shortcuts.ts";
 import { getOneOffBashCommandContext, type OneOffBashCommandContext } from "./completion.ts";
 import type { GhostSuggestion } from "./types.ts";
@@ -22,6 +23,12 @@ const DEFAULT_EDITOR_BOUNDARY_SHORTCUTS: EditorBoundaryShortcuts = {
     start: "super+shift+up",
     end: "super+shift+down",
 };
+const DEFAULT_GHOST_COLOR = "\x1b[38;5;244m";
+
+interface TrailingSkillToken {
+    start: number;
+    prefix: string;
+}
 
 function isPrintableInput(data: string): boolean {
     return data.length === 1 && data.charCodeAt(0) >= 32;
@@ -29,6 +36,33 @@ function isPrintableInput(data: string): boolean {
 
 function matchesEditorBoundaryShortcut(data: string, shortcut: string): boolean {
     return matchesConfiguredShortcut(data, shortcut);
+}
+
+function findTrailingSkillToken(text: string): TrailingSkillToken | null {
+    let tokenStart = text.length;
+    while (tokenStart > 0 && !/\s/.test(text[tokenStart - 1] ?? "")) {
+        tokenStart -= 1;
+    }
+
+    const token = text.slice(tokenStart);
+    if (tokenStart <= 0 || !/^\/[a-z0-9-]*$/.test(token)) return null;
+    return { start: tokenStart, prefix: token.slice(1) };
+}
+
+function hexToRgb(hex: string): [number, number, number] | null {
+    const value = hex.trim().replace(/^#/, "");
+    if (!/^[0-9a-f]{6}$/i.test(value)) return null;
+    return [
+        parseInt(value.slice(0, 2), 16),
+        parseInt(value.slice(2, 4), 16),
+        parseInt(value.slice(4, 6), 16),
+    ];
+}
+
+function getGhostColorAnsi(color: string | undefined): string {
+    if (!color) return DEFAULT_GHOST_COLOR;
+    const rgb = color.startsWith("#") ? hexToRgb(color) : null;
+    return rgb ? ansi.getFgAnsi(...rgb) : color;
 }
 
 export class OneOffShellEditor extends CustomEditor {
@@ -50,6 +84,11 @@ export class OneOffShellEditor extends CustomEditor {
         this.optionsRef = options;
     }
 
+    setAutocompleteProvider(provider: AutocompleteProvider): void {
+        super.setAutocompleteProvider(provider);
+        this.wrappedProviderInstalled = false;
+    }
+
     installAutocompleteProvider(provider: AutocompleteProvider): void {
         this.setAutocompleteProvider(provider);
         this.wrappedProviderInstalled = true;
@@ -60,7 +99,7 @@ export class OneOffShellEditor extends CustomEditor {
     }
 
     getGhostSuggestion(): GhostSuggestion | null {
-        return this.isOneOffBashCommandContext() ? this.ghost : null;
+        return this.isRenderableGhostSuggestion() ? this.ghost : null;
     }
 
     refreshGhostSuggestion(): void {
@@ -108,7 +147,16 @@ export class OneOffShellEditor extends CustomEditor {
             }
 
             if (
-                oneOffBashCommand &&
+                !oneOffBashCommand &&
+                this.keybindingsRef.matches(data, "tui.input.tab") &&
+                this.isPrefixedSkillGhostSuggestion() &&
+                this.acceptGhostSuggestion()
+            ) {
+                return;
+            }
+
+            if (
+                (oneOffBashCommand || this.isPrefixedSkillGhostSuggestion()) &&
                 this.keybindingsRef.matches(data, "tui.editor.cursorRight") &&
                 this.acceptGhostSuggestion()
             ) {
@@ -118,34 +166,38 @@ export class OneOffShellEditor extends CustomEditor {
             super.handleInput(data);
         }
 
-        if (!this.isOneOffBashCommandContext()) {
-            this.clearGhostSuggestion();
-            return;
-        }
-
-        if (
-            pasteInProgress ||
-            isPrintableInput(data) ||
-            this.keybindingsRef.matches(data, "tui.editor.deleteCharBackward") ||
-            this.keybindingsRef.matches(data, "tui.editor.deleteCharForward") ||
-            this.keybindingsRef.matches(data, "tui.editor.deleteWordBackward") ||
-            this.keybindingsRef.matches(data, "tui.editor.deleteWordForward") ||
-            this.keybindingsRef.matches(data, "tui.editor.deleteToLineStart") ||
-            this.keybindingsRef.matches(data, "tui.editor.deleteToLineEnd") ||
-            this.keybindingsRef.matches(data, "tui.input.newLine") ||
-            this.keybindingsRef.matches(data, "tui.editor.cursorLeft") ||
-            this.keybindingsRef.matches(data, "tui.editor.cursorRight")
-        ) {
+        if (this.shouldScheduleGhostUpdate(data, pasteInProgress)) {
             this.scheduleGhostUpdate();
         }
     }
 
     render(width: number): string[] {
-        const oneOffBash = getOneOffBashCommandContext(this.getExpandedText());
+        const text = this.getExpandedText();
+        const oneOffBash = getOneOffBashCommandContext(text);
         const lines = oneOffBash
             ? this.renderWithHiddenOneOffPrefix(width, oneOffBash)
             : super.render(width);
+
+        if (!this.ghost) return this.withAutocompleteBottomSpacer(lines);
+        if (this.ghost.source === "skill") {
+            return this.renderSkillGhostSuffix(lines, width, text);
+        }
         if (!oneOffBash) return this.withAutocompleteBottomSpacer(lines);
+        return this.renderOneOffGhostSuffix(lines, width, oneOffBash);
+    }
+
+    private withAutocompleteBottomSpacer(lines: string[]): string[] {
+        const isShowingAutocomplete = Reflect.get(this, "isShowingAutocomplete");
+        return typeof isShowingAutocomplete === "function" && isShowingAutocomplete.call(this)
+            ? [...lines, ""]
+            : lines;
+    }
+
+    private renderOneOffGhostSuffix(
+        lines: string[],
+        width: number,
+        oneOffBash: OneOffBashCommandContext,
+    ): string[] {
         if (!this.ghost) return this.withAutocompleteBottomSpacer(lines);
 
         const text = this.getText();
@@ -173,16 +225,151 @@ export class OneOffShellEditor extends CustomEditor {
         const padding = " ".repeat(
             Math.max(0, width - visibleWidth(displayText) - 1 - visibleWidth(shownSuffix)),
         );
-        const ghost = `\x1b[38;5;244m${shownSuffix}\x1b[0m`;
+        const ghost = `${getGhostColorAnsi(this.ghost.color)}${shownSuffix}${ansi.reset}`;
         lines[contentLine] = `${displayText}${cursorBlock}${ghost}${padding}`;
         return this.withAutocompleteBottomSpacer(lines);
     }
 
-    private withAutocompleteBottomSpacer(lines: string[]): string[] {
-        const isShowingAutocomplete = Reflect.get(this, "isShowingAutocomplete");
-        return typeof isShowingAutocomplete === "function" && isShowingAutocomplete.call(this)
-            ? [...lines, ""]
-            : lines;
+    private renderSkillGhostSuffix(lines: string[], width: number, text: string): string[] {
+        if (!this.ghost || !this.isPrefixedSkillGhostSuggestion()) {
+            return this.withAutocompleteBottomSpacer(lines);
+        }
+
+        const currentVisualLine = this.getCurrentVisualLineInfo(width);
+        if (!currentVisualLine) return this.withAutocompleteBottomSpacer(lines);
+        if (
+            currentVisualLine.renderedLineIndex < 1 ||
+            currentVisualLine.renderedLineIndex >= lines.length
+        ) {
+            return this.withAutocompleteBottomSpacer(lines);
+        }
+
+        const cursor = this.getCursor();
+        const editorLines = this.getEditorLines();
+        const currentLine = editorLines[cursor.line] ?? "";
+        const displayText = currentLine.slice(currentVisualLine.startCol, cursor.col);
+        const suffix = this.ghost.value.slice(text.length);
+        const { contentWidth, leftPadding, rightPadding } = this.getRenderPadding(width);
+        const cursorBlock = "\x1b[7m \x1b[0m";
+        const availableWidth = Math.max(0, contentWidth - visibleWidth(displayText) - 1);
+        if (availableWidth === 0) return this.withAutocompleteBottomSpacer(lines);
+
+        const shownSuffix = truncateToWidth(suffix, availableWidth, "", true);
+        if (!shownSuffix) return this.withAutocompleteBottomSpacer(lines);
+
+        const padding = " ".repeat(
+            Math.max(0, contentWidth - visibleWidth(displayText) - 1 - visibleWidth(shownSuffix)),
+        );
+        const ghost = `${getGhostColorAnsi(this.ghost.color)}${shownSuffix}${ansi.reset}`;
+        lines[currentVisualLine.renderedLineIndex] =
+            `${leftPadding}${displayText}${cursorBlock}${ghost}${padding}${rightPadding}`;
+        return this.withAutocompleteBottomSpacer(lines);
+    }
+
+    private getEditorLines(): string[] {
+        const getLines = Reflect.get(this, "getLines");
+        if (typeof getLines === "function") {
+            const lines = getLines.call(this);
+            if (Array.isArray(lines) && lines.every((line) => typeof line === "string")) {
+                return lines;
+            }
+        }
+        return this.getText().split("\n");
+    }
+
+    private getEditorPaddingX(): number {
+        const getPaddingX = Reflect.get(this, "getPaddingX");
+        if (typeof getPaddingX !== "function") return 0;
+        const padding = getPaddingX.call(this);
+        return typeof padding === "number" && Number.isFinite(padding) ? padding : 0;
+    }
+
+    private getRenderPadding(width: number): {
+        contentWidth: number;
+        leftPadding: string;
+        rightPadding: string;
+    } {
+        const maxPadding = Math.max(0, Math.floor((width - 1) / 2));
+        const paddingX = Math.min(this.getEditorPaddingX(), maxPadding);
+        const contentWidth = Math.max(1, width - paddingX * 2);
+        const padding = " ".repeat(paddingX);
+        return { contentWidth, leftPadding: padding, rightPadding: padding };
+    }
+
+    private getCurrentVisualLineInfo(
+        width: number,
+    ): { renderedLineIndex: number; startCol: number } | null {
+        const buildVisualLineMap = Reflect.get(this, "buildVisualLineMap");
+        const findCurrentVisualLine = Reflect.get(this, "findCurrentVisualLine");
+        if (
+            typeof buildVisualLineMap !== "function" ||
+            typeof findCurrentVisualLine !== "function"
+        ) {
+            return null;
+        }
+
+        const lastWidth = Reflect.get(this, "lastWidth");
+        const layoutWidth = typeof lastWidth === "number" && lastWidth > 0 ? lastWidth : width;
+        const visualLines = buildVisualLineMap.call(this, layoutWidth);
+        if (!Array.isArray(visualLines)) return null;
+        const visualLineIndex = findCurrentVisualLine.call(this, visualLines);
+        if (typeof visualLineIndex !== "number" || visualLineIndex < 0) return null;
+
+        const scrollOffset = Reflect.get(this, "scrollOffset");
+        const visibleOffset = typeof scrollOffset === "number" ? scrollOffset : 0;
+        const visualLine = visualLines[visualLineIndex] as Record<string, unknown> | undefined;
+        const startCol = typeof visualLine?.startCol === "number" ? visualLine.startCol : 0;
+        return { renderedLineIndex: 1 + visualLineIndex - visibleOffset, startCol };
+    }
+
+    private shouldScheduleGhostUpdate(data: string, pasteInProgress: boolean): boolean {
+        return (
+            pasteInProgress ||
+            isPrintableInput(data) ||
+            this.keybindingsRef.matches(data, "tui.editor.deleteCharBackward") ||
+            this.keybindingsRef.matches(data, "tui.editor.deleteCharForward") ||
+            this.keybindingsRef.matches(data, "tui.editor.deleteWordBackward") ||
+            this.keybindingsRef.matches(data, "tui.editor.deleteWordForward") ||
+            this.keybindingsRef.matches(data, "tui.editor.deleteToLineStart") ||
+            this.keybindingsRef.matches(data, "tui.editor.deleteToLineEnd") ||
+            this.keybindingsRef.matches(data, "tui.input.newLine") ||
+            this.keybindingsRef.matches(data, "tui.editor.cursorLeft") ||
+            this.keybindingsRef.matches(data, "tui.editor.cursorRight")
+        );
+    }
+
+    private isRenderableGhostSuggestion(): boolean {
+        if (!this.ghost) return false;
+        if (this.ghost.source === "skill") return this.isPrefixedSkillGhostSuggestion();
+
+        const text = this.getExpandedText();
+        return (
+            this.isOneOffBashCommandContext() &&
+            !text.includes("\n") &&
+            this.isCursorAtEndOfText(text) &&
+            this.ghost.value.startsWith(text) &&
+            this.ghost.value !== text
+        );
+    }
+
+    private isPrefixedSkillGhostSuggestion(): boolean {
+        if (!this.ghost || this.ghost.source !== "skill") return false;
+        const text = this.getExpandedText();
+        const token = findTrailingSkillToken(text);
+        return (
+            token !== null &&
+            token.prefix.length > 0 &&
+            this.isCursorAtEndOfText(text) &&
+            this.ghost.value.startsWith(text) &&
+            this.ghost.value !== text
+        );
+    }
+
+    private isCursorAtEndOfText(text: string): boolean {
+        const cursor = this.getCursor();
+        const lines = text.split("\n");
+        const lastLineIndex = Math.max(0, lines.length - 1);
+        return cursor.line === lastLineIndex && cursor.col === (lines[lastLineIndex] ?? "").length;
     }
 
     private isOneOffBashCommandContext(): boolean {
@@ -254,12 +441,10 @@ export class OneOffShellEditor extends CustomEditor {
     private acceptGhostSuggestion(): boolean {
         if (!this.ghost) return false;
         const text = this.getExpandedText();
-        if (text.includes("\n")) return false;
-
-        const cursor = this.getCursor();
-        if (cursor.line !== 0 || cursor.col !== text.length) return false;
-
+        if (this.ghost.source !== "skill" && text.includes("\n")) return false;
+        if (!this.isCursorAtEndOfText(text)) return false;
         if (!this.ghost.value.startsWith(text) || this.ghost.value === text) return false;
+
         this.setText(this.ghost.value);
         this.clearGhostSuggestion();
         return true;
