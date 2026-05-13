@@ -214,9 +214,7 @@ class StartupHeader {
 
     private expandedResourceRows(width: number): string[] {
         const rows = [
-            this.dim(
-                "escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o compact",
-            ),
+            this.dim("escape interrupt · ctrl+c/ctrl+d clear/exit · ctrl+o compact"),
             this.dim("Press ctrl+o to hide full startup help and loaded resources."),
             "",
             "Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.",
