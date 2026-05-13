@@ -279,7 +279,10 @@ add-zsh-hook precmd _venv_sync_prompt
 # <-------------------- ALIASES -------------------->
 
 alias mkdir='mkdir -p'
-alias c='clear'
+c() {
+    clear
+    [[ -n "${TMUX:-}" ]] && tmux clear-history
+}
 alias v='nvim'
 alias vc='code'
 alias lg='lazygit'
@@ -552,7 +555,6 @@ alias tn="tmux new-session -s "
 alias tk="tmux kill-session -t "
 alias tl="tmux list-sessions"
 alias td="tmux detach"
-alias tc="clear; tmux clear-history; clear"
 
 
 # <------------------- CUSTOM FUNCTIONS ------------------->
@@ -804,6 +806,8 @@ export_from_file "MAGIC_API_KEY" "$HOME/.config/magic/api_key"
 export_from_file "GOOGLE_STITCH_API_KEY" "$HOME/.config/google_stitch/api_key"
 export_from_file "GITHUB_PERSONAL_ACCESS_TOKEN" "$HOME/.config/github/token"
 export_from_file "LINEAR_API_KEY" "$HOME/.config/linear/api_key"
+export_from_file "EXA_API_KEY" "$HOME/.config/exa/api_key"
+export_from_file "GEMINI_API_KEY" "$HOME/.config/gemini/api_key"
 
 export OLLAMA_API_BASE="http://127.0.0.1:11434"
 

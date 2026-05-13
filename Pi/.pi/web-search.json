@@ -1,0 +1,7 @@
+{
+    "provider": "auto",
+    "workflow": "summary-review",
+    "searchModel": "gemini-2.5-flash",
+    "summaryModel": "openai-codex/gpt-5.4",
+    "allowBrowserCookies": true
+}

@@ -24,7 +24,7 @@ const LOCAL_PROVIDER_PATTERN = /ollama|lmstudio|lm-studio|vllm|local/i;
 
 const COLORS = {
     text: "#949494",
-    less: "#595A61",
+    less: "#58585F",
     contextHealthyBg: "#3E4E4C",
     contextHealthyFg: "#A6E3A1",
     contextWarnBg: "#514F50",
