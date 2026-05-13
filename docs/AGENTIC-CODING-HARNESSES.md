@@ -220,7 +220,9 @@ User's currently installed Pi packages and local extensions are tracked in `.dot
 | `@juicesharp/rpiv-ask-user-question`     | Tabbed-question dialog tool: 1-4 questions, 2-4 options each, single/multi-select, optional previews, free-text notes, Submit review tab                                                                                 |
 | `pi-mcp-adapter`                         | Adds MCP support to Pi through a compact proxy tool, lazy server lifecycle, direct-tool promotion, and config discovery from `~/.pi/agent/mcp.json`, `.pi/mcp.json`, `.mcp.json`, and `~/.config/mcp/mcp.json`           |
 | `extensions/all-core-tools.ts`           | Local extension that keeps all official Pi built-in tools active every session: `read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`                                                                                    |
-| `extensions/inline-skill-invocations.ts` | Local input-transform extension that lets `/skill:<name>` or `/<skill-name>` appear on its own line anywhere in a prompt, then rewrites the prompt so Pi's normal skill expansion runs.                                  |
+| `extensions/inline-skill-invocations.ts` | Local input-transform extension that lets `/skill:<name>` or `/<skill-name>` appear on its own line or in same-line prose, then rewrites the prompt so Pi's normal skill expansion runs. It ignores inline code, code blocks, and path-like text. |
+
+To mention a slash skill without invoking it in Pi, put it in inline code (`` `/review` ``), a fenced code block, or path-like text such as `/Users/andreaventi/.dotfiles/Agents/.agents/skills/review/SKILL.md`.
 
 `rpiv` = juicesharp's brand for a suite of Pi enhancements (from monorepo `rpiv-mono`).
 
@@ -614,7 +616,7 @@ Per-harness diagnostic flow:
 | Harness     | Symptom                                                     | Check                                                                                                                                                                                                                                                            |
 | ----------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Pi          | Skill is invisible to model                                 | (1) Does SKILL.md have a non-empty `description:` field? Pi hard-skips skills without one. (2) Is the skill in a Pi-discoverable path? Run `pi list-skills` if available; verify `skills:` array in `~/.pi/agent/settings.json` includes the skill's parent dir. |
-| Pi          | `/skill:<name>` only works when it is the whole first token | Core Pi only expands skill commands when the prompt starts with `/skill:`. This setup includes `extensions/inline-skill-invocations.ts`; reload Pi, then put `/skill:<name>` or `/<skill-name>` on its own line anywhere in the message.                         |
+| Pi          | `/skill:<name>` or `/<skill-name>` does not load            | Core Pi only expands skill commands when the prompt starts with `/skill:`. This setup includes `extensions/inline-skill-invocations.ts`; reload Pi, then put `/skill:<name>` or `/<skill-name>` on its own line or in same-line prose. Use inline code, fenced code blocks, or path-like text to mention a slash skill without invoking it. |
 | Claude Code | Skill doesn't auto-load on path match                       | Verify `paths:` frontmatter is correct YAML. Use the `InstructionsLoaded` hook to log what loaded.                                                                                                                                                               |
 | Codex       | Skill not in slash menu / `$<name>` invocation fails        | Verify SKILL.md is at `~/.agents/skills/<name>/SKILL.md` (canonical) or `~/.codex/skills/<name>/SKILL.md` (deprecated). Ensure name is lowercase-alphanumeric-hyphens.                                                                                           |
 | OpenCode    | Skill not surfaced                                          | OpenCode validates name regex `^[a-z0-9]+(-[a-z0-9]+)*$`. Capital letters or underscores cause silent skip.                                                                                                                                                      |
@@ -716,9 +718,9 @@ If Anthropic publishes updates to these skills, manual sync from `https://github
 
 ### 2026-05-09: Pi inline skill invocation extension
 
-Added `Pi/.pi/agent/extensions/inline-skill-invocations.ts`, a user-owned Pi input-transform extension. It detects `/skill:<name>` or `/<skill-name>` on its own non-fenced line anywhere in the user's prompt, rewrites the message to start with `/skill:<name>`, and preserves the surrounding text as skill arguments. This works around core Pi's documented behavior: skill command expansion only happens when the raw prompt starts with `/skill:`.
+Added `Pi/.pi/agent/extensions/inline-skill-invocations.ts`, a user-owned Pi input-transform extension. It detects `/skill:<name>` or `/<skill-name>` on its own non-fenced line or in same-line prose anywhere in the user's prompt, rewrites the message to start with `/skill:<name>`, and preserves the surrounding text as skill arguments. Inline code spans, fenced/indented code blocks, and path-like text intentionally do not invoke skills. This works around core Pi's documented behavior: skill command expansion only happens when the raw prompt starts with `/skill:`.
 
-Validation performed with a Node unit test for explicit, bare, inline-argument, fenced-code, unknown-command, and already-wrapped cases, plus Pi's `loadExtensions()` loader against the new extension file.
+Validation performed with a Node unit test for explicit, bare, inline-argument, same-line prose, inline-code, fenced-code, path-like, unknown-command, command-conflict, and already-wrapped cases, plus Pi's `loadExtensions()` loader against the extension file.
 
 ### 2026-05-10: Upstash Context7 skill added
 

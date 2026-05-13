@@ -72,6 +72,7 @@ interface SlashCommandInfo {
 const SKILL_COMMAND_PREFIX = "skill:";
 const EXPLICIT_SKILL_COMMAND = /^\/skill:([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:[ \t]+(.*))?$/;
 const BARE_SKILL_COMMAND = /^\/([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?:[ \t]+(.*))?$/;
+const SAME_LINE_SKILL_TOKEN = /\/(?:skill:)?[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g;
 const FENCE_START = /^\s*(```|~~~)/;
 const INDENTED_CODE_LINE = /^(?: {4,}| {0,3}\t)/;
 const WRAPPED_SKILL_PREFIX = "<skill ";
@@ -105,10 +106,26 @@ interface InlineSkillTransform {
     skillName: string;
 }
 
-interface SkillCandidate {
+interface WholeLineSkillCandidate {
+    kind: "whole-line";
     lineIndex: number;
     skillName: string;
     inlineArgs: string;
+}
+
+interface SameLineSkillCandidate {
+    kind: "same-line";
+    lineIndex: number;
+    skillName: string;
+    tokenStart: number;
+    tokenEnd: number;
+}
+
+type SkillCandidate = WholeLineSkillCandidate | SameLineSkillCandidate;
+
+interface TextSpan {
+    start: number;
+    end: number;
 }
 
 interface MidPromptSlashToken {
@@ -331,25 +348,121 @@ function findInlineSkillCandidate(
         const explicit = EXPLICIT_SKILL_COMMAND.exec(trimmed);
         if (explicit) {
             const skillName = explicit[1] ?? "";
-            if (!skillNames.has(skillName)) continue;
-            return { lineIndex, skillName, inlineArgs: (explicit[2] ?? "").trim() };
+            if (skillNames.has(skillName)) {
+                return {
+                    kind: "whole-line",
+                    lineIndex,
+                    skillName,
+                    inlineArgs: (explicit[2] ?? "").trim(),
+                };
+            }
         }
 
         const bare = BARE_SKILL_COMMAND.exec(trimmed);
-        if (!bare) continue;
+        if (bare) {
+            const skillName = bare[1] ?? "";
+            if (skillNames.has(skillName) && !nonSkillCommands.has(skillName)) {
+                return {
+                    kind: "whole-line",
+                    lineIndex,
+                    skillName,
+                    inlineArgs: (bare[2] ?? "").trim(),
+                };
+            }
+        }
 
-        const skillName = bare[1] ?? "";
-        if (!skillNames.has(skillName)) continue;
-        if (nonSkillCommands.has(skillName)) continue;
-
-        return { lineIndex, skillName, inlineArgs: (bare[2] ?? "").trim() };
+        const sameLine = findSameLineSkillCandidate(line, lineIndex, skillNames, nonSkillCommands);
+        if (sameLine) return sameLine;
     }
 
     return null;
 }
 
+function findSameLineSkillCandidate(
+    line: string,
+    lineIndex: number,
+    skillNames: Set<string>,
+    nonSkillCommands: Set<string>,
+): SameLineSkillCandidate | null {
+    const inlineCodeSpans = findInlineCodeSpans(line);
+    SAME_LINE_SKILL_TOKEN.lastIndex = 0;
+
+    for (;;) {
+        const match = SAME_LINE_SKILL_TOKEN.exec(line);
+        if (!match) return null;
+
+        const token = match[0] ?? "";
+        const tokenStart = match.index;
+        const tokenEnd = tokenStart + token.length;
+
+        if (isPositionInSpans(tokenStart, inlineCodeSpans)) continue;
+        if (isPositionInSpans(tokenEnd - 1, inlineCodeSpans)) continue;
+        if (!hasSafeSkillTokenStart(line, tokenStart)) continue;
+        if (!hasSafeSkillTokenEnd(line, tokenEnd)) continue;
+
+        const isExplicit = token.startsWith(`/${SKILL_COMMAND_PREFIX}`);
+        const skillName = isExplicit
+            ? token.slice(SKILL_COMMAND_PREFIX.length + 1)
+            : token.slice(1);
+
+        if (!skillNames.has(skillName)) continue;
+        if (!isExplicit && nonSkillCommands.has(skillName)) continue;
+
+        return { kind: "same-line", lineIndex, skillName, tokenStart, tokenEnd };
+    }
+}
+
+function findInlineCodeSpans(line: string): TextSpan[] {
+    const spans: TextSpan[] = [];
+    let index = 0;
+
+    while (index < line.length) {
+        if (line[index] !== "`") {
+            index += 1;
+            continue;
+        }
+
+        const spanStart = index;
+        while (index < line.length && line[index] === "`") index += 1;
+        const tickCount = index - spanStart;
+        const delimiter = "`".repeat(tickCount);
+        const closeIndex = line.indexOf(delimiter, index);
+        if (closeIndex === -1) continue;
+
+        spans.push({ start: spanStart, end: closeIndex + tickCount });
+        index = closeIndex + tickCount;
+    }
+
+    return spans;
+}
+
+function isPositionInSpans(position: number, spans: TextSpan[]): boolean {
+    return spans.some((span) => position >= span.start && position < span.end);
+}
+
+function hasSafeSkillTokenStart(line: string, tokenStart: number): boolean {
+    if (tokenStart === 0) return true;
+    const previous = line[tokenStart - 1];
+    return previous === " " || previous === "\t";
+}
+
+function hasSafeSkillTokenEnd(line: string, tokenEnd: number): boolean {
+    if (tokenEnd >= line.length) return true;
+    const next = line[tokenEnd];
+    return next === " " || next === "\t";
+}
+
 function removeInvocationLine(lines: string[], candidate: SkillCandidate): string {
     const argumentLines = [...lines];
+
+    if (candidate.kind === "same-line") {
+        argumentLines[candidate.lineIndex] = rewriteSameLineInvocation(
+            argumentLines[candidate.lineIndex] ?? "",
+            candidate,
+        );
+        return argumentLines.join("\n");
+    }
+
     if (candidate.inlineArgs) {
         argumentLines[candidate.lineIndex] = candidate.inlineArgs;
     } else {
@@ -357,6 +470,15 @@ function removeInvocationLine(lines: string[], candidate: SkillCandidate): strin
         removeDuplicateBlankAtJoin(argumentLines, candidate.lineIndex);
     }
     return argumentLines.join("\n");
+}
+
+function rewriteSameLineInvocation(line: string, candidate: SameLineSkillCandidate): string {
+    const normalized = stripTrailingCarriageReturn(line);
+    const before = normalized.slice(0, candidate.tokenStart);
+    const after = normalized.slice(candidate.tokenEnd);
+
+    if (after.trim() === "") return `${before}${after}`.trimEnd();
+    return `${before}${candidate.skillName}${after}`;
 }
 
 function removeDuplicateBlankAtJoin(lines: string[], joinIndex: number): void {
