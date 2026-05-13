@@ -1,184 +1,174 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "respectGitignore": false,
-  "cleanupPeriodDays": 30,
-  "env": {
-    "CLAUDE_CODE_NO_FLICKER": "1",
-    "SEMGREP_SEND_METRICS": "off",
-    "SEMGREP_ENABLE_VERSION_CHECK": "0"
-  },
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  },
-  "permissions": {
-    "allow": [
-      "mcp__codegraph__codegraph_search",
-      "mcp__codegraph__codegraph_context",
-      "mcp__codegraph__codegraph_callers",
-      "mcp__codegraph__codegraph_callees",
-      "mcp__codegraph__codegraph_impact",
-      "mcp__codegraph__codegraph_node",
-      "mcp__codegraph__codegraph_explore",
-      "mcp__codegraph__codegraph_status",
-      "mcp__codegraph__codegraph_files"
-    ],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.local)",
-      "Read(./.env.*.local)",
-      "Read(**/.env.local)",
-      "Read(**/.env.*.local)",
-      "Read(./secrets/**)",
-      "Read(**/credentials*)",
-      "Read(**/*.pem)",
-      "Read(~/.ssh/**)",
-      "Read(~/.aws/**)",
-      "Read(~/.gnupg/**)",
-      "Read(~/.docker/config.json)",
-      "Read(~/.npmrc)",
-      "Read(~/.config/gh/**)"
-    ],
-    "ask": [
-      "Write(./.env)",
-      "Write(./.env.*)",
-      "Bash(sudo *)",
-      "Bash(chmod 777 *)",
-      "Bash(git push *)",
-      "Bash(git merge *)",
-      "Bash(git reset --hard*)",
-      "Bash(curl *| sh)",
-      "Bash(wget *| sh)",
-      "Bash(pnpm install *)",
-      "Bash(pnpm add *)",
-      "Bash(pnpm remove *)",
-      "Bash(pnpm publish *)",
-      "Bash(npm publish *)",
-      "Bash(drop table*)",
-      "Bash(DROP TABLE*)",
-      "Bash(dd *)",
-      "Bash(mkfs *)"
-    ],
-    "defaultMode": "auto"
-  },
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "permission_prompt|elicitation_dialog",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "workmux set-window-status waiting"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "workmux set-window-status working"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "workmux set-window-status done"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "workmux set-window-status working"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/Users/andreaventi/.config/tmux/plugins/tmux-assistant-resurrect/hooks/claude-session-track.sh'"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/Users/andreaventi/.config/tmux/plugins/tmux-assistant-resurrect/hooks/claude-session-cleanup.sh'"
-          }
-        ]
-      }
-    ]
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline.sh",
-    "refreshInterval": 2
-  },
-  "enabledPlugins": {
-    "claude-notifications-go@claude-notifications-go": true,
-    "code-review@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "lua-lsp@claude-plugins-official": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "skill-codex@skill-codex": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "semgrep@claude-plugins-official": true
-  },
-  "extraKnownMarketplaces": {
-    "claude-notifications-go": {
-      "source": {
-        "source": "github",
-        "repo": "777genius/claude-notifications-go"
-      }
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "respectGitignore": false,
+    "cleanupPeriodDays": 30,
+    "skillListingBudgetFraction": 0.05,
+    "env": {
+        "CLAUDE_CODE_NO_FLICKER": "1",
+        "SEMGREP_SEND_METRICS": "off",
+        "SEMGREP_ENABLE_VERSION_CHECK": "0"
     },
-    "skill-codex": {
-      "source": {
-        "source": "github",
-        "repo": "skills-directory/skill-codex"
-      }
+    "attribution": {
+        "commit": "",
+        "pr": ""
     },
-    "ui-ux-pro-max-skill": {
-      "source": {
-        "source": "github",
-        "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
-      }
+    "permissions": {
+        "allow": [],
+        "deny": [
+            "Read(./.env)",
+            "Read(./.env.local)",
+            "Read(./.env.*.local)",
+            "Read(**/.env.local)",
+            "Read(**/.env.*.local)",
+            "Read(./secrets/**)",
+            "Read(**/credentials*)",
+            "Read(**/*.pem)",
+            "Read(~/.ssh/**)",
+            "Read(~/.aws/**)",
+            "Read(~/.gnupg/**)",
+            "Read(~/.docker/config.json)",
+            "Read(~/.npmrc)",
+            "Read(~/.config/gh/**)"
+        ],
+        "ask": [
+            "Write(./.env)",
+            "Write(./.env.*)",
+            "Bash(sudo *)",
+            "Bash(chmod 777 *)",
+            "Bash(git push *)",
+            "Bash(git merge *)",
+            "Bash(git reset --hard*)",
+            "Bash(curl *| sh)",
+            "Bash(wget *| sh)",
+            "Bash(pnpm install *)",
+            "Bash(pnpm add *)",
+            "Bash(pnpm remove *)",
+            "Bash(pnpm publish *)",
+            "Bash(npm publish *)",
+            "Bash(drop table*)",
+            "Bash(DROP TABLE*)",
+            "Bash(dd *)",
+            "Bash(mkfs *)"
+        ],
+        "defaultMode": "auto"
     },
-    "vercel-vercel-plugin": {
-      "source": {
-        "source": "directory",
-        "path": "/Users/andreaventi/.cache/plugins/github.com-vercel-vercel-plugin"
-      }
-    }
-  },
-  "outputStyle": "Default",
-  "effortLevel": "xhigh",
-  "voice": {
-    "enabled": true,
-    "mode": "hold"
-  },
-  "autoDreamEnabled": true,
-  "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true,
-  "skillListingBudgetFraction": 0.05
+    "hooks": {
+        "Notification": [
+            {
+                "matcher": "permission_prompt|elicitation_dialog",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "workmux set-window-status waiting"
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "workmux set-window-status working"
+                    }
+                ]
+            }
+        ],
+        "PreToolUse": [],
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "workmux set-window-status done"
+                    }
+                ]
+            }
+        ],
+        "UserPromptSubmit": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "workmux set-window-status working"
+                    }
+                ]
+            }
+        ],
+        "SessionStart": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash '/Users/andreaventi/.config/tmux/plugins/tmux-assistant-resurrect/hooks/claude-session-track.sh'"
+                    }
+                ]
+            }
+        ],
+        "SessionEnd": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash '/Users/andreaventi/.config/tmux/plugins/tmux-assistant-resurrect/hooks/claude-session-cleanup.sh'"
+                    }
+                ]
+            }
+        ]
+    },
+    "statusLine": {
+        "type": "command",
+        "command": "~/.claude/statusline.sh",
+        "refreshInterval": 2
+    },
+    "enabledPlugins": {
+        "claude-notifications-go@claude-notifications-go": true,
+        "code-review@claude-plugins-official": true,
+        "frontend-design@claude-plugins-official": true,
+        "lua-lsp@claude-plugins-official": true,
+        "pyright-lsp@claude-plugins-official": true,
+        "security-guidance@claude-plugins-official": true,
+        "skill-codex@skill-codex": true,
+        "typescript-lsp@claude-plugins-official": true,
+        "semgrep@claude-plugins-official": true
+    },
+    "extraKnownMarketplaces": {
+        "claude-notifications-go": {
+            "source": {
+                "source": "github",
+                "repo": "777genius/claude-notifications-go"
+            }
+        },
+        "skill-codex": {
+            "source": {
+                "source": "github",
+                "repo": "skills-directory/skill-codex"
+            }
+        },
+        "ui-ux-pro-max-skill": {
+            "source": {
+                "source": "github",
+                "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+            }
+        },
+        "vercel-vercel-plugin": {
+            "source": {
+                "source": "directory",
+                "path": "/Users/andreaventi/.cache/plugins/github.com-vercel-vercel-plugin"
+            }
+        }
+    },
+    "outputStyle": "Default",
+    "effortLevel": "xhigh",
+    "voice": {
+        "enabled": true,
+        "mode": "hold"
+    },
+    "autoDreamEnabled": true,
+    "remoteControlAtStartup": true,
+    "agentPushNotifEnabled": true,
+    "skipAutoPermissionPrompt": true,
+    "voiceEnabled": true
 }

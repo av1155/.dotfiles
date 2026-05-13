@@ -525,7 +525,7 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 │   ├── AGENTIC-CODING-HARNESSES.md (R)     # this runbook
 │   └── cross-tool-standardization/         # prior research (preserved)
 ├── scripts/                                # .stow-local-ignore: .+
-└── (other stow packages: AgentWorktrees/, App-Configs/, Fonts/, Formatting-Files/,
+└── (other stow packages: App-Configs/, Fonts/, Formatting-Files/,
    Git/, Java-Jars/, Local/, macOS-Library/, SSH/, ZSH/)
 ```
 

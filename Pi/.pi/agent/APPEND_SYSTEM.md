@@ -11,4 +11,3 @@ External capabilities are available through the `mcp` proxy tool. Some may also 
 Servers:
 
 - `context-mode`: context-efficient handling of large outputs, files, docs, or knowledge that shouldn't enter the conversation directly.
-- `codegraph`: indexed code graph for symbol search, callers/callees, impact analysis, and subsystem context.

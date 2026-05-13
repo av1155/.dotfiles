@@ -722,9 +722,6 @@ fi
 
 [ -f "$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh" ] && alias macOS-bootstrap="$HOME/.dotfiles/App-Configs/configs/MacOS-Bootstrap/mac_bootstrap.zsh"
 
-# [ -f "$HOME/.config/agent-worktrees/agent-worktrees.zsh" ] && \
-#     source "$HOME/.config/agent-worktrees/agent-worktrees.zsh"
-
 command -v workmux &>/dev/null && eval "$(workmux completions zsh)"
 
 

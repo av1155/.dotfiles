@@ -268,9 +268,6 @@ Example:
 │       ├── AGENTS.md           # Single canonical instruction file (Claude/Codex/OpenCode/Pi all symlink here)
 │       └── skills/             # 29 SKILL.md skills (5 conventions + 12 Matt Pocock + 11 personal workflow + 1 discovery)
 │
-├── AgentWorktrees/             # Workmux worktree helpers (zsh plugin + per-worktree settings)
-│   └── .claude/
-│
 ├── App-Configs/                # Application-specific configurations
 │   └── configs/
 │       ├── iTerm2_Profile/     # iTerm2 profile and icons

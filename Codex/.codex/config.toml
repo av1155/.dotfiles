@@ -49,13 +49,6 @@ startup_timeout_sec = 20
 tool_timeout_sec = 120
 enabled = true
 
-[mcp_servers.codegraph]
-command = "codegraph"
-args = ["serve", "--mcp"]
-startup_timeout_sec = 20
-tool_timeout_sec = 120
-enabled = true
-
 [hooks.state]
 
 [hooks.state."/Users/andreaventi/.codex/hooks.json:permission_request:0:0"]
