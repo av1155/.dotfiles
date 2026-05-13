@@ -11,7 +11,7 @@ const WRAP_MARK_RE = /\uE000/g;
 const RENDER_PATCH_FLAG = Symbol.for("pi-claude-style-interop:final-duration-row-patch");
 const TOOL_RENDER_PATCH_FLAG = Symbol.for("pi-claude-style-interop:direct-mcp-tool-render-patch");
 const RENDER_PATCH_VERSION = 1;
-const TOOL_RENDER_PATCH_VERSION = 6;
+const TOOL_RENDER_PATCH_VERSION = 7;
 const SETTINGS_CACHE_TTL_MS = 5_000;
 const CORE_TOOL_NAMES = new Set(["read", "bash", "edit", "write", "grep", "find", "ls"]);
 
@@ -1013,10 +1013,6 @@ function buildPreviewText(
     return preview.join("\n");
 }
 
-function resultToggleHint(expanded: boolean, theme: RenderTheme): string {
-    return themeFg(theme, "muted", expanded ? " • Ctrl+O to collapse" : " • Ctrl+O to expand");
-}
-
 function renderDirectMcpResult(
     result: unknown,
     options: ToolRenderResultOptions,
@@ -1060,14 +1056,13 @@ function renderDirectMcpResult(
     if (!showPreview) {
         return makeText(
             ctx.lastComponent,
-            branchBlock(`${statusText}${resultToggleHint(false, theme)}`, theme),
+            branchBlock(`${statusText}${themeFg(theme, "muted", " • Ctrl+O to expand")}`, theme),
         );
     }
 
     const maxLines = expanded ? expandedPreviewLimit() : previewLimit();
     const preview = buildPreviewText(lines, maxLines, theme, isError);
-    const text = expanded ? `${statusText}${resultToggleHint(true, theme)}` : statusText;
-    return makeText(ctx.lastComponent, branchBlock(`${text}\n${preview}`, theme));
+    return makeText(ctx.lastComponent, branchBlock(`${statusText}\n${preview}`, theme));
 }
 
 function renderGenericToolResult(
@@ -1105,14 +1100,13 @@ function renderGenericToolResult(
     if (!expanded && !isError) {
         return makeText(
             ctx.lastComponent,
-            branchBlock(`${statusText}${resultToggleHint(false, theme)}`, theme),
+            branchBlock(`${statusText}${themeFg(theme, "muted", " • Ctrl+O to expand")}`, theme),
         );
     }
 
     const maxLines = expanded ? expandedPreviewLimit() : previewLimit();
     const preview = buildPreviewText(lines, maxLines, theme, isError);
-    const text = expanded ? `${statusText}${resultToggleHint(true, theme)}` : statusText;
-    return makeText(ctx.lastComponent, branchBlock(`${text}\n${preview}`, theme));
+    return makeText(ctx.lastComponent, branchBlock(`${statusText}\n${preview}`, theme));
 }
 
 function callDefinitionRenderer(

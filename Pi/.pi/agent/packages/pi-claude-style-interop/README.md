@@ -50,7 +50,7 @@ The patch is conditional and maintainable when packages are added or removed:
 5. Tool call rows use a three-part color grammar from the active theme: tool label = `toolTitle` (`#B7BDF8` in Catppuccin Macchiato), primary context = `accent` (`#C6A0F6`), and trailing detail = `muted` (`#A5ADCB` in the current theme file).
 6. Pending normalized call rows blink between muted hollow and green solid dots, matching the pending-dot rhythm from `pi-claude-style-tools`.
 7. Render context is normalized for completed tool rows so delegated renderers can show final success or error dots instead of stale pending dots on replayed or restored rows.
-8. Result toggle hints say `Ctrl+O to expand` when collapsed and `Ctrl+O to collapse` when expanded.
+8. Collapsed normalized result rows use the same `Ctrl+O to expand` hint as `pi-claude-style-tools`; expanded previews omit a custom collapse hint.
 9. Result rendering preserves extension-specific result renderers, partial, error, collapsed, and expanded states. Direct MCP results honor `mcpOutputMode`, `previewLines`, and `expandedPreviewMaxLines`.
 
 This covers current user packages including `pi-subagents`, `pi-web-access`, `pi-lens`, `rpiv-todo`, `rpiv-ask-user-question`, `pi-mcp-adapter`, `pi-processes`, `pi-memory`, and Plannotator while staying resilient to uninstalling or adding tools.
