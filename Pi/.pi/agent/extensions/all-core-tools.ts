@@ -9,6 +9,7 @@ interface ExtensionAPI {
     on(event: "session_start" | "before_agent_start", handler: () => Promise<void>): void;
 }
 
+// SHARED: keep in sync with CORE_TOOL_NAMES at agent/packages/pi-claude-style-interop/index.ts
 const CORE_TOOLS = ["read", "bash", "edit", "write", "grep", "find", "ls"] as const;
 
 export default function allCoreTools(pi: ExtensionAPI): void {

@@ -419,7 +419,6 @@ function readSettingsFile(path: string): JsonRecord {
         const parsed = JSON.parse(readFileSync(path, "utf-8"));
         return isRecord(parsed) ? parsed : {};
     } catch (error) {
-        console.debug(`[startup-screen] Failed to read settings at ${path}:`, error);
         return {};
     }
 }

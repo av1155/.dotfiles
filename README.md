@@ -299,11 +299,25 @@ Example:
 │       ├── tmux/               # Tmux configuration & plugins
 │       └── yazi/               # File manager configuration
 │
-├── Pi/                         # Pi (earendil-works/pi) global config
-│   └── .pi/agent/
-│       ├── AGENTS.md           # Symlink to Agents/.agents/AGENTS.md
-│       ├── mcp.json            # Pi MCP adapter global override
-│       └── settings.json       # Model defaults and installed Pi packages
+├── Pi/                         # Pi (earendil-works/pi) per-machine config
+│   └── .pi/
+│       ├── settings.json       # Project-local Pi settings
+│       ├── web-search.json     # Provider/workflow defaults for the web search adapter
+│       ├── agent/              # Global agent config (symlinked to ~/.pi/agent/)
+│       │   ├── AGENTS.md       # Symlink → Agents/.agents/AGENTS.md
+│       │   ├── AGENTS-PI.md    # Pi-specific agent reference (constitutional invariants, patch versions, dual-runtime fallback)
+│       │   ├── APPEND_SYSTEM.md # Appended system-prompt content for MCP discovery
+│       │   ├── keybindings.json # Custom Pi keybindings
+│       │   ├── mcp.json        # MCP server registration
+│       │   ├── package.json    # Workspace anchor for knip, tests, Prettier
+│       │   ├── plannotator.json # Plannotator phase prompts
+│       │   ├── settings.json   # Pi global settings (model defaults, installed packages, extensions[])
+│       │   ├── extensions/     # 5 auto-discovered extensions + 1 homegrown test
+│       │   ├── packages/       # 2 private local packages (pi-statusline-footer, pi-claude-style-interop)
+│       │   ├── themes/         # catppuccin-macchiato theme
+│       │   └── vibes/          # Spinner-message vibes (star-wars.txt + README.md)
+│       ├── .plannotator/plans/ # Plannotator plans (gitignored; archive/ for finished)
+│       └── .pi-lens/           # Local pi-lens cache (gitignored)
 │
 ├── docs/                       # Documentation (tracked but not stowed via .stow-local-ignore)
 │   ├── .stow-local-ignore      # Pattern: .+ (skip everything; no $HOME symlinks)

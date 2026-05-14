@@ -21,11 +21,7 @@
     "packages/pi-claude-style-interop",
     "npm:@spences10/pi-confirm-destructive"
   ],
-  "extensions": [
-    "extensions/all-core-tools.ts",
-    "extensions/inline-skill-invocations.ts",
-    "extensions/startup-screen.ts"
-  ],
+  "extensions": [],
   "memory": {
     "lessonInjection": "selective"
   },

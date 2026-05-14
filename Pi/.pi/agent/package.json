@@ -1,0 +1,22 @@
+{
+    "name": "pi-agent-config",
+    "version": "0.0.0",
+    "private": true,
+    "description": "Pi agent config workspace (extensions + local packages)",
+    "type": "module",
+    "workspaces": ["packages/*"],
+    "scripts": {
+        "test": "node --experimental-strip-types --test extensions/tests/**/*.test.ts",
+        "knip": "knip",
+        "madge": "madge --circular --extensions ts,tsx,js,jsx .",
+        "format": "prettier --write ."
+    },
+    "prettier": {
+        "trailingComma": "all",
+        "tabWidth": 4,
+        "semi": true,
+        "singleQuote": false,
+        "printWidth": 100,
+        "bracketSpacing": true
+    }
+}

@@ -13,8 +13,10 @@ const TOOL_RENDER_PATCH_FLAG = Symbol.for("pi-claude-style-interop:direct-mcp-to
 const RENDER_PATCH_VERSION = 1;
 const TOOL_RENDER_PATCH_VERSION = 7;
 const SETTINGS_CACHE_TTL_MS = 5_000;
+// SHARED: keep in sync with CORE_TOOLS at agent/extensions/all-core-tools.ts
 const CORE_TOOL_NAMES = new Set(["read", "bash", "edit", "write", "grep", "find", "ls"]);
 
+// SHARED: mirrors pi-claude-style-tools 1.0.25 handled-tool registry (no local duplicate)
 // Tools with explicit handling in pi-claude-style-tools 1.0.25. Keep this
 // centralized so future package updates only need this inventory adjusted.
 const CLAUDE_STYLE_HANDLED_TOOL_NAMES = new Set([
@@ -1254,6 +1256,12 @@ async function loadAssistantMessageComponent(): Promise<AssistantMessageComponen
             // Try the next package name. Pi has used both names across versions.
         }
     }
+    // Both Pi runtime package names failed to resolve. This is exotic in
+    // practice but worth surfacing so a future Pi rename does not silently
+    // disable the patch. The patch installer treats null as "skip install".
+    console.warn(
+        "[pi-claude-style-interop] Could not load AssistantMessageComponent from any known Pi package name",
+    );
     return null;
 }
 
@@ -1270,6 +1278,12 @@ async function loadToolExecutionComponent(): Promise<ToolExecutionComponentCtor 
             // Try the next package name. Pi has used both names across versions.
         }
     }
+    // Both Pi runtime package names failed to resolve. This is exotic in
+    // practice but worth surfacing so a future Pi rename does not silently
+    // disable the patch. The patch installer treats null as "skip install".
+    console.warn(
+        "[pi-claude-style-interop] Could not load ToolExecutionComponent from any known Pi package name",
+    );
     return null;
 }
 
