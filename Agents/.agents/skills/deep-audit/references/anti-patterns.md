@@ -164,6 +164,18 @@ When running a deep audit, actively hunt for each of these patterns in the chang
 
 ---
 
+## AP-14: The Caller-Blind Catch
+
+**Shape:** A shared helper catches an error and converts it to a benign return value (empty list, `None`, a default) to satisfy one caller's preference for graceful degradation, but a different caller depends on that same error propagating so a higher-layer safety mechanism can fire.
+
+**Detection:** When adding a `try/except` (or `try/catch`, `Result::ok_or_default`, etc.) to a function called from more than one site, enumerate every caller and trace what each does with the result. If any caller distinguishes "function failed" from "function succeeded with a benign value," the catch belongs at the call site, not in the helper. Grep for the helper's name and audit each call.
+
+**Example:** `fetch_upgrade_pool()` is called from both the per-cycle engine search loop and the snapshot-refresh reconcile path. Catching transient HTTP / validation errors inside the helper to return `[]` makes the engine path silent (the desired behavior for that caller), but the reconcile path then sees an "empty pool" instead of an exception and proceeds to delete cooldown rows that should have been preserved. The supervisor's `ReconcileSets.empty()` safety mechanism only activates on a raised exception, so the catch-and-return-empty bypasses it and causes data loss on the next reconcile pass.
+
+**Fix:** Move the catch to the caller that wants graceful degradation. The other caller still receives the exception and can apply its own safety logic. If two callers each want different recovery behavior, the helper should raise and both callers wrap with their own `try/except`.
+
+---
+
 ## Adding new patterns
 
 When a deep audit discovers a FAIL that doesn't fit any of the above, add it here using this template:

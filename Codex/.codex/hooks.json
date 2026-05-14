@@ -48,6 +48,15 @@
             "type": "command"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/andreaventi/.local/bin/plannotator",
+            "timeout": 345600
+          }
+        ]
       }
     ]
   }
