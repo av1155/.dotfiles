@@ -642,6 +642,12 @@ async function loadUserMessageComponent(): Promise<UserMessageComponentCtor | nu
             // Try the next package name. Pi has used both names across versions.
         }
     }
+    // Both Pi runtime package names failed to resolve. This is exotic in
+    // practice but worth surfacing so a future Pi rename does not silently
+    // disable the patch. The patch installer treats null as "skip install".
+    console.warn(
+        "[user-message-style] Could not load UserMessageComponent from any known Pi package name",
+    );
     return null;
 }
 

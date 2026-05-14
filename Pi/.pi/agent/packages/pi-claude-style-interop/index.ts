@@ -1256,6 +1256,12 @@ async function loadAssistantMessageComponent(): Promise<AssistantMessageComponen
             // Try the next package name. Pi has used both names across versions.
         }
     }
+    // Both Pi runtime package names failed to resolve. This is exotic in
+    // practice but worth surfacing so a future Pi rename does not silently
+    // disable the patch. The patch installer treats null as "skip install".
+    console.warn(
+        "[pi-claude-style-interop] Could not load AssistantMessageComponent from any known Pi package name",
+    );
     return null;
 }
 
@@ -1272,6 +1278,12 @@ async function loadToolExecutionComponent(): Promise<ToolExecutionComponentCtor 
             // Try the next package name. Pi has used both names across versions.
         }
     }
+    // Both Pi runtime package names failed to resolve. This is exotic in
+    // practice but worth surfacing so a future Pi rename does not silently
+    // disable the patch. The patch installer treats null as "skip install".
+    console.warn(
+        "[pi-claude-style-interop] Could not load ToolExecutionComponent from any known Pi package name",
+    );
     return null;
 }
 
