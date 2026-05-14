@@ -282,6 +282,8 @@ Per-item mapping with origin classification and bucket assignment, documented du
 | firecrawl-cli/SKILL.md                      | Firecrawl CLI                         | C                                    | Added 2026-05-10 from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; frontmatter name changed to `firecrawl-cli` to match directory; skill-symlinked for Claude       |
 | firecrawl-scrape/SKILL.md                   | Firecrawl CLI                         | C                                    | Added 2026-05-10; verbatim from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; skill-symlinked for Claude                                                             |
 | firecrawl-map/SKILL.md                      | Firecrawl CLI                         | C                                    | Added 2026-05-10; verbatim from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; skill-symlinked for Claude                                                             |
+| prototype/SKILL.md                          | Matt Pocock                           | C                                    | Added 2026-05-13 from `mattpocock/skills` commit `e74f0061bb67222181640effa98c675bdb2fdaa7`; verbatim copy; skill-symlinked for Claude                                                    |
+| handoff/SKILL.md                            | Matt Pocock                           | C                                    | Added 2026-05-13 from `mattpocock/skills` commit `e74f0061bb67222181640effa98c675bdb2fdaa7`; verbatim copy; skill-symlinked for Claude                                                    |
 
 #### Skills currently in `.dotfiles/Claude/.claude/skills/` (16 personal-workflow)
 
@@ -759,6 +761,42 @@ Removed the deleted `context7-cli` skill's stale symlinks from `Claude/.claude/s
 ### 2026-05-12: Removed upstream `skill-creator`
 
 Removed the tracked upstream Anthropic `skill-creator` skill from `Agents/.agents/skills/skill-creator/` and the live `~/.agents/skills/skill-creator` symlink. It was not visible in Claude Code because no Claude-facing symlink or enabled plugin exposed it. The user-authored `skill-creator-global` skill is now the canonical skill-authoring craft skill.
+
+### 2026-05-13: Synced Matt Pocock skills with upstream
+
+Synced from `https://github.com/mattpocock/skills` at commit `e74f0061bb67222181640effa98c675bdb2fdaa7` (2026-05-13). Manual sync only — installer not used, to preserve the canonical pool layout and the cross-harness symlinks.
+
+Upstream reorganised the repo into category subdirs (`engineering/`, `productivity/`, `misc/`, `personal/`, `in-progress/`, `deprecated/`). The canonical pool keeps its flat layout under `Agents/.agents/skills/`.
+
+Updated in place (file-level copy through the canonical pool; symlinks untouched):
+
+| Skill                                                        | Change                                                                                              |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `grill-with-docs/SKILL.md`                                   | Tightens `CONTEXT.md` guidance: glossary-only, not a spec or scratch pad.                           |
+| `setup-matt-pocock-skills/issue-tracker-gitlab.md`           | Simplifies `glab issue list` example (drops `--state opened` note).                                 |
+| `to-issues/SKILL.md`                                         | Drops `needs-triage` advice; adds AFK-ready posture and prototype-snippet exception.                |
+| `to-prd/SKILL.md`                                            | Switches `needs-triage` → `ready-for-agent`; adds prototype-snippet exception.                      |
+
+Added (new upstream skills; verbatim copy):
+
+| Skill       | Path                               | Claude symlink                          | Modifications       |
+| ----------- | ---------------------------------- | --------------------------------------- | ------------------- |
+| `prototype` | `Agents/.agents/skills/prototype/` | `Claude/.claude/skills/prototype`       | None, verbatim copy |
+| `handoff`   | `Agents/.agents/skills/handoff/`   | `Claude/.claude/skills/handoff`         | None, verbatim copy |
+
+Both new skills are referenced from existing pool content: the updated `to-issues` and `to-prd` skills both call out a "prototype produced a snippet" exception, and `handoff` complements the existing `catchup` skill (catchup is incoming context restore; handoff is outgoing context capture).
+
+Deliberately not installed from this upstream sync:
+
+- `productivity/write-a-skill` — removed 2026-05-12; superseded by `skill-creator-global`.
+- `personal/edit-article`, `personal/obsidian-vault` — Matt-personal.
+- `in-progress/review` (would collide with the user-authored `review` skill), `in-progress/writing-beats`, `in-progress/writing-fragments`, `in-progress/writing-shape` — upstream marks these unfinished.
+- `deprecated/design-an-interface`, `deprecated/qa`, `deprecated/request-refactor-plan`, `deprecated/ubiquitous-language` — upstream-deprecated.
+- `misc/git-guardrails-claude-code`, `misc/migrate-to-shoehorn`, `misc/scaffold-exercises`, `misc/setup-pre-commit` — narrow/project-scaffolding skills; not adopted into the global pool. Revisit if a specific need arises.
+
+After sync, ran `stow --restow Agents Claude` to wire the two new `$HOME` symlinks. Verified all 13 Matt Pocock skills (11 existing + 2 new) resolve under both `~/.agents/skills/<name>/SKILL.md` and `~/.claude/skills/<name>/SKILL.md`.
+
+If Matt publishes further updates, repeat: clone `mattpocock/skills`, `diff -rq` each tracked skill against `skills/{engineering,productivity}/<name>/`, copy changed files through the canonical pool, restow.
 
 ### Pending entries
 
