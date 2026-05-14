@@ -196,6 +196,8 @@ brew "telnet"
 brew "tlrc"
 # Terminal multiplexer
 brew "tmux"
+# Vulnerability scanner for container images, file systems, and Git repos
+brew "trivy"
 # Extremely fast Python package installer and resolver, written in Rust
 brew "uv"
 # Modern watch command
