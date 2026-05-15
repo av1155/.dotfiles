@@ -12,10 +12,6 @@ tap "stripe/stripe-cli"
 tap "teamookla/speedtest"
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
-# Extremely Fast Compression algorithm
-brew "lz4"
-# Zstandard is a real-time compression algorithm
-brew "zstd"
 # Highly capable, feature-rich programming language
 brew "perl"
 # Aquarium animation in ASCII art
@@ -46,6 +42,10 @@ brew "cmatrix"
 brew "colima", restart_service: :changed
 # GNU File, Shell, and Text utilities
 brew "coreutils"
+# Extremely Fast Compression algorithm
+brew "lz4"
+# Zstandard is a real-time compression algorithm
+brew "zstd"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
 # Load/unload environment variables based on $PWD
