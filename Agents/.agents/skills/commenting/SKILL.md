@@ -25,6 +25,7 @@ Comments explain **why**, code explains **what**. If a comment just restates the
 - **Restating code** (`const i = 0; // initialize i`).
 - **Commented-out code.** Use git; delete it.
 - **Changelog-style narration** (`// 2026-04-15: fixed bug`). That belongs in the commit message.
+- **Discovery narration** (`// it took a live incident to find this`, `// after debugging we realized...`, `// we originally tried X but...`). State the constraint; reference the ticket. The story belongs in the PR description or postmortem, not the source.
 - **Decorative banners** (`// ===== SECTION =====`). Module structure already does this. SQL migrations and `globals.css` are the documented exceptions where banners help readability.
 - **Stale comments.** When you change code, update or remove the comment.
 - **Apologetic comments** (`// this is hacky but...`). Either fix it or open a ticket.

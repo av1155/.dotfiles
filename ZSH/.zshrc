@@ -805,6 +805,7 @@ export_from_file "GITHUB_PERSONAL_ACCESS_TOKEN" "$HOME/.config/github/token"
 export_from_file "LINEAR_API_KEY" "$HOME/.config/linear/api_key"
 export_from_file "EXA_API_KEY" "$HOME/.config/exa/api_key"
 export_from_file "GEMINI_API_KEY" "$HOME/.config/gemini/api_key"
+export_from_file "SYMPHONY_DASHBOARD_TOKEN" "$HOME/.config/symphony/dashboard_token"
 
 export OLLAMA_API_BASE="http://127.0.0.1:11434"
 
