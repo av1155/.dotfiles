@@ -73,7 +73,6 @@ readonly PNPM_GLOBALS=(
 
 readonly LM_STUDIO_APP="/Applications/LM Studio.app"
 readonly LM_STUDIO_BIN="${HOME}/.cache/lm-studio/bin"
-readonly LLAMA_LAUNCHER="${DOTFILES_DIR}/scripts/llama-qwen.sh"
 
 # =============================================================================
 # Runtime flags (overridden by CLI parsing)
@@ -710,15 +709,6 @@ phase_local_llm() {
 
     if [[ -x "${LM_STUDIO_BIN}/lms" ]]; then
         log_success "LM Studio CLI ready: ${LM_STUDIO_BIN}/lms"
-    fi
-
-    # Make sure the custom llama-server launcher is executable.
-    if [[ -f "${LLAMA_LAUNCHER}" ]]; then
-        if [[ ! -x "${LLAMA_LAUNCHER}" ]]; then
-            run chmod +x "${LLAMA_LAUNCHER}"
-        fi
-        log_info "Custom launcher: ${LLAMA_LAUNCHER}"
-        log_info "Aliased to 'qwen' in .zshrc — runs Qwen3.6-35B-A3B on port 1235."
     fi
 
     log_info "Models live under ~/.cache/lm-studio/models/ — download via LM Studio UI."
