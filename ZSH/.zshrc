@@ -843,3 +843,12 @@ if command -v zoxide &>/dev/null; then
     eval "$(zoxide init zsh --cmd cd)"
 fi
 
+
+# >>> llm-stack >>>
+export LLM_STACK_HOME="/Users/andreaventi/llm-stack"
+export LLM_STACK_HOST="mac-m4-max"
+export PATH="$LLM_STACK_HOME/bin:$PATH"
+alias qwen-agent="$LLM_STACK_HOME/profiles/qwen3.6-27b-agent.sh"
+alias qwen="$LLM_STACK_HOME/profiles/qwen3.6-35b-a3b-thinking.sh"
+alias llama-update="$LLM_STACK_HOME/bin/llama-update"
+# <<< llm-stack <<<
