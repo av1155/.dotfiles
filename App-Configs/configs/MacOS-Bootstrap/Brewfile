@@ -96,6 +96,8 @@ brew "libusb"
 brew "go"
 # Kubernetes package manager
 brew "helm"
+# Client library for huggingface.co hub
+brew "hf"
 # Generic library support script
 brew "libtool"
 # Tools and libraries to manipulate images in select formats
