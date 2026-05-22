@@ -108,4 +108,5 @@ build/
 .opencode/
 .plannotator/
 .pi-lens/
+.playwright-cli/
 .claude/scheduled_tasks.lock
