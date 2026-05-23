@@ -145,7 +145,7 @@ brew "neovim-remote"
 # Port scanning utility for large networks
 brew "nmap"
 # Open-source, cross-platform JavaScript runtime environment
-brew "node@24"
+brew "node@24", link: true
 # Libraries for security-enabled client and server applications
 brew "nss"
 # Package for scientific computing with Python
@@ -454,3 +454,18 @@ vscode "wayou.vscode-todo-highlight"
 vscode "wholroyd.jinja"
 vscode "xaver.clang-format"
 go "github.com/koron/iferr"
+npm "@aliou/pi-processes"
+npm "@juicesharp/rpiv-args"
+npm "@juicesharp/rpiv-ask-user-question"
+npm "@juicesharp/rpiv-todo"
+npm "@plannotator/pi-extension"
+npm "@samfp/pi-memory"
+npm "@spences10/pi-confirm-destructive"
+npm "corepack"
+npm "ctx7"
+npm "pi-claude-style-tools"
+npm "pi-lens"
+npm "pi-mcp-adapter"
+npm "pi-simplify"
+npm "pi-subagents"
+npm "pi-web-access"
