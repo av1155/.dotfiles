@@ -145,7 +145,7 @@ brew "neovim-remote"
 # Port scanning utility for large networks
 brew "nmap"
 # Open-source, cross-platform JavaScript runtime environment
-brew "node@24"
+brew "node@24", link: true
 # Libraries for security-enabled client and server applications
 brew "nss"
 # Package for scientific computing with Python
@@ -171,7 +171,7 @@ brew "pngpaste"
 # PNG image optimizing utility
 brew "pngquant"
 # Fast, disk space efficient package manager
-brew "pnpm"
+brew "pnpm", link: false
 # Bundle a Python application and all its dependencies
 brew "pyinstaller"
 # Generic machine emulator and virtualizer
