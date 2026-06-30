@@ -1,15 +1,15 @@
-tap "av1155/scripts", "https://github.com/av1155/scripts.git"
-tap "getsentry/tools"
-tap "heroku/brew"
-tap "jesseduffield/lazygit"
-tap "jstkdng/programs"
-tap "oven-sh/bun"
-tap "raine/workmux"
-tap "samtay/tui"
-tap "sst/tap"
-tap "steipete/tap"
-tap "stripe/stripe-cli"
-tap "teamookla/speedtest"
+tap "anomalyco/tap", "https://github.com/anomalyco/homebrew-tap.git", trusted: true
+tap "av1155/scripts", "https://github.com/av1155/scripts.git", trusted: true
+tap "getsentry/tools", trusted: true
+tap "heroku/brew", trusted: true
+tap "jesseduffield/lazygit", trusted: true
+tap "jstkdng/programs", trusted: true
+tap "oven-sh/bun", trusted: true
+tap "raine/workmux", trusted: true
+tap "samtay/tui", trusted: true
+tap "steipete/tap", trusted: true
+tap "stripe/stripe-cli", trusted: true
+tap "teamookla/speedtest", trusted: true
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
 # Highly capable, feature-rich programming language
@@ -64,8 +64,8 @@ brew "eza"
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
-# Low-level access to audio, keyboard, mouse, joystick, and graphics
-brew "sdl2"
+# SDL2 compatibility layer that uses SDL3 behind the scenes
+brew "sdl2-compat"
 # Play, record, convert, and stream select audio and video codecs
 brew "ffmpeg"
 # Command-line fuzzy finder written in Go
@@ -98,6 +98,8 @@ brew "go"
 brew "helm"
 # Client library for huggingface.co hub
 brew "hf"
+# C/C++ and Java libraries for Unicode and globalization
+brew "icu4c@77"
 # Generic library support script
 brew "libtool"
 # Tools and libraries to manipulate images in select formats
@@ -145,11 +147,15 @@ brew "neovim-remote"
 # Port scanning utility for large networks
 brew "nmap"
 # Open-source, cross-platform JavaScript runtime environment
-brew "node@24", link: true
+brew "node@24"
 # Libraries for security-enabled client and server applications
 brew "nss"
 # Package for scientific computing with Python
 brew "numpy"
+# Search tool like grep and The Silver Searcher
+brew "ripgrep"
+# AI coding agent, built for the terminal
+brew "opencode"
 # Development kit for the Java programming language
 brew "openjdk"
 # Vulnerability scanner which uses the OSV database
@@ -171,13 +177,11 @@ brew "pngpaste"
 # PNG image optimizing utility
 brew "pngquant"
 # Fast, disk space efficient package manager
-brew "pnpm", link: false
+brew "pnpm"
 # Bundle a Python application and all its dependencies
 brew "pyinstaller"
 # Generic machine emulator and virtualizer
 brew "qemu"
-# Search tool like grep and The Silver Searcher
-brew "ripgrep"
 # Tools for Multiple Arcade Machine Emulator
 brew "rom-tools"
 # Extremely fast Python linter, written in Rust
@@ -234,8 +238,6 @@ brew "oven-sh/bun/bun"
 brew "raine/workmux/workmux"
 # Tetris in your terminal
 brew "samtay/tui/tetris"
-# The AI coding agent built for the terminal.
-brew "sst/tap/opencode"
 # Stripe CLI utility
 brew "stripe/stripe-cli/stripe"
 # Ookla Speedtest
