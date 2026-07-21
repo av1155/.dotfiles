@@ -147,7 +147,7 @@ brew "neovim-remote"
 # Port scanning utility for large networks
 brew "nmap"
 # Open-source, cross-platform JavaScript runtime environment
-brew "node@24"
+brew "node@24", link: true
 # Libraries for security-enabled client and server applications
 brew "nss"
 # Package for scientific computing with Python
@@ -178,6 +178,8 @@ brew "pngpaste"
 brew "pngquant"
 # Fast, disk space efficient package manager
 brew "pnpm"
+# PDF rendering library (based on the xpdf-3.0 code base)
+brew "poppler"
 # Bundle a Python application and all its dependencies
 brew "pyinstaller"
 # Generic machine emulator and virtualizer
@@ -457,6 +459,7 @@ vscode "wholroyd.jinja"
 vscode "xaver.clang-format"
 go "github.com/koron/iferr"
 npm "@aliou/pi-processes"
+npm "@earendil-works/pi-coding-agent"
 npm "@juicesharp/rpiv-args"
 npm "@juicesharp/rpiv-ask-user-question"
 npm "@juicesharp/rpiv-todo"
