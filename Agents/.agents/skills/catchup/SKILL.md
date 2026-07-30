@@ -25,12 +25,14 @@ This gives: current branch, uncommitted changes, and recent history.
 Detect what's available and use it:
 
 **On a feature branch:**
+
 ```bash
 gh pr list --state open --head "$(git branch --show-current)" \
   --json number,title,url,statusCheckRollup --limit 1 2>/dev/null
 ```
 
 **On main/master/develop:**
+
 ```bash
 gh pr list --state open --limit 5 \
   --json number,title,headRefName 2>/dev/null
@@ -42,7 +44,9 @@ If `gh` is unavailable, skip and note "PR status unavailable (no `gh` CLI)."
 
 Detect which tracker this project uses and pull current state:
 
-**Linear:** If the Linear MCP is connected and the project references Linear (check CLAUDE.md, README, or `.claude/` configs), pull the active sprint/cycle and any issues assigned to the current user or linked to the current branch.
+**Linear:** If the Linear MCP is connected and the project references Linear (check CLAUDE.md, README, or `.claude/` configs), pull any issues assigned to the current user or linked to the current branch, plus the active cycle if the team uses cycles. Do not assume a sprint or cycle exists; many projects organize work by milestone, phase, or feature stream instead, and the plan document in step 5 is the better source of ordering when one exists.
+
+Read issue comments, not just descriptions. Several trackers, Linear included, return the description without them, and decisions are routinely appended as comments that override the original spec.
 
 **GitHub Issues:** If no Linear, use `gh` to check for issues linked to the current branch or recent PRs.
 
@@ -51,6 +55,7 @@ Detect which tracker this project uses and pull current state:
 ## 4. Changed Files
 
 **On a feature branch** (not main/master/develop):
+
 ```bash
 git diff --name-only main...HEAD 2>/dev/null || git diff --name-only master...HEAD 2>/dev/null
 ```
@@ -62,11 +67,20 @@ Read key changed files to understand work-in-progress context. For large diffs (
 ## 5. Progress File
 
 Look for a project progress or session state file:
+
 ```bash
 ls claude-progress.md PROGRESS.md .claude-progress progress.md AGENTS.md 2>/dev/null
 ```
 
 If one exists, read it. These files carry forward decisions, blockers, and next steps across sessions.
+
+Then look for the plan the project is currently executing:
+
+```bash
+ls docs/implementation-plans/ docs/plans/ ROADMAP.md PLAN.md 2>/dev/null
+```
+
+If a plan directory holds several files, the progress file or the most recently modified plan usually names the active one. A plan typically carries an ordered queue of work with items marked done; the first unmarked item is the real next step, and it beats anything inferred from a branch name. Report which plan is active and where its queue stands, since a project with several plans normally has exactly one in flight.
 
 ## 6. Project Slash Commands
 

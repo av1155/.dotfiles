@@ -676,6 +676,31 @@ Practical: critical AGENTS.md content goes near the top OR near the end. Mid-fil
 
 Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
 
+### 2026-07-24 — catchup: de-sprint, add active-plan detection
+
+`~/.dotfiles/Agents/.agents/skills/catchup/SKILL.md`, user-authored, edited in place.
+
+Prompted by the invest-platform harness rebuild, which replaced a sprint-based
+workflow with a per-flow one. Two edits, both kept deliberately generic so the
+skill stays correct for every project rather than encoding one repo's model:
+
+- Section 3 no longer assumes a sprint or cycle exists. It pulls issues assigned
+  to the user or linked to the branch, treats a cycle as optional, and points at
+  the plan document as the better source of ordering. Also now says to read issue
+  comments, not just descriptions: Linear's `get_issue` omits them and decisions
+  routinely land there.
+- Section 5 gained active-plan detection (`docs/implementation-plans/`,
+  `docs/plans/`, `ROADMAP.md`, `PLAN.md`). Where a plan carries an ordered queue,
+  the first unmarked item is the real next step and beats anything inferred from
+  a branch name.
+
+Nothing project-specific was added. No BAI names, paths, or flow labels appear
+in the skill.
+
+To re-apply if overwritten by an upstream import: both edits are additive prose
+inside existing sections 3 and 5; re-read the sections and restate the two points
+above. Nothing structural changed, and no frontmatter was touched.
+
 ### 2026-05-07 — Stage 3 false-alarm verification
 
 The Stage 2 audit's "Tier 1 description blocker" classification for three files was **incorrect**. Verification with frontmatter parsing confirmed:
