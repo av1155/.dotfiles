@@ -36,8 +36,8 @@ Comments explain **why**, code explains **what**. If a comment just restates the
 
 ## Per-language doc style
 
-- **TypeScript / JavaScript**: TSDoc on exported symbols (functions, types, components, hooks, schemas). Inline `//` for short notes. Two leading spaces before inline `//`. Never duplicate a TypeScript signature inside the doc; the signature is the source of truth. Forbidden tags: `@type`, inline `@param {type}` (TypeScript already owns types). See the `typescript` rule for full details.
-- **Python**: PEP 257 + Google-style docstrings (Sphinx Napoleon). Imperative mood ("Return X", not "Returns X"). `Args:`, `Returns:`, `Raises:` sections. Don't repeat type hints in the docstring. See the `python` rule for full details.
+- **TypeScript / JavaScript**: no doc block by default; the signature is the doc. Add TSDoc only where the contract is not derivable from types: units, ownership, side effects, thrown errors. Inline `//` for short notes. Two leading spaces before inline `//`. Never duplicate a TypeScript signature inside the doc. Forbidden tags: `@type`, inline `@param {type}` (TypeScript already owns types).
+- **Python**: no docstring by default on an annotated function. Where one earns its place, PEP 257 + Google-style (Sphinx Napoleon), imperative mood ("Return X"). Use `Raises:` for non-obvious exceptions. Skip `Args:` and `Returns:` when the annotations already carry them.
 - **CSS / Tailwind**: `/* ... */`. Comment the intent of token groups, not the value. Never comment individual utility classes; the class name is the doc. Long class strings (>10-12 utilities) signal an extraction, not a comment.
 - **SQL migrations**: header comment block at the top (purpose, ticket, expand-contract phase if applicable). Inline `--` for non-obvious indexes, cascade choices, RLS predicates, partial-index predicates. Decorative section banners are tolerated in long migration files for readability.
 - **YAML / TOML / Dockerfile**: `#` comments. Comment non-default settings only (a non-default `tracesSampleRate`, a `paths-ignore`, a `runner.environment` gate). Don't comment `image:`, `restart:`, `WORKDIR`.

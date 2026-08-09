@@ -9,6 +9,10 @@ Global defaults for coding agents.
 3. Other repo-local instruction files
 4. This file
 
+Skills refine how to do something within these rules. They never override
+whether a rule applies. On direct conflict with this file, this file wins
+unless a rule here defers explicitly.
+
 If a repo has no local guidance, say so briefly and proceed safely.
 
 ## Operating defaults
@@ -79,3 +83,28 @@ When training data may be stale or wrong, fetch from the source:
 ## Subagents
 
 Use subagents only for bounded parallel exploration, review, or verification. Give them a narrow scope, explicit success criteria, a file shortlist, and the expected return format (summary, findings, file list — not raw content).
+
+## Code comments
+
+Default: no comments. Express intent through naming and structure.
+Comment only to record what code cannot: non-obvious invariants,
+workarounds, external constraints. One line. Imperative. No narrative.
+
+Good: // API returns cents
+Bad:  // Now we iterate over the users to check each one's status...
+
+Never write: doc headers restating signatures, step narration,
+summaries of adjacent code, notes about what you changed.
+
+Two exceptions. Shell scripts and SQL migrations may carry a header block
+stating purpose, required env vars, exit codes, or migration phase.
+`TODO(<author>, <ticket>)` is always allowed; a bare TODO is not.
+
+## Prose in files (reports, docs, commit messages)
+
+Cover the substance only. No filler sections, no redundant
+summaries, no boilerplate.
+
+<!-- keep as last line -->
+
+Reminder: comments are rare, single-line, why-only.

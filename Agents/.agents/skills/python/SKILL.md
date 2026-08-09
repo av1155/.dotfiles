@@ -238,7 +238,7 @@ Editor parity then follows automatically: the user's shell auto-activates `.venv
 - [ ] `ruff check` clean.
 - [ ] `ruff format --check` clean.
 - [ ] `pyright` (strict) and `mypy --strict` clean for changed files.
-- [ ] All public functions have type hints and a docstring.
+- [ ] All public functions have type hints.
 - [ ] All external calls have a timeout.
 - [ ] No bare `except`, no `except Exception:` outside background-task loops.
 - [ ] No mutable default args.
