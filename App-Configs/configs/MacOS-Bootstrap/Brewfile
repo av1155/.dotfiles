@@ -12,8 +12,6 @@ tap "stripe/stripe-cli", trusted: true
 tap "teamookla/speedtest", trusted: true
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
-# Highly capable, feature-rich programming language
-brew "perl"
 # Aquarium animation in ASCII art
 brew "asciiquarium"
 # ChatGPT in the terminal
@@ -162,6 +160,8 @@ brew "osv-scanner"
 brew "oxipng"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
+# Highly capable, feature-rich programming language
+brew "perl"
 # Web-based PostgreSQL database browser
 brew "pgweb"
 # Parallel gzip
