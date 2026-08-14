@@ -289,18 +289,23 @@ Per-item mapping with origin classification and bucket assignment, documented du
 
 All bucket **C** (description-triggered, most use `$ARGUMENTS`). All migrate to `.agents/skills/<name>/` in Stage 5; replace original with directory skill-symlink.
 
+**Migration done, verified 2026-08-14.** Every skill in this table now lives in
+`Agents/.agents/skills/<name>/` with a directory symlink left behind in
+`Claude/.claude/skills/`. Edit the `.agents` copy; the heading above describes
+where these used to be. The frontmatter column is accurate as of the same date.
+
 | Skill       | Uses args?         | Notable frontmatter                               |
 | ----------- | ------------------ | ------------------------------------------------- |
 | catchup     | no                 | `allowed-tools`                                   |
 | coordinator | no                 | `disable-model-invocation: true`                  |
-| deep-audit  | yes (`$ARGUMENTS`) | `argument-hint`, `disable-model-invocation: true` |
+| deep-audit  | yes (`$ARGUMENTS`) | `argument-hint`, `allowed-tools`                  |
 | fix-issue   | yes (`$ARGUMENTS`) | `argument-hint`, `disable-model-invocation: true` |
 | merge       | yes (`$ARGUMENTS`) | `disable-model-invocation: true`                  |
-| open-pr     | no                 | —                                                 |
+| open-pr     | no                 | `disable-model-invocation: true`                  |
 | rebase      | yes (`$ARGUMENTS`) | `disable-model-invocation: true`                  |
-| review      | no                 | —                                                 |
+| review      | no                 | `allowed-tools`                                   |
 | ship        | yes (`$ARGUMENTS`) | `argument-hint`, `disable-model-invocation: true` |
-| workmux     | no                 | —                                                 |
+| workmux     | no                 | `disable-model-invocation: true`                  |
 | worktree    | yes (`$ARGUMENTS`) | `disable-model-invocation: true`                  |
 
 (Plus the 13 symlinks to `Agents/.agents/skills/` already covered above.)
@@ -675,6 +680,54 @@ Practical: critical AGENTS.md content goes near the top OR near the end. Mid-fil
 ## 18. Modification Ledger
 
 Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
+
+### 2026-08-14 — review, deep-audit: a working-tree contract for passes that write
+
+`~/.dotfiles/Agents/.agents/skills/review/SKILL.md` and
+`deep-audit/SKILL.md`, both user-authored, edited in place, plus a new shared
+reference at `review/references/working-tree-safety.md` that deep-audit links
+across as `../review/references/working-tree-safety.md`.
+
+Why. Both skills run in the implementer's working directory and neither had a
+protocol for it. `review` declared READ-ONLY in three places and nothing
+enforced it: two of the four harnesses ignore `allowed-tools` (see the support
+matrix in section 4), and where it is honoured it does not re-restrict a
+subagent that already holds broader tools, which is how these skills are
+usually invoked. `deep-audit` had no write posture at all while its own Step 2
+runs the project's gates and its best technique mutates source; its
+`allowed-tools` did not even permit a test runner.
+
+On one invest-platform wave a reviewer undid a one-line probe with
+`git checkout -- <file>`, which reverts the whole file and took about twenty
+minutes of uncommitted implementer work with it, then truthfully reported the
+tree as clean. A second pass mutated a file the implementer was editing. A
+third detected the implementer's edits mid-sweep and killed its own harness,
+losing twelve planned mutations and returning a bare count with no survivor
+list.
+
+What changed. A prohibition with no sanctioned alternative gets broken quietly,
+so both skills now carry a contract instead: capture `git status --porcelain`
+up front and treat everything in it as someone else's; never `checkout`,
+`restore` or `stash` to undo a probe, since all three act on whole files;
+restore from a copy in a `finally`; on a dirty baseline do not write at all,
+and either report the finding unverified or take a `git worktree`; re-check
+before each write so a moving tree stops the sweep rather than corrupting it;
+and close with the literal command output rather than a claim. Both output
+formats gained a Working tree section so the exit state is checkable.
+
+`deep-audit` also gained mutation testing as a named technique in Step 4, with
+the rule that every survivor is classified (real gap, operator-only signal,
+inert observability string, or equivalent mutant) because an unclassified
+survivor list is noise. Its `allowed-tools` gained Write, Edit, the package
+managers and the doc-lookup tools. `review` stays read-only by default, which
+is still the right posture; it now has a reason and an escape hatch rather than
+a bare "don't".
+
+To re-apply if overwritten: re-add the "Working tree safety" section to both
+SKILL.md bodies, the Working tree block to both output formats, the mutation
+testing paragraph to deep-audit Step 4, and restore the shared reference. The
+binding rules are inline in each skill deliberately, so losing the reference
+degrades the detail rather than the safety.
 
 ### 2026-08-11 — deep-audit: make the report say its findings are unverified
 
