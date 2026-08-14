@@ -676,6 +676,35 @@ Practical: critical AGENTS.md content goes near the top OR near the end. Mid-fil
 
 Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
 
+### 2026-08-11 — deep-audit: make the report say its findings are unverified
+
+`~/.dotfiles/Agents/.agents/skills/deep-audit/SKILL.md`, user-authored, edited in
+place. Two additive edits, both generic:
+
+- The Step 5 report template gained a closing `### Verify Before Acting` section.
+  It tells the reader to re-derive each finding at the source, names the finding
+  types most likely to be confidently wrong (framework and library internals,
+  byte counts, timings, "X never happens"), asks the audit to distinguish what it
+  reproduced from what it only read, and says a PASS means the audit found
+  nothing rather than that the code is right.
+- A new rule 10 makes emitting that section mandatory and explains why, in terms
+  of the reader being someone (often an agent) who will act immediately. The old
+  rule 10, "PASS means PASS", renumbered to 11 and is otherwise untouched.
+
+Prompted by an invest-platform wave where a deep audit returned seven FAILs, two
+of which were confident, specifically-cited claims about framework internals. One
+said Turbopack caches a rejected chunk promise so the network is never retried;
+reading the build's own runtime showed it retries once and then deletes the
+registry entry. The other explained a type annotation by saying `dynamic()` cannot
+see through `React.memo`; `tsc` disagreed. Both were caught only because the
+findings were checked at the source before acting. The audit was right about the
+underlying defects and wrong about the reasons, which is the failure shape worth
+warning about: a real file path and a line number read as proof.
+
+To re-apply if overwritten: append the `### Verify Before Acting` block to the end
+of the Step 5 report template, and add the mandate as a numbered rule ahead of
+"PASS means PASS". Nothing structural changed and no frontmatter was touched.
+
 ### 2026-07-24 — catchup: de-sprint, add active-plan detection
 
 `~/.dotfiles/Agents/.agents/skills/catchup/SKILL.md`, user-authored, edited in place.
