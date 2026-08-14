@@ -2,7 +2,7 @@
 name: deep-audit
 description: Exhaustive post-work audit for any codebase. Run after finishing a feature, sprint, bug fix, or refactoring pass to find overlooked edge cases, discarded response data, missing cross-field validations, misleading success signals, untested failure paths, and implicit assumptions. Invoke with /deep-audit or /deep-audit followed by context. Use this skill whenever the user says audit, review my changes, check my work, what did I miss, post-mortem, sanity check, edge cases, or asks to verify completeness of recent code changes.
 argument-hint: "[description or --range HEAD~N..HEAD or --files path1 path2]"
-allowed-tools: Read Grep Glob Bash(git *) Bash(find *) Bash(wc *) Bash(head *) Bash(tail *) Bash(cat *) Bash(jq *) Agent
+allowed-tools: Read Write Edit Grep Glob Bash(git *) Bash(find *) Bash(wc *) Bash(head *) Bash(tail *) Bash(cat *) Bash(jq *) Bash(pnpm *) Bash(npm *) Bash(npx *) Bash(yarn *) Bash(bun *) Bash(cargo *) Bash(go *) Bash(python *) Bash(python3 *) Bash(uv *) Bash(make *) Bash(just *) Bash(gh *) Bash(ctx7 *) WebFetch WebSearch Agent
 ---
 
 # Deep Audit — Exhaustive Post-Work Review
@@ -19,6 +19,43 @@ A real incident: a `ping()` function called `GET /api/v3/system/status` and rece
 - `/deep-audit description of what I just built` — same, but focuses the audit on the described area
 - `/deep-audit --range HEAD~5..HEAD` — audit a specific commit range
 - `/deep-audit --files src/foo.py src/bar.py` — audit specific files only
+
+---
+
+## Working tree safety
+
+This audit writes. Step 2 runs the project's gates, Step 4's strongest technique
+mutates source, and probes and seeded rows are ordinary. All of it happens in
+the implementer's working directory, which they may be editing right now.
+
+**Before anything else, capture the baseline and keep it:**
+
+```bash
+git rev-parse HEAD
+git status --porcelain
+```
+
+Every path in that `status` output is uncommitted work that is not yours.
+
+- **Never run `git checkout`, `git restore` or `git stash`.** They act on whole
+  files or the whole tree and cannot tell your mutation from the implementer's
+  work. A reviewer undoing a one-line probe this way destroyed twenty minutes of
+  uncommitted work and then truthfully reported the tree as clean.
+- **Restore from a copy you took first, in a `finally`,** so a failed test run
+  or an exception cannot strand a mutation in someone's source.
+- **If the baseline is dirty, do not write to the tree.** Report the finding as
+  unverified and say what would have proved it, or take your own checkout with
+  `git worktree add`.
+- **Re-check `git status --porcelain` before each write.** If it moved in a way
+  you did not cause, the implementer is editing. Stop writing, finish
+  read-only, and say so. A sweep that ignores this corrupts its own measurement:
+  one that did notice killed its harness mid-run and lost twelve of its planned
+  mutations.
+- **Delete every probe file and remove every seeded row**, and close the report
+  with the Working tree section of Step 5.
+
+Recipes, worktree dependency caveats and the incidents behind these rules are in
+[working-tree-safety.md](../review/references/working-tree-safety.md).
 
 ---
 
@@ -240,6 +277,29 @@ For each checklist item, determine:
 
 Do NOT be lazy. Do NOT skip items. Do NOT produce generic observations. Every finding must cite specific files, line numbers, and code. If a dimension has zero items (e.g., no concurrency in a pure synchronous script), state that explicitly and move on.
 
+**Mutation testing (the strongest technique here, when the gates are green).**
+A passing suite proves the tests run, not that they would notice. Change one
+thing the code depends on and re-run: delete a guard, invert a comparison,
+replace a value read from data with the constant it usually equals, drop a
+filter from a query. A mutation that survives names an untested behaviour
+exactly, with no judgement call attached.
+
+This is what a reading pass cannot reach. On one wave it showed that replacing a
+unit price read from the database with the literal it normally equals left the
+entire suite green, because every fixture used that same number, and that a
+build with two regulation minimums swapped passed every check. Both shipped
+past three reading passes.
+
+Work through the guards and predicates the diff introduces rather than mutating
+at random, since a survivor is only interesting when you can say what behaviour
+it leaves unprotected. Classify every survivor before reporting it: a real gap,
+an operator-only signal, an observability string with no behaviour behind it, or
+a semantically equivalent change that no test could distinguish. A survivor list
+without that classification is noise, and the last two categories are usually
+the majority. Follow the working tree protocol for every mutation, and prefer
+running the whole suite over a subset, since the interesting survivors are the
+ones no test anywhere catches.
+
 **Observable behavior verification (when possible):** If the changes affect a web UI and `playwright-cli` is available, consider spawning a subagent to actually load the affected page, trigger the new feature, and verify what the user sees, instead of only inferring behavior from source code. This is optional and should only be attempted if the project has a working dev server configuration. Do not block the audit on browser verification.
 
 ---
@@ -279,6 +339,25 @@ After all checks complete, produce:
 ### Meta-Observations
 <patterns across findings, if any — e.g., "3 of 4 FAILs involve discarded response data"
 or "all changed files lack corresponding test files">
+
+### Working tree
+HEAD <sha>, and the literal `git status --porcelain` output compared to the
+baseline. Name every probe file created and deleted, and every table seeded with
+its row count now. Print the command output rather than asserting a summary of
+it: a pass that claims "clean" and a pass that shows an empty `status` are not
+the same evidence, and only one survives being wrong.
+
+### Verify Before Acting
+Every finding above is a claim, not a fact. Re-derive each one at the source before
+changing code on its account: read the file, run the command, query the installed
+package, reproduce the scenario. Findings that cite framework or library internals,
+byte counts, timings, or "X never happens" are the ones most likely to be confidently
+wrong, and are also the ones whose fixes do the most damage when the premise is false.
+Where I verified a claim myself, the evidence is in the finding; where a finding rests
+on reading alone, it says so and you should reproduce it.
+
+Treat a PASS the same way. A PASS means the audit found nothing, which is weaker than
+the thing being correct.
 ```
 
 **After reporting:** If any FAIL was novel (doesn't match an existing anti-pattern in `references/anti-patterns.md`), tell the user: "This finding doesn't match any cataloged anti-pattern. Consider adding it to `~/.claude/skills/deep-audit/references/anti-patterns.md` so future audits hunt for it specifically." Describe the pattern shape so the user can append it.
@@ -339,4 +418,17 @@ Only proceed after the user confirms. If the user modifies the list (removes ite
 7. **If the diff is very large (100+ files),** focus on non-test source files first, then audit test files for coverage gaps.
 8. **Adapt to the project.** Use whatever quality gates, slash commands, test runners, linters, and issue trackers exist in the current project. Never hardcode tool names — discover them dynamically from config files and available resources.
 9. **Degrade gracefully.** Every optional tool (`ctx7`, WebSearch, `firecrawl`, Linear, `gh`, `playwright-cli`, security-guidance) enhances the audit when present but must not block it when absent. If a tool is unavailable, note what was skipped and continue.
-10. **PASS means PASS.** If code correctly handles something, mark it PASS and move on. Do not manufacture concerns about correct code, do not hedge PASSes with "but you could also...", and do not invent hypothetical scenarios that require ignoring the code's actual behavior. The audit is a quality gate, not a wishlist. A clean audit should produce mostly PASSes with zero FAILs — that is the goal, not a sign that the audit wasn't thorough enough.
+10. **Close every report with the "Verify Before Acting" section, verbatim in intent.**
+    The report is read by someone who will act on it, often an agent that will act
+    immediately, and a wrong finding acted on is worse than no finding. Say plainly
+    which findings you reproduced and which you only read. Distinguish "I ran this and
+    saw X" from "the source says X" from "X is how this library behaves" — the last is
+    where audits are most confidently wrong, because a specific citation to a real file
+    reads as proof even when the reading was wrong. Prefer being caught over being
+    believed: a finding you flag as unverified costs a reader five minutes, and one you
+    assert costs them a bad change.
+11. **Leave the tree as you found it.** Every write is undone from a copy, never
+    with git, and the exit state is reported as command output rather than as a
+    claim. On a dirty baseline you do not write at all. See "Working tree
+    safety" above.
+12. **PASS means PASS.** If code correctly handles something, mark it PASS and move on. Do not manufacture concerns about correct code, do not hedge PASSes with "but you could also...", and do not invent hypothetical scenarios that require ignoring the code's actual behavior. The audit is a quality gate, not a wishlist. A clean audit should produce mostly PASSes with zero FAILs — that is the goal, not a sign that the audit wasn't thorough enough.
