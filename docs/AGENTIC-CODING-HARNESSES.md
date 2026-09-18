@@ -681,6 +681,43 @@ Practical: critical AGENTS.md content goes near the top OR near the end. Mid-fil
 
 Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
 
+### 2026-09-18 — deep-audit: four dimensions the skill could not catch
+
+`~/.dotfiles/Agents/.agents/skills/deep-audit/SKILL.md` and
+`references/audit-dimensions.md`, both user-authored, edited in place. No
+re-stow needed: both are real files under the stow package and the harnesses
+read them through existing symlinks.
+
+Four defect classes got past five review passes and three deep-audit passes on
+one branch (invest-platform #501), and each is now a dimension:
+
+- 13, Delivery-Context Assumptions. A per-route response header is delivered on
+  the DOCUMENT. A route reached by a server-action redirect renders inside the
+  previous document and inherits its policy, so the route-scoped exception does
+  not apply and only a reload works. Opening the URL directly always passes,
+  which is why three investigations closed as "cannot reproduce".
+- 14, Reconstruction Fidelity. Code that rebuilds a third party's artifact must
+  refuse what it cannot reproduce. Six separate passes each found another way
+  the same parser drew a plausible, wrong QR code instead of refusing.
+- 15, Assertions That Cannot Fail. A negative assertion about telemetry kept
+  passing after the payload was widened to carry the whole secret, because
+  nothing could turn it red.
+- 16, Claims the Diff Ships. Comments and PR prose assert facts about browsers
+  and vendors that no gate reads. The sharpest case is a causal claim attached
+  to a fix that works: three successive explanations for one Safari fix were
+  written into the code as settled and all three were later falsified by
+  driving the real engine.
+
+Step 4 gained three methods beside mutation testing: falsify the tests rather
+than only the code, drive the real engine or tool instead of reasoning about
+it, and capture the producer's artifact rather than authoring a fixture from
+its documentation.
+
+To re-apply if overwritten: dimensions 13 to 16 in the Step 3 list in SKILL.md,
+the matching sections in `references/audit-dimensions.md`, the "thirteen" to
+"sixteen" count at the reference link, and the three method paragraphs before
+"Observable behavior verification" in Step 4.
+
 ### 2026-08-14 — review, deep-audit: a working-tree contract for passes that write
 
 `~/.dotfiles/Agents/.agents/skills/review/SKILL.md` and

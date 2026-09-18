@@ -338,3 +338,123 @@ If `playwright-cli` is available and the project has a dev server, consider actu
 - WARN if a new required environment variable was added but not documented
 - WARN if a migration exists but has no rollback path
 - PASS if all consumers are updated consistently
+
+---
+
+## Dimension 13: Delivery-Context Assumptions
+
+**What to look for:** configuration attached to one request being relied on by code that runs in a different delivery context.
+
+The common shape is a per-route response header. A middleware, proxy or edge function keys a policy on `request.pathname`, and a page depends on the relaxation that policy grants. That holds only when the page is fetched as its own document. In a single-page app, or an App Router app, a route reached by a link, a `router.push` or a server-action `redirect()` renders inside the PREVIOUS document and keeps the previous document's headers. The route-scoped exception silently does not apply, and only a reload makes it work.
+
+The same reasoning covers anything else keyed to how a response was requested: cookies with `SameSite` or `Path` scopes, `Vary` and cache keys, per-route `Permissions-Policy`, `COOP`/`COEP`, frame ancestors, and nonce propagation into dynamically injected scripts.
+
+### Detection strategies
+
+1. Grep the middleware, proxy or server config for anything keyed on a path or route: an allowlist set, a `startsWith`, a switch on `pathname`. Each entry is a claim that the page is always loaded as its own document.
+2. For each such route, list the ways a user actually reaches it: a link, a redirect from a server action, a form post, a client router call, a prefetch. Any of those that is not a document load inherits the source document's headers.
+3. Verify by loading the route the way a user reaches it, not by typing its URL. Opening the URL directly always produces the permissive response and hides the defect.
+4. In the browser, confirm the delivered header on the document that is actually live: `document` response headers, not the route's headers, then check the console for the corresponding violation.
+5. For dynamically injected scripts under a nonce-based policy, check that the injection either carries the nonce or is covered by `strict-dynamic`, and that the loader has an error path. A blocked script that is awaited with no `onerror` and no timeout hangs the feature rather than failing it.
+
+### Canonical example (measured 2026-09-17)
+
+A proxy granted `img-src 'self' data:` to exactly two paths, the TOTP enrolment screens, so the QR code could render as a `data:` URI. Sign-up and login reached that screen through a server-action redirect, which is a client-side navigation, so the screen painted inside the `/login` document under `img-src 'self'` and the QR was blocked. Reloading fixed it, which is why three earlier investigations closed as "cannot reproduce": each one opened the URL directly.
+
+### Severity
+
+- FAIL if a feature depends on a route-scoped header and any real entry point into that route is a client-side navigation
+- FAIL if a dynamically injected third-party script is awaited with no error path, so a blocked load hangs a user-facing action instead of failing it
+- WARN if a route-scoped relaxation exists and the audit cannot enumerate every entry point
+- WARN if a cached promise for a failed load is memoized process-wide, so a single failure poisons every later attempt
+- PASS if the header is delivered on every document that can render the surface, or the surface does not depend on it
+
+---
+
+## Dimension 14: Reconstruction Fidelity
+
+**What to look for:** code that takes an artifact produced somewhere else and rebuilds it, rather than passing it through.
+
+A vendor's SVG re-drawn as native elements, a wire format re-serialized, a document re-rendered from a parse, a barcode or QR redrawn from its modules, a diff re-applied from a patch. Every one of these has two failure modes and only one of them is visible. Refusing is loud: the surface says it could not do it and offers the fallback. Producing a plausible but wrong artifact is silent, and the user acts on it. A QR that scans to the wrong secret is worse in every way than a QR that does not render.
+
+The generating rule: reproduce what the producer meant, or refuse. Anything a reconstruction does not understand must end the attempt, never be skipped, defaulted or guessed.
+
+### Detection strategies
+
+1. Find the reconstruction boundary: where does data stop being handled as an opaque value and start being interpreted? That is the code under audit.
+2. Ask what the code does with input it does not fully understand. Walk the actual grammar of the source format and list what the implementation ignores: an unknown attribute, an unrecognised colour or unit notation, a coordinate that parses as empty, a transform, a nested or escaped context (CDATA, comments, processing instructions, entities). Each one is a candidate.
+3. For each, determine whether the output is refused or drawn. Drawn is a FAIL, independent of how unlikely the input is, because the failure is silent and the refusal path already exists.
+4. Check the scanning strategy. A regex that picks known shapes out of unknown text cannot tell "inside the document" from "inside a comment" and will accept things no renderer would draw. A closed grammar that rejects anything it has not been taught is the correct shape.
+5. Check precedence rules against the real specification, not intuition. Where two mechanisms can set the same property (an attribute and a style declaration, an inline rule and a sheet), reading the wrong one produces a coherent, inverted result.
+6. Check the invariants the reconstruction relies on rather than the values. "No two cells overlap", "every row has the same cell size", "the extent on both axes agrees with the declared size" catch classes of corruption that value assertions miss.
+7. Obtain the real artifact from the real producer, at the version in production, and run the code against it. A fixture written from the documentation encodes what the format allows, not what the producer emits, and the two differ.
+
+### Canonical example (measured 2026-09-17)
+
+A TOTP enrolment QR was redrawn from the vendor's SVG into native elements. Six separate passes each found another way the parser drew a plausible, wrong code rather than refusing: the `fill` attribute read in place of the `style` declaration that overrides it (a photographic negative of the real code), an unrecognised colour notation (a solid black square), an empty coordinate (every module in one column), a module displaced by a `transform`, a rect read out of a CDATA section, an `<svg>`-shaped string inside a processing instruction taken for the root, and a module painted over by a later rect that the reconstruction drew underneath. Every one of them passed the gates and the reading passes.
+
+### Severity
+
+- FAIL if any unhandled input produces output instead of a refusal
+- FAIL if the scan is a regex over the raw text rather than a grammar that closes
+- FAIL if the fixtures were authored from the specification and the real producer's output was never captured
+- WARN if the reconstruction refuses correctly but the refusal is not observable (no log, no metric, no user-visible fallback)
+- PASS if every path that cannot reproduce faithfully refuses, and the refusal is visible to both the user and operations
+
+---
+
+## Dimension 15: Assertions That Cannot Fail
+
+**What to look for:** tests that pass regardless of the code under test.
+
+A green suite is evidence only in proportion to what would turn it red. An assertion nothing can falsify costs the same to run as a real one, reads identically in review, and counts toward coverage, which is what makes it worse than no test.
+
+### Detection strategies
+
+1. For every assertion the diff adds, name the change to the source that would make it fail. If you cannot name one, the assertion is vacuous. Prefer making the change and watching it go red.
+2. Treat negative assertions as suspect by default. "The secret never appears in the payload" stops being able to fail the moment the payload carries nothing secret-shaped, and it keeps passing after the code that put it there is deleted. Pin the positive case alongside it: construct a payload that WOULD leak, and assert the code refuses it.
+3. Check whether the fixture was captured or invented. A fixture the diff also authored can encode a shape the real producer never emits, and then the code and its test agree on a fiction that production refutes.
+4. Check mocks for assertions satisfied by construction. Asserting that a mocked function returns what the mock was configured to return tests the mock.
+5. Watch for assertions that hold for the wrong reason: a guard earlier in the function refuses the fixture before the code under test runs, so the test passes while the intended path is never reached. Mutation testing finds these, and a surviving mutant whose fixture is refused by a different guard is the signature.
+6. Re-run each new test against the pre-change source where that is cheap. A test that passes on both sides of the diff is documenting, not verifying.
+
+### Severity
+
+- FAIL if an assertion cannot be made to fail by any change to the code it claims to cover
+- FAIL if a fixture that stands in for a third party's output was written rather than captured, and the real output was available
+- WARN if an assertion passes for a reason other than the one stated, even when the outcome is correct
+- PASS if every new assertion has a named, demonstrated failure mode
+
+---
+
+## Dimension 16: Claims the Diff Ships
+
+**What to look for:** factual assertions in text, which no gate reads.
+
+Comments, docblocks, commit messages, PR bodies, issue descriptions and progress files all carry claims about browsers, vendors, protocols, specifications, performance and cause. Lint does not check them, tests do not exercise them, and review tends to read them as context rather than as findings. They then outlive the code they describe and steer whoever touches it next.
+
+### Detection strategies
+
+1. Enumerate the claims. Every sentence in the diff's prose that asserts how something outside the repository behaves is an item.
+2. For each, name the observation that would refute it, and check whether anyone made that observation. A claim derived from reasoning, from training data, or from the vendor's documentation alone is a hypothesis and must say so in the text.
+3. Prefer a measurement to a citation when the behaviour is drivable. Browser engines, CLI tools and local servers can be driven directly; documentation describes intent and lags implementation in both directions.
+4. Check claims about a second implementation especially hard. "Engine A does X and engine B does not" is two claims, and the second one is usually the unmeasured half.
+5. Check that the claim's scope matches the evidence. Telemetry attributed to one browser does not establish behaviour in another; a preview environment is not production; one console capture is one sample.
+
+### The causal claim attached to a working fix
+
+This is the case that survives every gate, because the thing it is attached to works.
+
+A fix that resolves the symptom is evidence that something in the change mattered. It is not evidence for which part, and it is not evidence for the mechanism the author had in mind. Once the symptom is gone, the explanation stops being tested by anything: the tests pass, the user confirms the fix, and the story in the comment hardens into a fact that the next change reasons from.
+
+To claim X is what fixed it: reproduce the failure with X absent, or demonstrate the mechanism directly under controlled conditions. If neither is possible, the comment names the correlation and says the mechanism is unestablished.
+
+Measured 2026-09-18: a change fixed Safari sign-in and its comments credited a nonce added to a third-party script tag. Driving the real engine under the production policy showed the engine honours `strict-dynamic` and runs that script with no nonce at all, so the credited half was inert. The same change had also given the script loader an error path, which is what mattered. Two earlier explanations for the same fix had already been falsified, and each had been written into the code as settled.
+
+### Severity
+
+- FAIL if the diff asserts a causal mechanism for a fix and neither the failure-with-the-fix-absent nor the mechanism itself was reproduced
+- FAIL if a claim about external behaviour is stated as measured when it was reasoned
+- WARN if a claim is correctly hedged but the discriminating experiment is cheap and was not run
+- WARN if evidence from one environment, browser or sample is generalized without saying so
+- PASS if every external claim carries its measurement, or is marked as a hypothesis in the text itself

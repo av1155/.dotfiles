@@ -201,7 +201,7 @@ If the plugin is unavailable, Dimension 7 runs entirely from the hand-written ch
 
 ### Step 3: Build the audit plan
 
-Using reconnaissance data and build verification results, construct a detailed plan organized by the ten audit dimensions. Each item must be a concrete, specific check against actual code — never generic advice.
+Using reconnaissance data and build verification results, construct a detailed plan organized by the audit dimensions. Each item must be a concrete, specific check against actual code — never generic advice.
 
 Enter plan mode if not already in it. Present the plan to the user for review before executing.
 
@@ -217,11 +217,11 @@ Enter plan mode if not already in it. Present the plan to the user for review be
 
 Then present the full detail by dimension below the table. For audits with 15 or fewer items, skip the summary table and go straight to the full detail.
 
-**Read `references/audit-dimensions.md`** for the detailed specification of all ten dimensions with examples and detection strategies.
+**Read `references/audit-dimensions.md`** for the detailed specification of all sixteen dimensions with examples and detection strategies.
 
 **Read `references/anti-patterns.md`** for the catalog of common oversight patterns to hunt for.
 
-The ten dimensions are:
+The core ten dimensions are:
 1. **Discarded Data** — response bodies, return values, and fields that are fetched but unused
 2. **Cross-Field Validation** — logical relationships between user inputs that go unchecked
 3. **Failure Mode Distance** — how far errors travel from their root cause before surfacing
@@ -247,6 +247,14 @@ The ten dimensions are:
     - Environment variable requirements
     - Configuration file formats
     - If a schema changed but its consumers didn't, FAIL.
+
+13. **Delivery-Context Assumptions** — anything a middleware, proxy or server config keys on the request path (per-route CSP and other headers, cookie scopes, cache keys) is a claim that the page is always fetched as its own document. A route reached by a link, a client router call or a server-action redirect renders inside the PREVIOUS document and keeps its headers, so the exception silently does not apply and only a reload works. Verify by reaching the route the way a user does; opening its URL directly always passes and hides the defect. Also check that a dynamically injected third-party script carries the nonce or is covered by `strict-dynamic`, and that its loader has an error path rather than an awaited promise that never settles.
+
+14. **Reconstruction Fidelity** — code that re-renders, re-parses or re-derives an artifact produced somewhere else (a vendor's SVG, a wire format, a serialized document, a generated image) has two failure modes and only one of them is visible. Refusing is loud. Producing a plausible, wrong artifact is silent, and the user acts on it. Audit every such path for what it does with input it does not fully understand: an unrecognised colour notation, an attribute it skips, a coordinate it reads as empty, a nested context it was not expecting. If the answer is anything other than refuse, it is a FAIL. Scan with a closed grammar that rejects what it has not been taught, never a regex that picks known shapes out of unknown text.
+
+15. **Assertions That Cannot Fail** — a test that passes is not evidence until you know what would make it fail. For every assertion the diff adds, name the change to the source that would turn it red, and prefer making that change. Negative assertions are the usual offenders ("the secret never appears in the log payload" cannot fail once the payload stops carrying anything secret-shaped), along with assertions against fixtures the diff also authored, and mocks that satisfy the assertion by construction. A fixture invented rather than captured is its own FAIL: it can encode a shape the real producer never emits, and then both the code and its test agree on a fiction.
+
+16. **Claims the Diff Ships** — comments, docblocks, commit messages, PR bodies and issue text carry factual assertions about browsers, vendors, protocols and performance, and no gate reads any of them. Treat each one as a finding surface. For every such claim, name the observation that would refute it and check whether anyone made it; a claim written from reasoning gets marked as a hypothesis in the text or it is a FAIL. The sharpest case is a causal claim attached to a fix that works. A working fix is evidence that something in the change mattered, never evidence for which part. To claim X fixed it, reproduce the failure with X absent, or demonstrate the mechanism directly. Otherwise the code ships a confident explanation that the next person will build on.
 
 For each dimension, generate specific checklist items derived from the actual code. Each item has:
 - An ID (e.g., D1-03 for Dimension 1, item 3; T-02 for Test Coverage, item 2; S-01 for Schema Consistency, item 1)
@@ -299,6 +307,32 @@ without that classification is noise, and the last two categories are usually
 the majority. Follow the working tree protocol for every mutation, and prefer
 running the whole suite over a subset, since the interesting survivors are the
 ones no test anywhere catches.
+
+**Falsify the tests, not only the code.** Mutation testing asks whether the
+suite notices a change to the source. The companion question is whether an
+assertion could fail at all. For each assertion the diff adds, name the change
+that would turn it red, and make that change where it is cheap. The ones that
+survive this are negative assertions, assertions against fixtures the diff also
+wrote, and assertions a mock satisfies by construction. On one wave a test
+asserting a secret never reached the telemetry payload kept passing when the
+payload was widened to carry the entire secret, because the assertion had
+stopped being able to fail months of work earlier.
+
+**Drive the real thing rather than reasoning about it.** Browser engines, CLI
+tools, vendor endpoints and local servers can all be driven directly, and a
+twenty-line probe settles in one run what a paragraph of reasoning gets wrong
+in both directions. When the diff rests on how something outside the repository
+behaves, the audit's job is to make it behave, under the conditions the code
+will actually meet: the production policy shape, the pinned version, the real
+payload. Playwright ships Chromium, Firefox and WebKit, so a claim about any of
+them is measurable in minutes.
+
+**Capture the producer's artifact, never author it.** Where the diff parses,
+renders or validates something a third party emits, fetch the real output from
+the real source at the version in production and run the code against it.
+Fixtures written from the documentation encode what the format permits rather
+than what the producer sends, and they will agree with an implementation that
+production refutes.
 
 **Observable behavior verification (when possible):** If the changes affect a web UI and `playwright-cli` is available, consider spawning a subagent to actually load the affected page, trigger the new feature, and verify what the user sees, instead of only inferring behavior from source code. This is optional and should only be attempted if the project has a working dev server configuration. Do not block the audit on browser verification.
 
