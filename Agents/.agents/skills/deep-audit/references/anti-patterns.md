@@ -176,6 +176,54 @@ When running a deep audit, actively hunt for each of these patterns in the chang
 
 ---
 
+## AP-15: The Inherited Policy
+
+**Shape:** A per-route response header is treated as a property of the route, when the browser applies it to the document the page was delivered in.
+
+**Detection:** Grep the middleware, proxy or server config for anything keyed on a path: an allowlist set, a `startsWith`, a switch on `pathname`. Each entry claims the page is always fetched as its own document. List every way a user reaches that route; any client-side navigation (a link, a router call, a server-action redirect) inherits the PREVIOUS document's headers.
+
+**Example:** A proxy granted `img-src 'self' data:` to two TOTP enrolment paths so the QR could render. Sign-up reached that screen through a server-action redirect, so it painted inside the `/login` document under `img-src 'self'` and the QR was blocked. Reloading fixed it, which is why three investigations closed as "cannot reproduce": each one opened the URL directly.
+
+**Fix:** Deliver the policy on every document that can render the surface, or remove the surface's dependence on it. Verify by reaching the route the way a user does, never by typing its URL.
+
+---
+
+## AP-16: The Plausible Reconstruction
+
+**Shape:** Code that rebuilds a third party's artifact guesses at the parts it does not understand, producing a wrong result that looks right, instead of refusing.
+
+**Detection:** Find the boundary where data stops being an opaque value and starts being interpreted. Walk the real grammar of the source format and list what the implementation skips: an unknown attribute, an unrecognised colour or unit notation, a coordinate that parses as empty, a transform, a nested context like CDATA or a processing instruction. Ask what each produces. Anything other than a refusal is the pattern.
+
+**Example:** A TOTP QR redrawn from a vendor's SVG. Six passes each found another way it drew a plausible wrong code: the `fill` attribute read in place of the `style` declaration that overrides it (a photographic negative), an unrecognised colour (a black square), an empty coordinate (one column), a rect read out of a CDATA section. Each scans, and each enrols the investor against a secret their authenticator will reject.
+
+**Fix:** Reproduce faithfully or refuse. Scan with a closed grammar that rejects what it was not taught, never a regex over raw text. Assert invariants ("no two cells overlap", "the extent agrees with the declared size") rather than values, and build fixtures by capturing the real producer's output at the version in production.
+
+---
+
+## AP-17: The Assertion That Cannot Fail
+
+**Shape:** A test passes regardless of the code under test, and counts toward coverage while proving nothing.
+
+**Detection:** For every assertion, name the change to the source that would turn it red; if you cannot, it is vacuous. Negative assertions are the usual offenders, along with assertions against fixtures the same diff authored, mocks that satisfy the assertion by construction, and assertions that hold because an earlier guard refuses the fixture before the code under test runs.
+
+**Example:** A test asserting a secret never appears in a telemetry payload kept passing after the payload was widened to carry the entire secret. It had stopped being able to fail when the code that put secret-shaped data there was removed, months earlier.
+
+**Fix:** Make the change that should turn it red and watch it go red. Pin the positive case beside every negative one: construct input that WOULD leak and assert the code refuses it.
+
+---
+
+## AP-18: The Explanation That Shipped
+
+**Shape:** A causal claim attached to a fix that works. Once the symptom is gone nothing tests the explanation again, and it hardens into a fact the next change reasons from.
+
+**Detection:** Read the prose the diff adds, in comments, docblocks, commit messages and PR bodies. Every assertion about how something outside the repository behaves is an item. For each, name the observation that would refute it and check whether anyone made it. Claims about a second implementation ("engine A does X and engine B does not") are two claims, and the second is usually the unmeasured half.
+
+**Example:** A change fixed Safari sign-in and its comments credited a nonce added to a third-party script tag. Driving the real engine under the production policy showed WebKit honours `strict-dynamic` and runs that script with no nonce at all, so the credited half was inert; the same change had also given the loader an error path, which is what mattered. Two earlier explanations for the same fix had already been falsified, and each had been written into the code as settled.
+
+**Fix:** To claim X fixed it, reproduce the failure with X absent or demonstrate the mechanism directly. Where neither is possible, state the correlation and say the mechanism is unestablished. Prefer driving the real engine, tool or endpoint over citing its documentation.
+
+---
+
 ## Adding new patterns
 
 When a deep audit discovers a FAIL that doesn't fit any of the above, add it here using this template:
