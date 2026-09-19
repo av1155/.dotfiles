@@ -105,6 +105,20 @@ stating purpose, required env vars, exit codes, or migration phase.
 Cover the substance only. No filler sections, no redundant
 summaries, no boilerplate.
 
+## Evidence
+
+- Scale verification to impact and reversibility. For irreversible or high-impact
+  changes this supersedes "stop exploring once there is enough evidence to act" and
+  "the smallest relevant check".
+- Label material claims: verified, strongly supported, hypothesis, assumption,
+  unknown. Never turn an assumption into a fact by restating it.
+- Never say a command, test, or check ran or passed unless it did and you read the
+  output. Never claim to have inspected or measured what you did not.
+- Before declaring done, say what you could not verify and why.
+
+Load `evidence-driven-engineering` before wording a defect, a root cause, or a
+completion claim.
+
 <!-- keep as last line -->
 
 Reminder: comments are rare, single-line, why-only.
