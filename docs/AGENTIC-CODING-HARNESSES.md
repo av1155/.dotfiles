@@ -601,6 +601,15 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 4. Validate after edits with `python3 -m json.tool Pi/.pi/agent/plannotator.json >/dev/null`.
 5. Verify the live file is still the stow-managed symlink: `ls -l ~/.pi/agent/plannotator.json`.
 
+### Pin a merged, unreleased Pi package fix
+
+1. Confirm the upstream fix is merged and record its full commit SHA. Inspect the changed source and tests before trusting the pin.
+2. Ask before changing the dependency source. Prefer a merged fix commit over a moving branch.
+3. Replace the package entry in `Pi/.pi/agent/settings.json` with `git:<repo>@<full-sha>`. If the live `~/.pi/agent/settings.json` is a regular file rather than the Stow symlink, make the same targeted replacement there without overwriting unrelated live settings.
+4. Run `pi install git:<repo>@<full-sha>` so Pi materializes the pinned package, then reload Pi.
+5. Exercise the failing package path end to end. Source inspection or a passing upstream unit test alone is insufficient.
+6. Return to an npm release after it contains the fix, so normal package updates resume.
+
 ### Track Pi extensions safely
 
 1. Store non-secret global Pi extensions under `Pi/.pi/agent/extensions/`.
@@ -668,18 +677,70 @@ Per-harness diagnostic flow:
 
 Practical: critical AGENTS.md content goes near the top OR near the end. Mid-file sections experience reliability drops, especially in files >300 lines. (Stanford 2023 research; persists in 2026 frontier models.)
 
-### Per-project current state (post-Stage-9 verification)
+### Per-project current state (measured 2026-09-18)
 
-| Project         | AGENTS.md            | Cap utilization                        |
-| --------------- | -------------------- | -------------------------------------- |
-| Houndarr        | 547 lines / 23.7 KiB | 72%                                    |
-| wedding-site    | 418 lines / 32.2 KiB | **98% — at the cap, 587 bytes margin** |
-| invest-platform | 397 lines / 28.6 KiB | 87% (4 KiB headroom)                   |
-| Global          | 226 lines / 11.4 KiB | 35%                                    |
+Cap utilization is the combined global + project figure, which is what Codex
+actually caps at 32,768 bytes. The global file is charged against every project.
+
+| Project         | Project AGENTS.md    | Combined with global | Utilization | Margin      |
+| --------------- | -------------------- | -------------------- | ----------- | ----------- |
+| invest-platform | 509 lines / 27,046 B | 32,170 B             | **98%**     | 598 bytes   |
+| Houndarr        | 563 lines / 24,773 B | 29,897 B             | 91%         | 2,871 bytes |
+| wedding-site    | 220 lines / 20,936 B | 26,060 B             | 79%         | 6,708 bytes |
+| Global          | 124 lines / 5,124 B  | n/a                  | n/a         | n/a         |
+
+invest-platform has 598 bytes of headroom. Measure before adding to either that
+file or the global one.
 
 ## 18. Modification Ledger
 
 Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
+
+### 2026-09-18 — evidence-driven-engineering: new skill, split against the Codex cap
+
+New user-authored skill at
+`~/.dotfiles/Agents/.agents/skills/evidence-driven-engineering/SKILL.md` (125
+lines), symlinked into `Claude/.claude/skills/`. A 672-byte `## Evidence`
+section was added to `Agents/.agents/AGENTS.md`, inserted before the
+`<!-- keep as last line -->` marker so the existing tail reminder keeps the
+high-attention final slot.
+
+Source material was a 278-line / 9,284-byte "Evidence-Driven Engineering
+Instructions" block the user wanted applied globally. Appending it whole to the
+canonical AGENTS.md was ruled out by measurement, not preference: Codex caps
+global + project AGENTS.md at a combined 32 KiB and truncates silently from the
+start. The full block would have put invest-platform 8,014 bytes over, Houndarr
+5,741 over, and wedding-site 1,904 over.
+
+Section 16 step 1 routes always-on content to AGENTS.md and forbids making it a
+skill. That rule is right about the mechanism: all four harnesses evaluate
+`description:` at session-prompt time, when no claim exists yet, so a skill
+saying "load before you assert something is broken" fires late or not at all.
+The cap made full compliance impossible, so the content was split by
+enforceability instead. What must hold even when nothing loads went inline:
+proportionality to impact and reversibility, confidence labeling, the ban on
+reporting unrun work, and disclosure of what was not verified. The
+proportionality bullet is load-bearing because it supersedes two Operating
+defaults ("stop exploring once there is enough evidence to act" and "the
+smallest relevant check"); without it inline those read as settled.
+
+Roughly half the source was cut as already covered: the 9-step root-cause
+procedure duplicates `diagnose`, dependency verification duplicates `find-docs`
+and the always-on context7 rule, and the Code Changes and Safety sections
+duplicate AGENTS.md Boundaries, which is stricter because it requires asking
+rather than merely refraining. The persona preamble was dropped.
+
+Cap after the change: invest-platform 32,170 / 32,768 (98%, 598 bytes margin),
+Houndarr 91%, wedding-site 79%. invest-platform is now tight enough that the
+next AGENTS.md addition there needs this arithmetic run first.
+
+Known gap not filled: no skill in either pool carries a keyboard, focus, or WCAG
+checklist. `evidence-driven-engineering` names those concerns and cannot enforce
+them.
+
+To re-apply if overwritten: restore the SKILL.md, re-create the
+`Claude/.claude/skills/` symlink, `stow --restow Agents`, and re-insert the
+`## Evidence` section before the last-line marker.
 
 ### 2026-09-18 — deep-audit: four dimensions the skill could not catch
 
