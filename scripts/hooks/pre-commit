@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Blocks committing Claude/.claude/settings.json while it carries an autoMode key.
+#
+# Claude Code writes autoMode into ~/.claude/settings.json when auto mode is
+# configured for a project, and that block records org names, hosts, vendors and
+# CI secret names. This repo is public and the file is stow-linked, so the key
+# reaches a commit unless something stops it.
+#
+# Exit 0 clean, exit 1 blocks the commit. Bypass with --no-verify.
+# Install: ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
+
+set -euo pipefail
+
+TARGET="Claude/.claude/settings.json"
+
+git diff --cached --name-only --diff-filter=ACM | grep -qx "$TARGET" || exit 0
+
+if git show ":$TARGET" | python3 -c 'import json,sys; sys.exit(0 if "autoMode" in json.load(sys.stdin) else 1)'; then
+    cat >&2 <<'MSG'
+pre-commit: refusing to commit Claude/.claude/settings.json with an autoMode key.
+
+autoMode carries private project context (org names, hosts, vendors, CI secret
+names) and this repository is public.
+
+To proceed, strip the key first:
+
+  python3 - <<'PY'
+  import json, collections
+  p = "Claude/.claude/settings.json"
+  d = json.load(open(p), object_pairs_hook=collections.OrderedDict)
+  d.pop("autoMode", None)
+  json.dump(d, open(p, "w"), indent=2, ensure_ascii=False)
+  open(p, "a").write("\n")
+  PY
+  git add Claude/.claude/settings.json
+
+Bypass deliberately with: git commit --no-verify
+MSG
+    exit 1
+fi
