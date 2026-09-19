@@ -5,7 +5,7 @@
     "defaultThinkingLevel": "xhigh",
     "theme": "catppuccin-macchiato",
     "packages": [
-        "npm:pi-subagents",
+        "git:github.com/nicobailon/pi-subagents@d9864f8288152e83270f62090d7d66eb5ff729bb",
         "npm:pi-web-access",
         "packages/pi-statusline-footer",
         "npm:pi-lens",
