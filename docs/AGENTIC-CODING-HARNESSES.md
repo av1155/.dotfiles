@@ -625,6 +625,39 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 2. **Stow does NOT clean up orphan `$HOME` symlinks** when their target source has been deleted from the package. Manual cleanup: `find ~/<dir> -type l -! -exec test -e {} \; -delete` (POSIX find variant) or for known paths, `rm <path>` for each broken symlink. Stage 6 hit this: deleted `Codex/.codex/skills/` in the package, but `~/.codex/skills/<11 broken symlinks>` remained until manual cleanup in Stage 9.
 3. After cleanup, `stow --restow` again to ensure package state is consistent.
 
+### Restore the Claude settings.json symlink and guard it
+
+`~/.claude/settings.json` drifts back into a real file whenever it is replaced
+rather than edited through the symlink. While it is a real file, `stow --restow
+Claude` aborts on the whole package, and the repo copy has to be hand-synced.
+
+Symptom:
+
+```
+cannot stow .dotfiles/Claude/.claude/settings.json over existing target
+.claude/settings.json since neither a link nor a directory
+```
+
+Fix:
+
+1. Diff the live file against the repo copy and merge by hand. Keep whichever
+   side is newer per key; hook commands should use the `"$HOME"` form rather
+   than an absolute `/Users/...` path.
+2. Strip any `autoMode` key. It is scoped "User or managed" and is only honored
+   in `~/.claude/settings.json`, so it cannot be relocated to a project file or
+   a local override. There is no user-level `settings.local.json`. Auto mode
+   must be reconfigured through `/config` after this, and the key will be
+   written back into the now-tracked file.
+3. `rm ~/.claude/settings.json && stow --restow Claude`.
+4. Confirm `readlink ~/.claude/settings.json` resolves into the repo.
+
+The `scripts/hooks/pre-commit` guard blocks step 2 from regressing. `.git/hooks`
+is not tracked, so install it after a fresh clone:
+
+```
+ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
+```
+
 ### Debug "skill not loading"
 
 Per-harness diagnostic flow:
