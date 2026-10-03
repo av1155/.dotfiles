@@ -10,7 +10,9 @@ keys reads the file as Node's dotenv does and prints it in order: each comment l
 with anything in it that looks like a value hidden, each variable as set or empty (set
 means the file gives it a value, with ${...} references unexpanded), and the numbers of
 the lines it could not parse or withholds because their name looks like part of a
-value. The lines of a value, a key pasted without quotes included, are never shown.
+value. The lines of a value, a key pasted without quotes included, are never shown,
+but a secret written as plain words in a comment, or a short value on a line of its
+own, which dotenv reads as a name, would be.
 --against also names the variables only one of the two files has. envfile reads only
 files named .env* or *.env, through any link, and writes only such names.
 Exit codes: 0 success, 1 a failed command, 2 invalid usage.
@@ -55,11 +57,18 @@ ENV_FILE = re.compile(r"\.env.*|.*\.env")
 QUOTES = "\"'`"
 # In a comment, a value usually follows = or a label such as password:
 VALUE_TAIL = re.compile(
-    r"(?i)(=|(?:pass(?:word|wd)?|pwd|secret|token|key|credential)s?\s*:)(\s*)\S.*"
+    r"(?i)(=|(?:pass(?:word|wd)?|pwd|secret|token|key|credential)s?"
+    r"[\"'`]?\s*:)(\s*)\S.*"
 )
-USERINFO = re.compile(r"(://[^\s/:@]*:)[^\s/@]+@")
+USERINFO = re.compile(r"(://[^\s:/]*:)\S*@")
 BASE64 = re.compile(r"[A-Za-z0-9+/=]+")
-IDENTIFIER = re.compile(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+|[a-z][a-z0-9]*(?:_[a-z0-9]+)+")
+# The last line of a key, after a line of base64 or the key's BEGIN line
+KEY_TAIL = re.compile(r"[A-Za-z0-9+/]+=+")
+KEY_BODY = re.compile(r"[A-Za-z0-9+/]{32,}")
+# An env var name's words are short, unlike the random part of a token such as sbp_...
+IDENTIFIER = re.compile(
+    r"[A-Z][A-Z0-9]{0,14}(?:_[A-Z0-9]{1,15})+|[a-z][a-z0-9]{0,14}(?:_[a-z0-9]{1,15})+"
+)
 HIDDEN = "\ue000"
 SET = ("set", "empty")
 NOTES = {
@@ -95,8 +104,11 @@ def _parse(data: bytes) -> tuple[dict[str, bool], list[tuple[int, str, str]]]:
     lines = text.removesuffix("\n").split("\n") if text else []
     names: dict[str, bool] = {}
     keyed: dict[int, list[tuple[int, str, str]]] = {}
-    inside: set[int] = set()
     blocked: set[int] = set()
+    for begin, line in enumerate(lines, 1):
+        if line.strip(SPACE).startswith("-----BEGIN"):
+            blocked.update(_key_block(lines, begin))
+    inside = set(blocked)
     for match in LINE.finditer(text):
         number = bisect.bisect_right(starts, match.start(1))
         if number in blocked:
@@ -107,13 +119,15 @@ def _parse(data: bytes) -> tuple[dict[str, bool], list[tuple[int, str, str]]]:
             inside.update(range(first, last + 1))
         name, value = match.group(1), (match.group(2) or "").strip(SPACE)
         quoted = len(value) > 1 and value[0] in QUOTES and value[-1] == value[0]
-        if not quoted and "-----BEGIN" in value and "-----END" not in value:
-            blocked.update(_key_block(lines, number))
-            inside.update(blocked)
+        if not quoted and "-----BEGIN" in value:
+            block = _key_block(lines, number)
+            blocked.update(block)
+            inside.update(block)
         entries = keyed.setdefault(number, [])
         # A name that reads as a key, or a value of only padding, is a stray value line
         padding = value and not value.strip("=")
-        if NAME.fullmatch(name) is None or _looks_like_key(name) or padding:
+        stray = padding or _is_key_tail(lines, number)
+        if NAME.fullmatch(name) is None or _looks_like_key(name) or stray:
             entries.append((number, "withheld", name))
             continue
         names[name] = bool(value[1:-1] if quoted else value)
@@ -127,7 +141,8 @@ def _parse(data: bytes) -> tuple[dict[str, bool], list[tuple[int, str, str]]]:
         elif not line.strip(SPACE):
             outline.append((number, "blank", ""))
         elif line.lstrip(SPACE).startswith("#"):
-            outline.append((number, "comment", _comment(line)))
+            shown = f"# {HIDDEN}" if _is_key_tail(lines, number) else line
+            outline.append((number, "comment", _comment(shown)))
         else:
             outline.append((number, "skipped", ""))
     return names, outline
@@ -137,13 +152,24 @@ def _key_block(lines: list[str], begin: int) -> list[int]:
     # A key pasted without quotes runs on in base64 lines to its -----END line
     block: list[int] = []
     for number in range(begin + 1, len(lines) + 1):
-        line = lines[number - 1].strip(SPACE)
+        line = _body(lines[number - 1])
         block.append(number)
         if line.startswith("-----END"):
             return block
         if not BASE64.fullmatch(line):
             break
     return []
+
+
+def _is_key_tail(lines: list[str], number: int) -> bool:
+    before = _body(lines[number - 2]) if number > 1 else ""
+    after_key = KEY_BODY.fullmatch(before) is not None or "-----BEGIN" in before
+    return after_key and KEY_TAIL.fullmatch(_body(lines[number - 1])) is not None
+
+
+def _body(line: str) -> str:
+    # A key's lines may carry a comment mark or a trailing backslash
+    return line.strip(SPACE).removesuffix("\\").rstrip(SPACE).lstrip("#" + SPACE)
 
 
 def _comment(line: str) -> str:
@@ -155,7 +181,7 @@ def _comment(line: str) -> str:
 
 def _hide_key(word: str) -> str:
     if "://" in word:
-        return "/".join(_hide_key(part) for part in word.split("/"))
+        return re.sub(r"[^/@:]+", lambda part: _hide_key(part.group()), word)
     core = word.strip("\"'`()[]{}<>,;:.!?=" + HIDDEN)
     return word.replace(core, HIDDEN) if _looks_like_key(core) else word
 
@@ -174,7 +200,9 @@ def _write(target: Path, data: bytes, *, replace: bool) -> None:
     temp: str | None = None
     try:
         # mkstemp creates the file with mode 600, before any byte lands
-        descriptor, temp = tempfile.mkstemp(dir=target.parent, prefix=f"{target.name}.")
+        descriptor, temp = tempfile.mkstemp(
+            dir=target.parent, prefix=".env.", suffix=".local"
+        )
         with os.fdopen(descriptor, "wb") as handle:
             handle.write(data)
         # Only a finished copy goes in, and link refuses a target that appeared since
@@ -193,12 +221,12 @@ def _write(target: Path, data: bytes, *, replace: bool) -> None:
 
 def cmd_copy(args: argparse.Namespace) -> int:
     source, target = Path(args.source), Path(args.target)
-    if args.target.endswith(("/", os.sep)) and not target.is_dir():
+    if os.path.basename(args.target) in ("", ".", "..") and not target.is_dir():
         message = f"{args.target} is not a directory"
         raise EnvError(message)
     if target.is_dir():
         target /= source.name
-    # Another name would fall outside the deny rules and .gitignore patterns for env files
+    # Other names fall outside the deny rules and .gitignore patterns for env files
     if not ENV_FILE.fullmatch(target.name):
         message = f"{target} is not an env file name (.env* or *.env)"
         raise EnvError(message)
@@ -218,7 +246,7 @@ def cmd_copy(args: argparse.Namespace) -> int:
 
 
 def cmd_keys(args: argparse.Namespace) -> int:
-    files = [args.file, args.against] if args.against else [args.file]
+    files = [args.file] if args.against is None else [args.file, args.against]
     parsed = {label: _parse(_read(Path(label))) for label in files}
     outline = parsed[args.file][1]
     width = max((len(text) for _, kind, text in outline if kind in SET), default=0)
@@ -229,7 +257,7 @@ def cmd_keys(args: argparse.Namespace) -> int:
             print(text)
         else:
             _note(args.file, number, kind)
-    if args.against:
+    if args.against is not None:
         for number, kind, _ in parsed[args.against][1]:
             if kind in NOTES:
                 _note(args.against, number, kind)

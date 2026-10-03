@@ -6,6 +6,7 @@ Run: python3 -m unittest discover -s <this directory> -p 'test_*.py'
 import contextlib
 import importlib.machinery
 import io
+import os
 import resource
 import stat
 import subprocess
@@ -37,9 +38,36 @@ TAIL = "FAKEfakeNOTAKEYfake0123fakeFAKEfake0123"
 MIXED = "FakeMixedTail"
 HEXTAIL = "deadbeefcafe0123fake"
 PADDED = "abcd0123"
+# A pasted key's body, and its last lines in layouts that slip past a block
+BODY = ("FAKEbase64body" * 5)[:60] + "0123"
+KEY_TAILS = ("fakeb64tail", "FAKEB64TAIL9", "faketail7", "fakecommented", "fakeshort")
+KEYS = f"""JWT_PRIVATE_KEY=
+-----BEGIN PRIVATE KEY-----
+{BODY}
+{KEY_TAILS[0]}=
+-----END PRIVATE KEY-----
+LEGACY_KEY=-----BEGIN RSA PRIVATE KEY-----
+Proc-Type: 4,ENCRYPTED
+
+{BODY}
+{KEY_TAILS[1]}=
+-----END RSA PRIVATE KEY-----
+SLASHED=-----BEGIN PRIVATE KEY-----\\
+{BODY}\\
+{KEY_TAILS[2]}=\\
+-----END PRIVATE KEY-----
+# -----BEGIN OLD KEY-----
+# {BODY}
+# {KEY_TAILS[3]}=
+# -----END OLD KEY-----
+SHORT_KEY=-----BEGIN KEY-----
+{KEY_TAILS[4]}=
+AFTER_KEYS=1
+"""
 # Short enough to pass as a word, so only the rule for its place hides it
 SHORT = "pw4short"
 KEYLIKE = "AKIAFAKE0123456789XY"
+HEXLIKE = "0123456789abcdef" * 2 + "fake0123"
 COMMENTED = f"""# Supabase secret key
 # which is used only for
 # backend side
@@ -47,8 +75,13 @@ SUPABASE_SECRET_KEY={SECRET}
 
 # SUPABASE_SECRET_KEY={SHORT}
 # db: postgres://admin:{SHORT}@db.example.com/app
+# at: postgres://admin:Fake@{SHORT}@db.example.com/app
+# azure: postgres://fakeuser@fakeserver:{SHORT}@fakeserver.example.com/app
+# slash: postgres://admin:Xk3/{SHORT}/Zr8@db.example.com:5432/app
 # token: {SHORT}
 # pasted {KEYLIKE} here
+# CLI login sbp_{HEXLIKE} and FAKE_TOKEN_{HEXLIKE.upper()}
+# {{"client_secret": "{SHORT}"}}
 # see OAUTH2_CLIENT_SECRET at https://example.com/project/{KEYLIKE}/settings
 QUOTED="first
 # {SHORT} inside a value
@@ -125,7 +158,18 @@ class EnvfileTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         for output in self.outputs:
-            for secret in (SECRET, TAIL, MIXED, HEXTAIL, PADDED, SHORT, KEYLIKE):
+            hidden = (
+                SECRET,
+                TAIL,
+                MIXED,
+                HEXTAIL,
+                PADDED,
+                SHORT,
+                KEYLIKE,
+                BODY,
+                HEXLIKE,
+            )
+            for secret in (*hidden, *KEY_TAILS):
                 self.assertNotIn(secret, output)
 
     def envfile(
@@ -197,6 +241,26 @@ class EnvfileTests(unittest.TestCase):
         expected = [f"line {lines.index(x) + 1} of {tricky} {withheld}" for x in stray]
         self.assertEqual(notes, expected)
 
+    def test_keys_never_shows_the_lines_of_a_key_pasted_without_quotes(self) -> None:
+        keys = self.dir / ".env.keys"
+        keys.write_text(KEYS)
+        result = self.envfile("keys", str(keys))
+        listed = self.listed(result.stdout)
+        expected = {"JWT_PRIVATE_KEY": "empty", "LEGACY_KEY": "set", "SLASHED": "set"}
+        self.assertEqual(listed, expected | {"SHORT_KEY": "set", "AFTER_KEYS": "set"})
+        notes = [line for line in result.stdout.splitlines() if line.startswith("line")]
+        skipped, withheld = (
+            "is not NAME=value",
+            "is withheld: its name looks like a value",
+        )
+        expected_notes = [(2, skipped), (7, withheld), (9, skipped), (10, withheld)]
+        expected_notes += [(11, skipped), (21, withheld)]
+        self.assertEqual(
+            notes, [f"line {n} of {keys} {kind}" for n, kind in expected_notes]
+        )
+        comments = [line for line in result.stdout.splitlines() if line.startswith("#")]
+        self.assertEqual(comments[1:3], ["# <hidden>", "# <hidden>"])
+
     def test_keys_trims_values_as_javascript_does(self) -> None:
         spaced = self.dir / ".env.spaced"
         spaced.write_text("BOM_ONLY=\ufeff\nSEPARATOR=\x1c\n", encoding="utf-8")
@@ -214,8 +278,13 @@ SUPABASE_SECRET_KEY  set
 
 # SUPABASE_SECRET_KEY=<hidden>
 # db: postgres://admin:<hidden>@db.example.com/app
+# at: postgres://admin:<hidden>@db.example.com/app
+# azure: postgres://fakeuser@fakeserver:<hidden>@fakeserver.example.com/app
+# slash: postgres://admin:<hidden>@db.example.com:5432/app
 # token: <hidden>
 # pasted <hidden> here
+# CLI login <hidden> and <hidden>
+# {"client_secret": <hidden>
 # see OAUTH2_CLIENT_SECRET at https://example.com/project/<hidden>/settings
 QUOTED               set
 INLINE               set
@@ -297,6 +366,20 @@ INLINE               set
         self.assertEqual((code, late.read_text()), (1, "KEEP=1\n"))
         self.assertIn("cannot write", stderr)
 
+    def test_copy_stages_the_bytes_under_a_denied_env_name(self) -> None:
+        staged: list[str] = []
+        link = os.link
+
+        def watch(source: str, target: str) -> None:
+            staged.append(Path(source).name)
+            link(source, target)
+
+        with mock.patch("os.link", side_effect=watch):
+            target = str(self.dir / "fake.env")
+            code, _ = self.main(_module(), "copy", str(self.local), target)
+        self.assertEqual(code, 0)
+        self.assertRegex(staged[0], r"^\.env\..+\.local$")
+
     def test_failures_name_the_path_only(self) -> None:
         missing = self.envfile("keys", str(self.dir / ".env.absent"))
         self.assertEqual(missing.returncode, 1)
@@ -311,6 +394,9 @@ INLINE               set
         missing_dir = self.dir / "missing"
         slash = self.envfile("copy", str(self.local), f"{missing_dir}/")
         self.assertIn("is not a directory", slash.stderr)
+        dotted = self.envfile("copy", str(self.local), f"{self.dir / '.env.d'}/.")
+        self.assertIn("is not a directory", dotted.stderr)
+        self.assertFalse((self.dir / ".env.d").exists())
         self.assertFalse((self.dir / "notes.txt").exists() or missing_dir.exists())
         alias = self.dir / ".env.alias"
         alias.symlink_to(key)
@@ -319,6 +405,8 @@ INLINE               set
         renamed.symlink_to(self.local)
         self.assertIn("is not an env file", self.envfile("keys", str(renamed)).stderr)
         self.assertEqual(self.envfile("keys").returncode, 2)
+        empty = self.envfile("keys", str(self.local), "--against", "")
+        self.assertEqual((empty.returncode, empty.stdout), (1, ""))
         blocked = self.dir / "blocked"
         blocked.mkdir()
         blocked.chmod(0o500)

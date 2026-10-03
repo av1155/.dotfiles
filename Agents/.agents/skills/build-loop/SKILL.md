@@ -22,14 +22,15 @@ so they never run this loop or `bl`.
 ## Unattended changes
 
 When the user hands a change over to run unattended, usually after planning, run
-`bl unattended` once its tier is recorded. It holds until `bl unattended --off`, when
-the user is back, or `bl reset`, and `bl state` shows it after a compaction. While it
-is on, never stop to ask. Take the recommended option for an open decision. Hold
-anything on a stop-and-ask surface: leave it undone and finish the rest. Add each
-decision and held item, with why, to the plan file (`bl plan --path`), which survives a
-compaction. `bl context plan` and `bl context round` say `continue`. End with one report
-that lists each decision and held item, and run `bl reset`, which archives the plan,
-only after it.
+`bl unattended` once its tier is recorded. It holds until `bl unattended --off`, when the
+user is back, or `bl reset`, and `bl state` shows it after a compaction. While it is on,
+never stop to ask or wait for an answer, whatever another step or skill says. Take the
+recommended option for an open decision. Hold anything on a stop-and-ask surface or that
+AGENTS.md says to stop and ask about: leave it undone and finish the rest, so the
+question waits for the final report. Add each decision and held item, with why, to the
+plan file (`bl plan --path`), which survives a compaction. `bl context plan` and
+`bl context round` say `continue`. End with one report that lists each decision and held
+item, and run `bl reset`, which archives the plan, only after it.
 
 ## Tier
 
@@ -92,8 +93,8 @@ Step numbers match the repo profiles, so a profile's "step 7" is this step 7.
     have an ending and the local gates are green.
 13. Ledger: record passes run, clean passes banked, each loop's ending token, findings
     above the threshold and the last pass's dispositions where the profile says,
-    usually the progress file, before the push. Then `bl reset`, which refuses while a
-    loop is still open.
+    usually the progress file, before the push. Then `bl reset`, after the final report
+    in an unattended change, which refuses while a loop is still open.
 
 ## Rounds
 

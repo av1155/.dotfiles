@@ -802,7 +802,8 @@ file order, each variable as set or empty, optionally against `.env.example`. It
 and writes only names like `.env*` or `*.env`, parses as Node's dotenv does, withholds
 a name that looks like part of a value, and hides values, including what looks like
 one in a comment. A secret written as plain words in a comment would still show, a
-trade the user accepted. The `Read` deny rules for env files in
+trade the user accepted, and so would a short value on a line of its own, which
+dotenv itself reads as a name. The `Read` deny rules for env files in
 `Claude/.claude/settings.json` stay: AGENTS.md's rule against routing around a denied
 tool and the security skill both name `envfile` as the sanctioned route past them,
 end-to-end copies env files into worktrees with it, and build-loop's profile reference
@@ -815,8 +816,9 @@ rules kept the agent from copying or inspecting.
 To re-apply if overwritten: restore `bl`, `bl_state.py`, `bl_context.py` and
 `test_context.py` under build-loop's scripts, `envfile` and `test_envfile.py` under
 security's scripts, the build-loop, end-to-end and security `SKILL.md` files,
-end-to-end's `references/workspace.md`, build-loop's `references/profile.md`, and the
-`envfile` sentence under Never in `Agents/.agents/AGENTS.md`.
+end-to-end's `references/workspace.md` and `references/ship.md`, build-loop's
+`references/profile.md` and `references/rounds.md`, and the `envfile` sentence under
+Never in `Agents/.agents/AGENTS.md`.
 
 ### 2026-10-03: context-based /compact stops
 
