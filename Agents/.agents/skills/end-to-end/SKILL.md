@@ -1,6 +1,6 @@
 ---
 name: end-to-end
-description: Claude Code only. Take a planned work item end to end. Resolves the next wave or issue, sets up the workspace, plans and stops for /compact, implements through the build-loop skill, then ships, merges and cleans up within the session's authorization. Use when asked for the next wave, to work a progress file or a session section of a planning note, or to take a change end to end (PR, green checks, merge, housekeeping). Skip a bare "continue" or "proceed" with no work item, questions, and research.
+description: Claude Code only. Take a planned work item end to end. Resolves the next wave or issue, sets up the workspace, plans (stopping for /compact or sign-off only when the context or the plan calls for it), implements through the build-loop skill, then ships, merges and cleans up within the session's authorization. Use when asked for the next wave, to work a progress file or a session section of a planning note, or to take a change end to end (PR, green checks, merge, housekeeping). Skip a bare "continue" or "proceed" with no work item, questions, and research.
 ---
 
 # End to end
@@ -30,9 +30,7 @@ Main checkout or worktree, as the prompt or the repo profile says. For a worktre
 [workspace.md](references/workspace.md). Hand the user every command you may not run
 yourself as a `!` line with absolute paths, for example copying an env file.
 
-## 3. Plan, then stop
-
-Default for T3 work, and whenever the prompt asks.
+## 3. Plan, then stop only if needed
 
 1. Pick and record the tier with the build-loop skill.
 2. Write the plan to the path `bl plan --path` prints (in the git directory, outside the
@@ -40,9 +38,17 @@ Default for T3 work, and whenever the prompt asks.
    `bl plan <path>`. It holds the scope and acceptance criteria, files, tier and why,
    stop-and-ask surfaces, tests, gates, the review-loop plan, the PR body draft and the
    housekeeping steps.
-3. Tell the user the plan path and give a `/compact` note to paste that names the plan
-   path, the tier and the stage. Then stop.
-4. On "proceed": re-read the plan and run build-loop steps 5 to 13 end to end.
+3. Stop only when one of these holds, and otherwise go straight to step 4:
+    - `bl context` says `compact` after planning (25% of the window by default). Give
+      a `/compact` note to paste that names the plan path, the tier and the stage. If
+      `bl context` cannot measure, treat the context as high.
+    - The plan touches a stop-and-ask surface: the profile's list plus the AGENTS.md
+      ask-first boundaries. Ask for sign-off on those points.
+    - The prompt asks for a plan review.
+
+    When you stop, tell the user the plan path, then wait.
+
+4. Run build-loop steps 5 to 13 end to end, after re-reading the plan if you stopped.
 
 ## 4. Build
 

@@ -74,13 +74,13 @@ def now() -> str:
     return dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
 
 
-def _as_dict(value: object) -> dict[str, object]:
+def as_dict(value: object) -> dict[str, object]:
     return cast("dict[str, object]", value) if isinstance(value, dict) else {}
 
 
 def load(branch: str) -> dict[str, object]:
     try:
-        saved = _as_dict(json.loads((branch_dir(branch) / "state.json").read_text()))
+        saved = as_dict(json.loads((branch_dir(branch) / "state.json").read_text()))
     except (OSError, ValueError):
         saved = {}
     state: dict[str, object] = {
@@ -98,10 +98,10 @@ def load(branch: str) -> dict[str, object]:
         state["tier"] = None
     if not isinstance(state["rounds"], list):
         state["rounds"] = []
-    loops = _as_dict(saved.get("loops"))
+    loops = as_dict(saved.get("loops"))
     state["loops"] = {
         name: {"passes": 0, "clean": 0, "ending": None, "last": None}
-        | _as_dict(loops.get(name))
+        | as_dict(loops.get(name))
         for name in LOOPS
     }
     return state
