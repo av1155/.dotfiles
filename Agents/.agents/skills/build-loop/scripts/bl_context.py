@@ -48,6 +48,25 @@ def _context(line: str) -> tuple[int, bool] | None:
     return (total, False) if total else None
 
 
+def _record(line: str) -> dict[str, object]:
+    try:
+        entry: object = json.loads(line)
+    except ValueError:
+        return {}
+    return as_dict(entry)
+
+
+def _is_reply(line: str) -> bool:
+    record = _record(line)
+    model = as_dict(record.get("message")).get("model")
+    return (
+        record.get("type") == "assistant"
+        and not record.get("isSidechain")
+        and not record.get("isApiErrorMessage")
+        and model != "<synthetic>"
+    )
+
+
 def tokens(path: Path) -> tuple[int, bool] | None:
     """Return the newest reading, or None if this session has logged no request."""
     with path.open("rb") as handle:
@@ -55,11 +74,15 @@ def tokens(path: Path) -> tuple[int, bool] | None:
         handle.seek(max(0, size - TAIL_BYTES))
         tail = handle.read().decode("utf-8", "replace")
     # splitlines() would also split on U+2028, which JSON leaves unescaped
-    for line in reversed(tail.split("\n")):
+    lines = tail.split("\n")
+    for line in reversed(lines):
         found = _context(line)
         if found is not None:
             return found
-    if size <= TAIL_BYTES:
+    if size > TAIL_BYTES:
+        message = f"no main-thread request recorded near the end of {path.name}"
+    elif any(_is_reply(line) for line in lines):
+        message = f"{path.name} has replies without readable usage; check /context"
+    else:
         return None
-    message = f"no main-thread request recorded near the end of {path.name}"
     raise LoopError(message)

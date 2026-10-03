@@ -797,12 +797,16 @@ session transcript that `CLAUDE_CODE_SESSION_ID` names. When a compaction is log
 after that request, it reports what the compaction carried over instead, and a
 session with no request logged yet, as at startup or after `/clear`, reads as just
 started. Subagents and workflow agents share the main session's ID, so both skills
-are main session only. Tune it with `git config --global` keys
-`buildloop.compactAfterPlan`, `buildloop.compactBeforeRound` and
-`buildloop.contextWindow` (default 1000000).
+are main session only. The agent runs `bl context plan` or `bl context round`,
+which print only `continue` below the limit, and always in an unattended session
+(`claude -p` or the SDK), where nobody can run `/compact`. Tune it with
+`git config --global` keys `buildloop.compactAfterPlan`,
+`buildloop.compactBeforeRound` and `buildloop.contextWindow` (default 1000000).
 
 Why: long planning sessions reached 30 to 50% of the window before implementation
-started, and a fixed stop also interrupted short ones that had room to spare.
+started, and a fixed stop also interrupted short ones that had room to spare. Below
+the limit the agent sees no figures, because Cognition saw Sonnet 4.5 cut corners
+when it believed its window was nearly full.
 
 To re-apply if overwritten: restore `bl`, `bl_state.py`, `bl_context.py` and
 `test_context.py` under build-loop's scripts, and the end-to-end and build-loop

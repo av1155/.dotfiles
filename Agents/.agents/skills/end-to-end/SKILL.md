@@ -42,9 +42,9 @@ yourself as a `!` line with absolute paths, for example copying an env file.
    stop-and-ask surfaces, tests, gates, the review-loop plan, the PR body draft and the
    housekeeping steps.
 3. Stop only when one of these holds, and otherwise go straight to step 4:
-    - `bl context` says `compact` after planning (25% of the window by default). Give
-      a `/compact` note to paste that names the plan path, the tier and the stage. If
-      `bl context` cannot measure, treat the context as high.
+    - `bl context plan` says `compact` (past 25% of the window by default). Give a
+      `/compact` note to paste that names the plan path, the tier and the stage. If it
+      cannot measure, treat the context as high.
     - The plan touches a stop-and-ask surface: the profile's list plus the AGENTS.md
       ask-first boundaries. Ask for sign-off on those points.
     - The prompt asks for a plan review.

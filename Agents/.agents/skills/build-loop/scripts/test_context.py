@@ -50,9 +50,9 @@ class ContextTests(unittest.TestCase):
         text = "".join(f"{json.dumps(line)}\n" for line in lines)
         self.transcript.write_text(text + '{"type": "assistant", "message": {"usa')
 
-    def context(self, **extra: str) -> subprocess.CompletedProcess[str]:
+    def context(self, *point: str, **extra: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            [str(SCRIPT), "context"],
+            [str(SCRIPT), "context", *point],
             cwd=self.repo,
             env=self.env(**({"CLAUDE_CODE_SESSION_ID": SESSION} | extra)),
             capture_output=True,
@@ -146,6 +146,40 @@ class ContextTests(unittest.TestCase):
         )
         self.assertIn("after planning: continue", result.stdout)
         self.assertIn("before a round: continue", result.stdout)
+
+    def test_checkpoints_show_numbers_only_past_their_limit(self) -> None:
+        self.write(_request(240_000))
+        self.assertEqual(self.context("plan").stdout, "continue\n")
+        self.assertEqual(self.context("round").stdout, "continue\n")
+        self.write(_request(300_000))
+        self.assertEqual(
+            self.context("plan").stdout,
+            "compact: 300,000 tokens, 30% of a 1,000,000-token window (limit 25%)\n",
+        )
+        self.assertEqual(self.context("round").stdout, "continue\n")
+        self.write({"type": "user"})
+        self.assertEqual(self.context("round").stdout, "continue\n")
+
+    def test_an_unattended_session_always_continues(self) -> None:
+        self.write(_request(900_000))
+        unattended = {"CLAUDE_CODE_SESSION_ATTENDED": "0"}
+        self.assertEqual(self.context("round", **unattended).stdout, "continue\n")
+        lost = self.context("plan", CLAUDE_CODE_SESSION_ID="", **unattended)
+        self.assertEqual((lost.returncode, lost.stdout), (0, "continue\n"))
+        attended = self.context("round", CLAUDE_CODE_SESSION_ATTENDED="1")
+        self.assertIn("compact: 900,000 tokens", attended.stdout)
+        self.assertIn("90% of a", self.context(**unattended).stdout)
+
+    def test_replies_without_readable_usage_fail_loudly(self) -> None:
+        reply = {"type": "assistant", "message": {"model": "claude-opus-5-5"}}
+        self.write(reply)
+        result = self.context("plan")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("replies without readable usage", result.stderr)
+        error: dict[str, object] = {"type": "assistant", "isApiErrorMessage": True}
+        synthetic = {"type": "assistant", "message": {"model": "<synthetic>"}}
+        self.write(error, synthetic)
+        self.assertIn("just started", self.context().stdout)
 
     def test_window_and_thresholds_come_from_git_config(self) -> None:
         self.write(_request(100_000))

@@ -8,7 +8,9 @@ they survive reboots and are shared by worktrees; reset moves a finished change'
 directory into build-loop/.archive/. check-tier (pre-commit) and check-ledger
 (pre-push) only warn and always exit 0; check-tier stays quiet on docs-only
 commits, and check-ledger checks the branches being pushed. context reads the
-session's context use from its Claude Code transcript. Git config:
+session's context use from its Claude Code transcript; context plan and context
+round print only that checkpoint's verdict, with numbers only past its limit, and
+continue in an unattended session, where nobody can run /compact. Git config:
 buildloop.checks (warn|off, default warn), buildloop.agents (AI_AGENT prefixes,
 default claude-code), buildloop.contextWindow (default 1000000),
 buildloop.compactAfterPlan and buildloop.compactBeforeRound (percent, default 25
@@ -32,10 +34,10 @@ from typing import cast
 import bl_context
 import bl_state as core
 
-COMPACT_POINTS = (
-    ("after planning", "buildloop.compactAfterPlan", 25),
-    ("before a round", "buildloop.compactBeforeRound", 60),
-)
+COMPACT_POINTS = {
+    "plan": ("after planning", "buildloop.compactAfterPlan", 25),
+    "round": ("before a round", "buildloop.compactBeforeRound", 60),
+}
 
 DOC_SUFFIXES = (".md", ".mdx", ".markdown", ".rst", ".adoc", ".txt")
 DOC_NAME = re.compile(
@@ -209,20 +211,25 @@ def _config_int(key: str, default: int) -> int:
     return default
 
 
-def cmd_context(_args: argparse.Namespace) -> int:
+def cmd_context(args: argparse.Namespace) -> int:
+    if args.point and os.environ.get("CLAUDE_CODE_SESSION_ATTENDED") == "0":
+        print("continue")
+        return 0
     reading = bl_context.tokens(bl_context.transcript())
     window = _config_int("buildloop.contextWindow", 1_000_000)
-    share = 0
-    if reading is None:
-        print("context: no request logged yet, so this session just started")
-    else:
+    share, detail = 0, "no request logged yet, so this session just started"
+    if reading is not None:
         used, compacted = reading
         share = 100 * used // window
         carried = " carried over by a compaction" if compacted else ""
-        print(
-            f"context: {used:,} tokens{carried}, {share}% of a {window:,}-token window"
-        )
-    for label, key, default in COMPACT_POINTS:
+        detail = f"{used:,} tokens{carried}, {share}% of a {window:,}-token window"
+    if args.point:
+        _label, key, default = COMPACT_POINTS[args.point]
+        limit = _config_int(key, default)
+        print(f"compact: {detail} (limit {limit}%)" if share >= limit else "continue")
+        return 0
+    print(f"context: {detail}")
+    for label, key, default in COMPACT_POINTS.values():
         limit = _config_int(key, default)
         verdict = "compact" if share >= limit else "continue"
         print(f"{label}: {verdict} (compacts at {limit}%)")
@@ -271,8 +278,10 @@ def cmd_check_tier(_args: argparse.Namespace) -> int:
     head = core.head()
     base = f" --base {head}" if head else ""
     print(
-        f"build-loop (warn): no tier recorded for {state['branch']}. Pick one with the "
-        f"build-loop skill and record it: bl tier <T0|T1|T2|T3> --reason '<why>'{base}.",
+        f"build-loop (warn): no tier recorded for {state['branch']}. The main session "
+        "picks one with the build-loop skill and records it: bl tier <T0|T1|T2|T3> "
+        f"--reason '<why>'{base}. A subagent leaves this to the session that launched "
+        "it.",
         file=sys.stderr,
     )
     return 0
@@ -351,6 +360,12 @@ def _parser() -> argparse.ArgumentParser:
     reset.add_argument("--force", action="store_true", help="archive open loops too")
     reset.set_defaults(func=cmd_reset)
     context = commands.add_parser("context", help="this session's context use")
+    context.add_argument(
+        "point",
+        nargs="?",
+        choices=tuple(COMPACT_POINTS),
+        help="print only this checkpoint's verdict",
+    )
     context.set_defaults(func=cmd_context)
     check_tier = commands.add_parser("check-tier", help="pre-commit hook, warn only")
     check_tier.set_defaults(func=cmd_check_tier)
