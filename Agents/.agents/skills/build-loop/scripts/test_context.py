@@ -111,7 +111,8 @@ class ContextTests(unittest.TestCase):
         recent += "\n" * (len(recent) % 2)
         self.transcript.write_text(f"{old}{run}\n{recent}", encoding="utf-8")
         self.assertIn("context: 300,000 tokens", self.context().stdout)
-        self.transcript.write_text(f"{old}{run}\n", encoding="utf-8")
+        user = json.dumps({"type": "user"})
+        self.transcript.write_text(f"{old}{run}\n{user}\n", encoding="utf-8")
         self.assertIn("no request bl can read", self.context().stderr)
 
     def test_a_newer_compaction_replaces_the_stale_request(self) -> None:
@@ -146,6 +147,9 @@ class ContextTests(unittest.TestCase):
         )
         self.assertIn("after planning: continue", result.stdout)
         self.assertIn("before a round: continue", result.stdout)
+        for text in ("", '{"type": "user", "mess'):
+            self.transcript.write_text(text)
+            self.assertIn("just started", self.context().stdout)
 
     def test_checkpoints_show_numbers_only_from_their_limit(self) -> None:
         self.write(_request(240_000))
@@ -179,7 +183,10 @@ class ContextTests(unittest.TestCase):
         reply = {"type": "assistant", "message": {"model": "claude-opus-5-5"}}
         renamed = _request(700_000) | {"type": "model_response"}
         ran = {"type": "user", "message": {"content": [{"type": "tool_result"}]}}
-        for lines in ([reply], [{"entry": _request(700_000)}], [renamed, ran]):
+        usage = {"input_tokens": 10, "cache_creation_input_tokens": 90}
+        moved = {"type": "assistant", "message": {"usage": usage}}
+        shapes = ([reply], [{"entry": _request(700_000)}], [renamed, ran], [moved])
+        for lines in shapes:
             self.write(*lines)
             result = self.context("round")
             self.assertEqual(result.returncode, 1, lines)

@@ -35,15 +35,17 @@ def _context(line: str) -> tuple[int, bool] | None:
         if isinstance(carried, int):
             return carried, True
         message = (
-            "compacted since the last logged request; "
-            "run the same command again after your next step"
+            "compacted since the last logged request, with no size; check /context"
         )
         raise LoopError(message)
     if record.get("type") != "assistant":
         return None
     usage = as_dict(as_dict(record.get("message")).get("usage"))
     counts = [usage.get(key) for key in USAGE_KEYS]
-    total = sum(count for count in counts if isinstance(count, int))
+    ints = [count for count in counts if isinstance(count, int)]
+    if len(ints) < len(USAGE_KEYS):
+        return None
+    total = sum(ints)
     # API errors log synthetic assistant entries with all-zero usage
     return (total, False) if total else None
 
@@ -72,7 +74,10 @@ def _ran_a_tool(record: dict[str, object]) -> bool:
 
 
 def _just_started(lines: list[str]) -> bool:
-    records = (_record(line) for line in lines)
+    # The last piece may still be in flight
+    records = [_record(line) for line in lines[:-1] if line]
+    if not records:
+        return True
     main = [
         r
         for r in records
