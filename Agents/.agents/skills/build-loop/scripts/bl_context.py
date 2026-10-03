@@ -25,11 +25,7 @@ def transcript() -> Path:
 
 
 def _context(line: str) -> tuple[int, bool] | None:
-    try:
-        entry: object = json.loads(line)
-    except ValueError:
-        return None
-    record = as_dict(entry)
+    record = _record(line)
     if record.get("isSidechain"):
         return None
     if record.get("type") == "system" and record.get("subtype") == "compact_boundary":
