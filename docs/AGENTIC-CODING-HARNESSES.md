@@ -834,6 +834,13 @@ refactored tests (UTRefactor, arXiv 2409.16739, FSE 2025) and changed test
 behavior in about 15% of cases (SBES 2025, doi:10.5753/sbes.2025.11568), hence
 report-only tests.
 
+Verified with the build loop at T2 across dotfiles, invest-platform and
+wedding-site, 2026-10-02 to 10-03: the review loop ran 4 passes, clean on
+passes 3 and 4; the audit loop ran 4 passes, clean on passes 2 and 4; both
+ended `two clean`. Passes 1 to 3 found 1 HIGH, 5 MEDIUM and 4 FAIL, all fixed
+with regression tests. The last pass's LOW and WARN findings were fixed after
+pass 4 and had no further independent pass.
+
 To re-apply if overwritten: restore the three skill directories and
 `Claude/.claude/agents/`, the three Claude skill symlinks, the `Git/.gitconfig`
 block and the AGENTS.md lines, then `stow --restow Agents Claude`.
