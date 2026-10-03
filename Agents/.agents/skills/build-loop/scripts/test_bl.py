@@ -5,6 +5,7 @@ Run: python3 -m unittest discover -s <this directory> -p 'test_*.py'
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -18,8 +19,7 @@ AGENT = "claude-code_test"
 
 class BlTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self._tmp = tempfile.TemporaryDirectory()
-        root = Path(self._tmp.name)
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         self.remote = root / "remote.git"
         self.repo = root / "repo"
         subprocess.run(
@@ -31,17 +31,15 @@ class BlTestCase(unittest.TestCase):
         self.git("init", "-q", "-b", "main")
         for key, value in (("user.email", "t@example.com"), ("user.name", "t")):
             self.git("config", key, value)
+        script = shlex.quote(str(SCRIPT))
         self.git("config", "hook.bltier.event", "pre-commit")
-        self.git("config", "hook.bltier.command", f"{SCRIPT} check-tier")
+        self.git("config", "hook.bltier.command", f"{script} check-tier")
         self.git("config", "hook.blledger.event", "pre-push")
-        self.git("config", "hook.blledger.command", f"{SCRIPT} check-ledger")
+        self.git("config", "hook.blledger.command", f"{script} check-ledger")
         self.git("remote", "add", "origin", str(self.remote))
         (self.repo / "seed.txt").write_text("seed\n")
         self.git("add", "seed.txt")
         self.git("commit", "-q", "-m", "seed", agent=None)
-
-    def tearDown(self) -> None:
-        self._tmp.cleanup()
 
     def env(self, agent: str | None) -> dict[str, str]:
         drop = ("GIT_", "AI_AGENT", "CLAUDECODE")
@@ -51,27 +49,21 @@ class BlTestCase(unittest.TestCase):
             env["AI_AGENT"] = agent
         return env
 
+    def _run(
+        self, argv: list[str], agent: str | None
+    ) -> subprocess.CompletedProcess[str]:
+        env = self.env(agent)
+        return subprocess.run(
+            argv, cwd=self.repo, env=env, capture_output=True, text=True, check=False
+        )
+
     def git(
         self, *args: str, agent: str | None = AGENT
     ) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(
-            ["git", *args],
-            cwd=self.repo,
-            env=self.env(agent),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        return self._run(["git", *args], agent)
 
     def bl(self, *args: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(
-            [str(SCRIPT), *args],
-            cwd=self.repo,
-            env=self.env(AGENT),
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        return self._run([str(SCRIPT), *args], AGENT)
 
     def state(self) -> dict[str, object]:
         result = self.bl("state", "--json")
@@ -95,7 +87,19 @@ class TierAndPlanTests(BlTestCase):
         self.assertIn("updated: never", result.stdout)
         self.assertIn("next: pick and record a tier", result.stdout)
         self.bl("tier", "T1", "--reason", "fix")
-        self.assertRegex(self.bl("state").stdout, r"updated: \d{4}-\d\d-\d\dT")
+        state = self.bl("state").stdout
+        self.assertRegex(state, r"updated: \d{4}-\d\d-\d\dT")
+        self.assertIn("next: build through step 9, then run a round for", state)
+
+    def test_tier_records_the_change_base_once(self) -> None:
+        head = self.git("rev-parse", "HEAD").stdout.strip()
+        self.bl("tier", "T1", "--reason", "fix")
+        (self.repo / "app.py").write_text("x = 1\n")
+        self.git("add", "app.py")
+        self.git("commit", "-q", "-m", "work", agent=None)
+        self.bl("tier", "T2", "--reason", "grew")
+        self.assertEqual(self.state()["base"], head)
+        self.assertIn(f"base: {head}", self.bl("state").stdout)
 
     def test_tier_can_rise_but_lowers_only_with_force(self) -> None:
         self.assertEqual(self.bl("tier", "T2", "--reason", "feature").returncode, 0)
@@ -113,7 +117,7 @@ class TierAndPlanTests(BlTestCase):
         self.git("checkout", "-q", "-b", "feat/x-y", agent=None)
         path = Path(self.bl("plan", "--path").stdout.strip())
         self.assertEqual(path.name, "plan.md")
-        self.assertEqual(path.parent.name, "feat__x-y")
+        self.assertEqual(path.parent.name, "feat%2Fx-y")
         self.assertTrue(path.parent.is_dir())
         self.assertIn(str(self.repo / ".git" / "build-loop"), str(path.resolve()))
         path.write_text("plan\n")
@@ -145,6 +149,12 @@ class TierAndPlanTests(BlTestCase):
         self.git("checkout", "-q", "x", agent=None)
         self.assertEqual(self.state()["tier"], "T2")
 
+    def test_similar_branch_names_keep_separate_state(self) -> None:
+        self.git("checkout", "-q", "-b", "a/b", agent=None)
+        self.bl("tier", "T2", "--reason", "feature")
+        self.git("checkout", "-q", "-b", "a__b", agent=None)
+        self.assertIsNone(self.state()["tier"])
+
     def test_rounds_need_a_tier(self) -> None:
         self.assertEqual(
             self.bl("round", "--review", "clean", "--audit", "clean").returncode, 1
@@ -172,12 +182,12 @@ class RoundTests(BlTestCase):
         self.bl("tier", "T1", "--reason", "small fix")
         self.rounds(("clean", "dirty"), ("done", "dirty"))
         self.assertEqual(self.loop("review")["ending"], "one clean")
-        self.assertEqual(self.loop("audit")["ending"], "cap of 2")
+        self.assertEqual(self.loop("audit")["ending"], "cap of two")
 
     def test_t3_caps_at_eight(self) -> None:
         self.bl("tier", "T3", "--reason", "money")
         self.rounds(*[("dirty", "dirty")] * 8)
-        self.assertEqual(self.loop("review")["ending"], "cap of 8")
+        self.assertEqual(self.loop("review")["ending"], "cap of eight")
         self.rounds(("dirty", "dirty"))
         self.assertEqual(self.loop("review")["passes"], 8)
 
@@ -199,14 +209,19 @@ class RoundTests(BlTestCase):
         )
         self.assertEqual(result.returncode, 0)
         self.assertEqual(self.loop("audit")["ending"], "stopped early (authorised)")
+        self.assertEqual(
+            self.bl("ending", "--loop", "audit", "--token", "").returncode, 2
+        )
 
 
 class HookTests(BlTestCase):
-    def commit(self, agent: str | None) -> subprocess.CompletedProcess[str]:
-        (self.repo / "app.py").write_text(
+    def commit(
+        self, agent: str | None, path: str = "app.py"
+    ) -> subprocess.CompletedProcess[str]:
+        (self.repo / path).write_text(
             f"x = {len(self.git('log', '--oneline').stdout)}\n"
         )
-        self.git("add", "app.py")
+        self.git("add", path)
         return self.git("commit", "-q", "-m", "change", agent=agent)
 
     def test_check_tier_warns_agents_without_blocking(self) -> None:
@@ -216,6 +231,18 @@ class HookTests(BlTestCase):
         self.assertNotIn("no tier recorded", self.commit(None).stderr)
         self.bl("tier", "T1", "--reason", "fix")
         self.assertNotIn("no tier recorded", self.commit(AGENT).stderr)
+
+    def test_check_tier_is_quiet_on_docs_only_commits(self) -> None:
+        for path in ("NOTES.md", "LICENSE"):
+            self.assertNotIn("no tier recorded", self.commit(AGENT, path).stderr)
+        self.assertIn("no tier recorded", self.commit(AGENT, "CMakeLists.txt").stderr)
+
+    def test_hooks_honor_every_configured_agent_prefix(self) -> None:
+        self.assertNotIn("no tier recorded", self.commit("codex_1").stderr)
+        self.git("config", "buildloop.agents", "claude-code")
+        self.git("config", "--add", "buildloop.agents", "codex")
+        self.assertIn("no tier recorded", self.commit("codex_1").stderr)
+        self.assertIn("no tier recorded", self.commit(AGENT).stderr)
 
     def test_check_ledger_warns_on_early_agent_push(self) -> None:
         self.bl("tier", "T2", "--reason", "feature")

@@ -1,6 +1,6 @@
 ---
 name: build-loop
-description: Build and verify a code change to a fixed quality bar. Picks a risk tier, then implements, refines, runs the gates, drives the change for real, commits, and runs adversarial /review and /deep-audit rounds in fresh subagents until each loop reaches an ending. Use when implementing a feature, fix, wave or issue, when asked to follow or run the build loop, before opening a PR, or when the end-to-end skill hands over. Skip for questions, research, and changes to docs or config alone.
+description: Claude Code only. Build and verify a code change to a fixed quality bar. Picks a risk tier, then implements, refines, runs the gates, drives the change for real, commits, and runs adversarial /review and /deep-audit rounds in fresh subagents until each loop reaches an ending. Use when implementing a feature, fix, wave or issue, when asked to follow or run the build loop, before opening a PR, or when the end-to-end skill hands over. Skip for questions, research and docs-only changes.
 argument-hint: "[T0|T1|T2|T3]"
 ---
 
@@ -18,16 +18,16 @@ argument-hint: "[T0|T1|T2|T3]"
 
 ## Tier
 
-Start a new change with `bl state`. A tier, plan or rounds already on file belong to an
-earlier change on this branch, which long-lived branches such as main keep: `bl reset`
-archives them. Then pick the tier before writing code and record it:
+Start a new change with `bl state`. If it shows state from an earlier change on this
+branch, which long-lived branches such as main keep, `bl reset` archives it; a change
+you are resuming keeps its state. Then pick the tier before writing code and record it:
 `bl tier <T> --reason "<why>"`. Raise it the moment new risk appears, which reopens any
 loop the lower tier's target or cap had closed; lower it only when the user says so. The
 user's prompt or the repo profile can set it.
 
 | Tier | When                                                                                                                                                                          | Loop                                                                                      |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| T0   | Docs, comments, config with no behavior change, generated or vendored refreshes                                                                                               | The gates for what changed. No rounds.                                                    |
+| T0   | Docs, comments, config with no behavior change, generated or vendored refreshes                                                                                               | The gates for what changed, and a refine stamp for any code or config file. No rounds.    |
 | T1   | A small single-concern fix, roughly under 150 changed code lines, touching no risk surface                                                                                    | Steps 2 to 13, `light` refine. Rounds until each loop has one clean pass, cap 2 per loop. |
 | T2   | A single-issue feature or fix touching no risk surface                                                                                                                        | Steps 1 to 13. Two clean passes per loop, cap 4.                                          |
 | T3   | Money, auth or sessions, PII or secrets, schema or migrations, data deletion, vendor contracts, security-sensitive code, several issues in one change, or the profile says so | Steps 1 to 13 with stop-and-ask surfaces. Two clean passes per loop, cap 8.               |
@@ -60,8 +60,8 @@ Step numbers match the repo profiles, so a profile's "step 7" is this step 7.
    commenting, the language skill).
 6. Designed UI: follow the profile's design-to-code rules.
 7. Refine, then gates. Run the `refine` skill on the staged change (`full` before round
-   1), then the profile's gates on that tree. Gates must be green on the exact commit a
-   round reviews.
+   1 at T2 and T3, `light` at T1), then the profile's gates on that tree. Gates must be
+   green on the exact commit a round reviews, including a tidy commit refine adds.
 8. Drive it for real: browser, CLI, API or sandbox lane, per the profile. Mocked unit
    tests alone are not evidence.
 9. Commit, then run rounds. Commits stay local until step 12.
@@ -81,7 +81,8 @@ A round, for T1 to T3:
 
 1. Commit, with the gates green on that commit.
 2. In one message, launch a fresh `/review` subagent (Prompt 2) and a fresh `/deep-audit`
-   subagent (Prompt 3) against that commit.
+   subagent (Prompt 3) on the change's range, `<base>..<that commit>`, with the base from
+   `bl state`.
 3. Change nothing in the repo while either runs.
 4. Disposition both reports under Prompt 1: a `light` refine pass on the fix hunks, the
    gates, then commit.
@@ -125,7 +126,8 @@ Binding. Detail and the commands are in [safety.md](references/safety.md).
 ## State
 
 `bl` keeps per-branch state under `$(git rev-parse --git-common-dir)/build-loop/`, which
-survives reboots and is shared by worktrees: `bl tier`, `bl plan` (`bl plan --path`
-prints where to write the plan), `bl round`, `bl ending`, `bl state`, and `bl reset`,
+survives reboots and is shared by worktrees: `bl tier` (the first one also records the
+change's base commit), `bl plan` (`bl plan --path` prints where to write the plan),
+`bl round`, `bl ending`, `bl state`, and `bl reset`,
 which moves a finished change's state and plan to `build-loop/.archive/`. Git hooks warn
 on an agent commit with no tier and on an agent push before both loops have an ending.

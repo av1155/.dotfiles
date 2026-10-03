@@ -6,9 +6,10 @@ Usage: bl {state,tier,plan,round,ending,reset,check-tier,check-ledger} [options]
 State and plan live in $(git rev-parse --git-common-dir)/build-loop/<branch>/, so
 they survive reboots and are shared by worktrees; reset moves a finished change's
 directory into build-loop/.archive/. check-tier (pre-commit) and
-check-ledger (pre-push) only warn and always exit 0. Git config:
-buildloop.checks (warn|off, default warn), buildloop.agents (AI_AGENT
-prefixes, default claude-code).
+check-ledger (pre-push) only warn and always exit 0, and check-tier stays quiet
+on docs-only commits. Git config: buildloop.checks (warn|off, default warn),
+buildloop.agents (AI_AGENT prefixes, default claude-code). Needs Python 3.11 or
+later.
 
 Exit codes: 0 success; 1 a failed command; 2 invalid usage, or lowering a tier
 without --force.
@@ -23,13 +24,22 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import cast
+from urllib.parse import quote
+
+if sys.version_info < (3, 11):
+    sys.exit("bl needs Python 3.11 or later as python3 on PATH")
 
 TIERS = ("T0", "T1", "T2", "T3")
 CAPS = {"T1": 2, "T2": 4, "T3": 8}
+CAP_ENDINGS = {"T1": "cap of two", "T2": "cap of four", "T3": "cap of eight"}
 TARGETS = {"T1": 1, "T2": 2, "T3": 2}
 LOOPS = ("review", "audit")
 OPEN_ENDINGS = (None, "in progress")
-COUNTED_ENDINGS = ("one clean", "two clean", *(f"cap of {n}" for n in CAPS.values()))
+COUNTED_ENDINGS = ("one clean", "two clean", *CAP_ENDINGS.values())
+MANUAL_ENDINGS = ("documentation wave", "stopped early (authorised)",
+                  "stopped early (unauthorised)", "in progress")  # fmt: skip
+DOC_SUFFIXES = (".md", ".mdx", ".markdown", ".rst", ".adoc", ".txt")
+DOC_NAME = re.compile(r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][\w.-]*)?")
 GIT_TIMEOUT_SECONDS = 30
 
 
@@ -63,7 +73,7 @@ def _optional_git(*args: str) -> str:
 
 
 def _branch() -> str:
-    return _optional_git("symbolic-ref", "--quiet", "--short", "HEAD") or "detached"
+    return _optional_git("symbolic-ref", "--quiet", "--short", "HEAD") or "HEAD"
 
 
 def _state_dir() -> Path:
@@ -74,7 +84,7 @@ def _state_dir() -> Path:
 
 
 def _branch_dir(branch: str) -> Path:
-    return _state_dir() / re.sub(r"[^A-Za-z0-9._-]", "__", branch)
+    return _state_dir() / quote(branch, safe="")
 
 
 def _state_path(branch: str) -> Path:
@@ -98,6 +108,7 @@ def _load(branch: str) -> dict[str, object]:
         "branch": branch,
         "tier": None,
         "reason": "",
+        "base": None,
         "plan": None,
         "rounds": [],
     }
@@ -145,7 +156,8 @@ def _next_step(state: dict[str, object]) -> str:
         return "gates, then commit; no rounds at T0"
     open_loops = _open_loops(state)
     if open_loops:
-        return f"run a round for: {', '.join(open_loops)}"
+        first = "" if state["rounds"] else "build through step 9, then "
+        return f"{first}run a round for: {', '.join(open_loops)}"
     return (
         "both loops have an ending: dispositions (step 11), ledger (step 13), ship, "
         "then bl reset"
@@ -156,6 +168,7 @@ def _print_state(state: dict[str, object]) -> None:
     print(f"branch: {state['branch']}")
     print(f"updated: {state.get('updated') or 'never'}")
     print(f"tier: {state['tier'] or 'not set'} {state['reason'] or ''}".rstrip())
+    print(f"base: {state['base'] or 'not recorded'}")
     print(f"plan: {state['plan'] or 'not recorded'}")
     print(f"rounds: {len(cast('list[object]', state['rounds']))}")
     for name in LOOPS:
@@ -185,7 +198,7 @@ def _settle(state: dict[str, object], name: str) -> None:
     if _int(loop["clean"]) >= TARGETS[tier]:
         loop["ending"] = "one clean" if TARGETS[tier] == 1 else "two clean"
     elif _int(loop["passes"]) >= CAPS[tier]:
-        loop["ending"] = f"cap of {CAPS[tier]}"
+        loop["ending"] = CAP_ENDINGS[tier]
     elif loop["ending"] in COUNTED_ENDINGS:
         loop["ending"] = None
 
@@ -205,6 +218,10 @@ def cmd_tier(args: argparse.Namespace) -> int:
         )
         return 2
     state["tier"], state["reason"] = args.tier, args.reason
+    if not state["base"]:
+        state["base"] = (
+            _optional_git("rev-parse", "--verify", "--quiet", "HEAD") or None
+        )
     for name in LOOPS:
         _settle(state, name)
     _save(state)
@@ -279,7 +296,7 @@ def _checks_active() -> bool:
     agent = os.environ.get("AI_AGENT") or fallback
     if not agent or _optional_git("config", "--get", "buildloop.checks") == "off":
         return False
-    allowed = _optional_git("config", "--get", "buildloop.agents") or "claude-code"
+    allowed = _optional_git("config", "--get-all", "buildloop.agents") or "claude-code"
     return any(agent.startswith(p) for p in re.split(r"[\s,]+", allowed) if p)
 
 
@@ -292,9 +309,21 @@ def _hook_state() -> dict[str, object] | None:
         return None
 
 
+def _is_doc(path: str) -> bool:
+    name = path.rsplit("/", 1)[-1]
+    by_suffix = name.lower().endswith(DOC_SUFFIXES) and name != "CMakeLists.txt"
+    return by_suffix or DOC_NAME.fullmatch(name) is not None
+
+
+def _docs_only() -> bool:
+    staged = _optional_git("diff", "--cached", "--name-only", "-z").split("\0")
+    paths = [path for path in staged if path]
+    return bool(paths) and all(_is_doc(path) for path in paths)
+
+
 def cmd_check_tier(_args: argparse.Namespace) -> int:
     state = _hook_state()
-    if state is not None and state["tier"] is None:
+    if state is not None and state["tier"] is None and not _docs_only():
         print(
             f"build-loop (warn): no tier recorded for {state['branch']}. Pick one with the "
             "build-loop skill and record it: bl tier <T0|T1|T2|T3> --reason '<why>'.",
@@ -344,7 +373,7 @@ def _parser() -> argparse.ArgumentParser:
     rnd.set_defaults(func=cmd_round)
     ending = commands.add_parser("ending", help="set a loop's ending token")
     ending.add_argument("--loop", choices=LOOPS, required=True)
-    ending.add_argument("--token", required=True)
+    ending.add_argument("--token", choices=MANUAL_ENDINGS, required=True)
     ending.set_defaults(func=cmd_ending)
     reset = commands.add_parser("reset", help="archive this branch's state and plan")
     reset.set_defaults(func=cmd_reset)

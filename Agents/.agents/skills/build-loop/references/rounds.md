@@ -33,13 +33,13 @@ assertions and the next pass audits those.
 
 This is the whole list of ways a loop ends. Caps are per loop: T1 2, T2 4, T3 8 passes.
 
-| Ending                       | When                                                                                                      | Ledger token                 |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| Clean target banked          | T1: one clean pass. T2 and T3: two clean passes, counted cumulatively. Suspended on a documentation wave. | `one clean` / `two clean`    |
-| Cap reached                  | Fix that pass's findings under the severity gate, record them, continue to step 11.                       | `cap of N`                   |
-| Documentation wave converged | Only when the change's product is prose.                                                                  | `documentation wave`         |
-| The user ends it             | Said in that session. Nothing else authorises it.                                                         | `stopped early (authorised)` |
-| Still running                | An early push left a loop open when the ledger was written. Amend it when an ending lands.                | `in progress`                |
+| Ending                       | When                                                                                                      | Ledger token                  |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Clean target banked          | T1: one clean pass. T2 and T3: two clean passes, counted cumulatively. Suspended on a documentation wave. | `one clean` / `two clean`     |
+| Cap reached                  | Fix that pass's findings under the severity gate, record them, continue to step 11.                       | `cap of two`, `four`, `eight` |
+| Documentation wave converged | Only when the change's product is prose.                                                                  | `documentation wave`          |
+| The user ends it             | Said in that session. Nothing else authorises it.                                                         | `stopped early (authorised)`  |
+| Still running                | An early push left a loop open when the ledger was written. Amend it when an ending lands.                | `in progress`                 |
 
 If more than one could apply, record the first reached. An agent that stops without one
 of these has broken the loop rather than ended it: the ledger then says
@@ -89,8 +89,8 @@ where that is disclosed.
   session keeps counting each from where it was. The ledger reports passes, not rounds.
 - Fixes land at the end of every round, so a loop that exits early never saw later
   rounds' fixes. If the surviving loop's findings touch code the exited loop reviewed,
-  reopen the exited loop for one more pass rather than reasoning about whether it would
-  have cared.
+  reopen the exited loop for one more pass (`bl ending --loop <loop> --token
+"in progress"`) rather than reasoning about whether it would have cared.
 - Concurrency needs the audit to leave the tree alone, which is why Prompt 3 is
   read-only. When correctness genuinely turns on a mutation sweep, that audit round runs
   alone under Prompt 3a, and the ledger says so.
