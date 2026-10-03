@@ -1,6 +1,6 @@
 ---
 name: end-to-end
-description: Take a planned work item end to end. Resolves the next wave or issue, sets up the workspace, plans and stops for /compact, implements through the build-loop skill, then ships, merges and cleans up within the session's authorization. Use when asked for the next wave, to work a progress file or a session section of a planning note, or to take a change end to end (PR, green checks, merge, housekeeping). Skip a bare "continue" or "proceed" with no work item, questions, and research.
+description: Claude Code only. Take a planned work item end to end. Resolves the next wave or issue, sets up the workspace, plans and stops for /compact, implements through the build-loop skill, then ships, merges and cleans up within the session's authorization. Use when asked for the next wave, to work a progress file or a session section of a planning note, or to take a change end to end (PR, green checks, merge, housekeeping). Skip a bare "continue" or "proceed" with no work item, questions, and research.
 ---
 
 # End to end
@@ -35,10 +35,11 @@ yourself as a `!` line with absolute paths, for example copying an env file.
 Default for T3 work, and whenever the prompt asks.
 
 1. Pick and record the tier with the build-loop skill.
-2. Write the plan to the path `bl plan --path` prints (outside the repo, so it survives
-   compaction and reboots), then `bl plan <path>`. It holds the scope and acceptance
-   criteria, files, tier and why, stop-and-ask surfaces, tests, gates, the review-loop
-   plan, the PR body draft and the housekeeping steps.
+2. Write the plan to the path `bl plan --path` prints (in the git directory, outside the
+   working tree, so it survives compaction, reboots and checkouts), then
+   `bl plan <path>`. It holds the scope and acceptance criteria, files, tier and why,
+   stop-and-ask surfaces, tests, gates, the review-loop plan, the PR body draft and the
+   housekeeping steps.
 3. Tell the user the plan path and give a `/compact` note to paste that names the plan
    path, the tier and the stage. Then stop.
 4. On "proceed": re-read the plan and run build-loop steps 5 to 13 end to end.
