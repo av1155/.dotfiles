@@ -184,6 +184,7 @@ class ContextTests(unittest.TestCase):
 
     def test_an_unattended_change_continues_until_turned_off(self) -> None:
         self.write(_request(900_000))
+        self.assertIn("unattended off", self.bl("unattended", "--off").stdout)
         self.assertEqual(self.bl("unattended").returncode, 2)
         self.bl("tier", "T1", "--reason", "test")
         self.assertIn("unattended on", self.bl("unattended").stdout)
@@ -194,6 +195,11 @@ class ContextTests(unittest.TestCase):
         self.bl("unattended", "--off")
         self.assertIn("compact: 900,000 tokens", self.context("round").stdout)
         self.bl("unattended")
+        self.bl("round", "--round", "1", "--review", "clean", "--audit", "clean")
+        self.assertEqual(self.bl("unattended", "--off").returncode, 0)
+        self.assertIn("compact: 900,000 tokens", self.context("round").stdout)
+        self.assertEqual(self.bl("unattended").returncode, 0)
+        self.assertEqual(self.context("round").stdout, "continue\n")
         self.bl("reset", "--force")
         self.assertNotIn("unattended", self.bl("state").stdout)
         self.assertIn("compact: 900,000 tokens", self.context("round").stdout)

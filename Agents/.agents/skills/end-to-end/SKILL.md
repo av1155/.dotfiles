@@ -31,8 +31,8 @@ so they never run this skill or `bl`.
 
 Main checkout or worktree, as the prompt or the repo profile says. For a worktree follow
 [workspace.md](references/workspace.md). Copy env files with the security skill's
-`envfile`, and hand the user every other command you may not run yourself as a `!`
-line with absolute paths.
+`~/.agents/skills/security/scripts/envfile`, and hand the user every other command you
+may not run yourself as a `!` line with absolute paths.
 
 ## 3. Plan, then stop only if needed
 

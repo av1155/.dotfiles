@@ -18,8 +18,8 @@ name") so the tracker links and closes the issue on merge.
 3. Install dependencies in the worktree root with the repo's package manager.
 4. Copy only what the profile lists as safe to copy (for example local stack version
    pins). Never copy files that link the worktree to hosted systems.
-5. Copy env files such as `.env.local` with the security skill's `envfile copy`, which
-   never prints a value. For any other file the profile says the agent may not copy,
+5. Copy env files such as `.env.local` with
+   `~/.agents/skills/security/scripts/envfile copy`, which never prints a value. For any other file the profile says the agent may not copy,
    hand the user the exact `!` line with absolute paths and wait for it before any gate
    that needs it.
 6. The main checkout is not yours while you work in a worktree: no `git checkout`,

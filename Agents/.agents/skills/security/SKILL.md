@@ -17,7 +17,8 @@ For backend scale and rate limit specifics, defer to the `scalability` skill (ov
 - Never read or print an env file's values. To copy one, for example into a worktree,
   or to compare its variable names with `.env.example`, use
   `~/.agents/skills/security/scripts/envfile` (see `envfile --help`). It never prints a
-  value, and it is the sanctioned route past the `Read` deny rules for env files.
+  value, and it is the sanctioned route past the `Read` deny rules for env files only;
+  it refuses keys and other credential files.
 - When committing, run a secret-scanner pre-commit hook (gitleaks, trufflehog, or the platform's equivalent).
 - Rotate any credential that ever touched a commit, log file, screenshot, paste buffer, or chat — assume it is compromised.
 

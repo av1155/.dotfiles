@@ -21,7 +21,8 @@ and 60). Needs Python 3.11 or later.
 Exit codes: 0 success; 1 a failed command; 2 invalid usage, lowering a tier
 without --force, retiering a finished change without --reopen, a round number
 that is not the next one, a result for a loop that has ended, a documentation-wave
-ending on another change, or resetting open loops without --force.
+ending on another change, marking a change unattended before its tier is recorded,
+or resetting open loops without --force.
 """
 
 import argparse
@@ -215,17 +216,18 @@ def cmd_context(args: argparse.Namespace) -> int:
 
 def cmd_unattended(args: argparse.Namespace) -> int:
     state = core.load(core.current_branch())
-    if state["tier"] is None or core.finished(state):
+    if args.off:
+        if state["unattended"]:
+            state["unattended"] = False
+            core.save(state)
+        print(f"unattended off for {state['branch']}")
+        return 0
+    if state["tier"] is None:
         message = "no change in progress here; record its tier with bl tier first"
         return _refuse("unattended", message)
-    state["unattended"] = not args.off
+    state["unattended"] = True
     core.save(state)
-    if args.off:
-        print(f"unattended off for {state['branch']}")
-    else:
-        print(
-            f"unattended on for {state['branch']} until bl unattended --off or bl reset"
-        )
+    print(f"unattended on for {state['branch']} until bl unattended --off or bl reset")
     return 0
 
 

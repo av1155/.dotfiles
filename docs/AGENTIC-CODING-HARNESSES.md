@@ -789,18 +789,21 @@ harnesses.
 A change can now run unattended. When the user hands it over, usually after planning,
 the agent runs `bl unattended`, which is stored with the change's build-loop state and
 lasts until `bl unattended --off` or `bl reset`. While it is on, the agent never stops
-to ask: open decisions take the recommended option and are recorded, anything on a
-stop-and-ask surface is held and recorded while the rest is finished, `bl context plan`
-and `bl context round` say `continue`, and one report at the end lists both.
+to ask: open decisions take the recommended option, anything on a stop-and-ask surface
+is held while the rest is finished, the plan file records both, `bl context plan` and
+`bl context round` say `continue`, and one report at the end lists both.
 `--dangerously-skip-permissions` stays human-in-the-loop; nothing keys on the
 permission mode.
 
-`~/.agents/skills/security/scripts/envfile` copies an env file (mode 600, no overwrite
-without `--force`) and lists its variable names as set or empty, optionally against
-`.env.example`. It never prints a value. The `Read` deny rules for env files in
-`Claude/.claude/settings.json` stay: the security skill names `envfile` as the
-sanctioned route past them, end-to-end copies env files into worktrees with it, and
-build-loop's profile reference no longer says env files may not be copied.
+`~/.agents/skills/security/scripts/envfile` copies an env file (mode 600, swapped in
+whole, no overwrite without `--force`) and lists its variable names as set or empty,
+optionally against `.env.example`. It reads only files named `.env*` or `*.env`,
+parses them as Node's dotenv does, withholds a name that looks like part of a value,
+and never prints a value. The `Read` deny rules for env files in
+`Claude/.claude/settings.json` stay: AGENTS.md's rule against routing around a denied
+tool and the security skill both name `envfile` as the sanctioned route past them,
+end-to-end copies env files into worktrees with it, and build-loop's profile reference
+no longer says env files may not be copied.
 
 Why: the user plans with the agent and then leaves it to implement and run the review
 loop overnight, and worktree and `.env.example` work needs env files that the deny
@@ -809,7 +812,8 @@ rules kept the agent from copying or inspecting.
 To re-apply if overwritten: restore `bl`, `bl_state.py`, `bl_context.py` and
 `test_context.py` under build-loop's scripts, `envfile` and `test_envfile.py` under
 security's scripts, the build-loop, end-to-end and security `SKILL.md` files,
-end-to-end's `references/workspace.md` and build-loop's `references/profile.md`.
+end-to-end's `references/workspace.md`, build-loop's `references/profile.md`, and the
+`envfile` sentence under Never in `Agents/.agents/AGENTS.md`.
 
 ### 2026-10-03: context-based /compact stops
 

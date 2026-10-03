@@ -4,22 +4,40 @@
 Usage: envfile copy <source> <target> [--force]
        envfile keys <file> [--against <example>]
 
-copy writes the file with mode 600, into <target> itself or a directory, and refuses
-to replace an existing file unless --force. keys prints each variable as set or empty
-and the numbers of lines it could not parse; --against also names the variables only
-one of the two files has. Exit codes: 0 success, 1 a failed command, 2 invalid usage.
+copy writes the file with mode 600, into <target> itself or a directory, refuses to
+replace an existing file unless --force, and leaves the target as it was if it fails.
+keys reads the file as Node's dotenv does and prints each variable as set or empty,
+then the numbers of the lines it could not parse and of the lines it withholds because
+their name looks like part of a value; --against also names the variables only one
+of the two files has. Both read only files named .env* or *.env, through any link.
+Exit codes: 0 success, 1 a failed command, 2 invalid usage.
 """
 
 import argparse
+import bisect
+import contextlib
 import os
 import re
+import signal
 import sys
+import tempfile
 from pathlib import Path
 
 if sys.version_info < (3, 11):
     sys.exit("envfile needs Python 3.11 or later as python3 on PATH")
 
-ASSIGNMENT = re.compile(r"\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_.-]*)\s*=(.*)")
+# Node dotenv's LINE pattern, which @next/env bundles too
+LINE = re.compile(
+    r"^\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)("
+    r"\s*'(?:\\'|[^'])*'"
+    r'|\s*"(?:\\"|[^"])*"'
+    r"|\s*`(?:\\`|[^`])*`"
+    r"|[^#\r\n]+)?\s*(?:#.*)?$",
+    re.MULTILINE | re.ASCII,
+)
+# A mixed-case name is likelier a stray line of a value, such as a key's last line
+NAME = re.compile(r"[A-Z_][A-Z0-9_]*|[a-z_][a-z0-9_]*")
+ENV_FILE = re.compile(r"\.env.*|.*\.env")
 QUOTES = "\"'`"
 
 
@@ -28,6 +46,10 @@ class EnvError(Exception):
 
 
 def _read(path: Path) -> bytes:
+    # The user allows env files only, never keys or other credentials
+    if not all(ENV_FILE.fullmatch(name) for name in (path.name, path.resolve().name)):
+        message = f"{path} is not an env file (.env* or *.env)"
+        raise EnvError(message)
     try:
         return path.read_bytes()
     except OSError as error:
@@ -35,88 +57,90 @@ def _read(path: Path) -> bytes:
         raise EnvError(message) from None
 
 
-def _closing(text: str, quote: str) -> int:
-    escaped = False
-    for position, char in enumerate(text):
-        if escaped:
-            escaped = False
-        elif char == "\\":
-            escaped = True
-        elif char == quote:
-            return position
-    return -1
-
-
-def _names(data: bytes) -> tuple[dict[str, bool], list[int]]:
-    lines = data.decode("utf-8", errors="replace").splitlines()
+def _parse(data: bytes) -> tuple[dict[str, bool], list[int], list[int]]:
+    """Return each name as set or not, and the unparsed and withheld line numbers."""
+    text = data.decode("utf-8", errors="replace").removeprefix("\ufeff")
+    # dotenv ends lines only here, never at U+2028 or a form feed inside a value
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    starts = [0, *(match.end() for match in re.finditer("\n", text))]
     names: dict[str, bool] = {}
-    skipped: list[int] = []
-    number = 0
-    while number < len(lines):
-        line = lines[number]
-        number += 1
-        if not line.strip() or line.lstrip().startswith("#"):
+    withheld: list[int] = []
+    parsed: set[int] = set()
+    for match in LINE.finditer(text):
+        first = bisect.bisect_right(starts, match.start())
+        last = bisect.bisect_right(starts, match.end() - 1)
+        parsed.update(range(first, last + 1))
+        if NAME.fullmatch(match.group(1)) is None:
+            withheld.append(bisect.bisect_right(starts, match.start(1)))
             continue
-        match = ASSIGNMENT.fullmatch(line)
-        if match is None:
-            skipped.append(number)
-            continue
-        name, raw = match.group(1), match.group(2)
-        start = raw.strip()
-        if start and start[0] in QUOTES:
-            body = start[1:]
-            # A quoted value may span lines, and those lines are never names
-            while _closing(body, start[0]) < 0 and number < len(lines):
-                body += "\n" + lines[number]
-                number += 1
-            end = _closing(body, start[0])
-            value = body if end < 0 else body[:end]
+        value = (match.group(2) or "").strip()
+        if len(value) > 1 and value[0] in QUOTES and value[-1] == value[0]:
+            value = value[1:-1]
+        names[match.group(1)] = bool(value)
+    skipped = [
+        number
+        for number, line in enumerate(text.split("\n"), 1)
+        if number not in parsed and line.strip() and not line.lstrip().startswith("#")
+    ]
+    return names, skipped, withheld
+
+
+def _write(target: Path, data: bytes, *, replace: bool) -> None:
+    temp: str | None = None
+    try:
+        # mkstemp creates the file with mode 600, before any byte lands
+        descriptor, temp = tempfile.mkstemp(dir=target.parent, prefix=f"{target.name}.")
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(data)
+        # Only a finished copy goes in, and link refuses a target that appeared since
+        if replace:
+            os.replace(temp, target)
         else:
-            value = re.split(r"\s#", raw, maxsplit=1)[0]
-        names[name] = bool(value.strip())
-    return names, skipped
+            os.link(temp, target)
+    except OSError as error:
+        message = f"cannot write {target}: {error.strerror}"
+        raise EnvError(message) from None
+    finally:
+        if temp is not None:
+            with contextlib.suppress(FileNotFoundError):
+                os.unlink(temp)
 
 
 def cmd_copy(args: argparse.Namespace) -> int:
     source, target = Path(args.source), Path(args.target)
     if target.is_dir():
         target /= source.name
-    if target.exists() and target.resolve() == source.resolve():
+    data = _read(source)
+    # Unlike resolved paths, this catches hard links and case variants
+    if target.exists() and os.path.samefile(source, target):
         message = f"{source} and {target} are the same file"
         raise EnvError(message)
-    if target.exists() and not args.force:
+    if os.path.lexists(target) and not args.force:
         message = f"{target} exists; pass --force to replace it"
         raise EnvError(message)
-    data = _read(source)
-    names, _ = _names(data)
-    try:
-        descriptor = os.open(target, os.O_WRONLY | os.O_CREAT, 0o600)
-        with os.fdopen(descriptor, "wb") as handle:
-            # Tighten the mode before any byte lands, even in a file that existed
-            os.fchmod(handle.fileno(), 0o600)
-            handle.truncate()
-            handle.write(data)
-    except OSError as error:
-        message = f"cannot write {target}: {error.strerror}"
-        raise EnvError(message) from None
-    print(f"copied {source} -> {target} ({len(names)} variables)")
+    _write(target, data, replace=args.force)
+    names, _, withheld = _parse(data)
+    print(f"copied {source} -> {target} ({len(names) + len(withheld)} variables)")
     return 0
 
 
 def cmd_keys(args: argparse.Namespace) -> int:
-    path = Path(args.file)
-    names, skipped = _names(_read(path))
+    files = [args.file, args.against] if args.against else [args.file]
+    parsed = {label: _parse(_read(Path(label))) for label in files}
+    names = parsed[args.file][0]
     width = max((len(name) for name in names), default=0) + 2
     for name, is_set in names.items():
         print(f"{name.ljust(width)}{'set' if is_set else 'empty'}")
-    for number in skipped:
-        print(f"line {number} of {path.name} is not NAME=value")
+    for label, (_, skipped, withheld) in parsed.items():
+        for number in skipped:
+            print(f"line {number} of {label} is not NAME=value")
+        for number in withheld:
+            print(f"line {number} of {label} is withheld: its name looks like a value")
     if args.against:
-        example = Path(args.against)
-        other, _ = _names(_read(example))
+        other = parsed[args.against][0]
         for label, missing in (
-            (path.name, [name for name in names if name not in other]),
-            (example.name, [name for name in other if name not in names]),
+            (args.file, [name for name in names if name not in other]),
+            (args.against, [name for name in other if name not in names]),
         ):
             if missing:
                 print(f"only in {label}: {', '.join(missing)}")
@@ -155,4 +179,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    # End quietly when the reader stops early, as `| head` does
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     sys.exit(main())

@@ -24,9 +24,10 @@ so they never run this loop or `bl`.
 When the user hands a change over to run unattended, usually after planning, run
 `bl unattended` once its tier is recorded. It holds until `bl unattended --off`, when
 the user is back, or `bl reset`, and `bl state` shows it after a compaction. While it
-is on, never stop to ask. Take the recommended option for an open decision and record
-it. Hold anything on a stop-and-ask surface: leave it undone, record why, and finish
-the rest. `bl context plan` and `bl context round` say `continue`. End with one report
+is on, never stop to ask. Take the recommended option for an open decision. Hold
+anything on a stop-and-ask surface: leave it undone and finish the rest. Add each
+decision and held item, with why, to the plan file (`bl plan --path`), which survives a
+compaction. `bl context plan` and `bl context round` say `continue`. End with one report
 that lists each decision and held item.
 
 ## Tier
@@ -153,6 +154,7 @@ survives reboots and is shared by worktrees: `bl tier` (the first one also recor
 change's base commit), `bl plan` (`bl plan --path` prints where to write the plan),
 `bl round`, `bl ending`, `bl state`, `bl context plan` and `bl context round` (one
 checkpoint's verdict from this session's transcript, the only forms an agent runs;
-bare `bl context` is the full report, for people), and `bl reset`,
+bare `bl context` is the full report, for people), `bl unattended` and
+`bl unattended --off` (see Unattended changes), and `bl reset`,
 which moves a finished change's state and plan to `build-loop/.archive/`. Git hooks warn
 on an agent commit with no tier and on an agent push before both loops have an ending.

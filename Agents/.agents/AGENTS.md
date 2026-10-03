@@ -44,6 +44,7 @@ Never:
 - IMPORTANT: Expose, print, commit, or paste secrets
 - Skip hooks or checks without explicit approval. If a hook or check blocks progress, surface it and ask.
 - Route around a denied tool by using another tool or shell path. If access is blocked, stop and ask.
+  The one sanctioned route is the `security` skill's `envfile` for env files, which never prints a value.
 - Mix unrelated cleanup, formatting churn, and feature work in one change
 
 ## Style
