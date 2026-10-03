@@ -1,15 +1,18 @@
 #!/usr/bin/env -S python3 -B
-"""Copy env files and list their variable names without ever printing a value.
+"""Copy env files and list their variable names and comments, with values hidden.
 
 Usage: envfile copy <source> <target> [--force]
        envfile keys <file> [--against <example>]
 
-copy writes the file with mode 600, into <target> itself or a directory, refuses to
+copy writes the file with mode 600 to <target> or into a directory, refuses to
 replace an existing file unless --force, and leaves the target as it was if it fails.
-keys reads the file as Node's dotenv does and prints each variable as set or empty,
-then the numbers of the lines it could not parse and of the lines it withholds because
-their name looks like part of a value; --against also names the variables only one
-of the two files has. Both read only files named .env* or *.env, through any link.
+keys reads the file as Node's dotenv does and prints it in order: each comment line,
+with anything in it that looks like a value hidden, each variable as set or empty (set
+means the file gives it a value, with ${...} references unexpanded), and the numbers of
+the lines it could not parse or withholds because their name looks like part of a
+value. The lines of a value, a key pasted without quotes included, are never shown.
+--against also names the variables only one of the two files has. envfile reads only
+files named .env* or *.env, through any link, and writes only such names.
 Exit codes: 0 success, 1 a failed command, 2 invalid usage.
 """
 
@@ -26,19 +29,43 @@ from pathlib import Path
 if sys.version_info < (3, 11):
     sys.exit("envfile needs Python 3.11 or later as python3 on PATH")
 
-# Node dotenv's LINE pattern, which @next/env bundles too
+# JavaScript's whitespace and line ends, as dotenv's pattern and trim() see them
+ENDS = "\n\r\u2028\u2029"
+SPACE = "".join(
+    [
+        "\t\v\f \u00a0\u1680\u202f\u205f\u3000\ufeff",
+        ENDS,
+        *map(chr, range(0x2000, 0x200B)),
+    ]
+)
+_S = f"[{SPACE}]"
+# Node dotenv's LINE pattern, which @next/env bundles too, with JavaScript's \w, \s,
+# ^, $ and . written out
 LINE = re.compile(
-    r"^\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)("
-    r"\s*'(?:\\'|[^'])*'"
-    r'|\s*"(?:\\"|[^"])*"'
-    r"|\s*`(?:\\`|[^`])*`"
-    r"|[^#\r\n]+)?\s*(?:#.*)?$",
-    re.MULTILINE | re.ASCII,
+    rf"(?:(?<=[{ENDS}])|\A){_S}*(?:export{_S}+)?([A-Za-z0-9_.-]+)"
+    rf"(?:{_S}*={_S}*?|:{_S}+?)("
+    rf"{_S}*'(?:\\'|[^'])*'"
+    rf'|{_S}*"(?:\\"|[^"])*"'
+    rf"|{_S}*`(?:\\`|[^`])*`"
+    rf"|[^#\r\n]+)?{_S}*(?:#[^{ENDS}]*)?(?=[{ENDS}]|\Z)"
 )
 # A mixed-case name is likelier a stray line of a value, such as a key's last line
 NAME = re.compile(r"[A-Z_][A-Z0-9_]*|[a-z_][a-z0-9_]*")
 ENV_FILE = re.compile(r"\.env.*|.*\.env")
 QUOTES = "\"'`"
+# In a comment, a value usually follows = or a label such as password:
+VALUE_TAIL = re.compile(
+    r"(?i)(=|(?:pass(?:word|wd)?|pwd|secret|token|key|credential)s?\s*:)(\s*)\S.*"
+)
+USERINFO = re.compile(r"(://[^\s/:@]*:)[^\s/@]+@")
+BASE64 = re.compile(r"[A-Za-z0-9+/=]+")
+IDENTIFIER = re.compile(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+|[a-z][a-z0-9]*(?:_[a-z0-9]+)+")
+HIDDEN = "\ue000"
+SET = ("set", "empty")
+NOTES = {
+    "skipped": "is not NAME=value",
+    "withheld": "is withheld: its name looks like a value",
+}
 
 
 class EnvError(Exception):
@@ -57,32 +84,90 @@ def _read(path: Path) -> bytes:
         raise EnvError(message) from None
 
 
-def _parse(data: bytes) -> tuple[dict[str, bool], list[int], list[int]]:
-    """Return each name as set or not, and the unparsed and withheld line numbers."""
-    text = data.decode("utf-8", errors="replace").removeprefix("\ufeff")
-    # dotenv ends lines only here, never at U+2028 or a form feed inside a value
+def _parse(data: bytes) -> tuple[dict[str, bool], list[tuple[int, str, str]]]:
+    """Return each name as set or not, and each line to show as number, kind, text.
+
+    A withheld line keeps its name as text for comparisons, and is shown by number only.
+    """
+    text = data.decode("utf-8", errors="replace")
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     starts = [0, *(match.end() for match in re.finditer("\n", text))]
+    lines = text.removesuffix("\n").split("\n") if text else []
     names: dict[str, bool] = {}
-    withheld: list[int] = []
-    parsed: set[int] = set()
+    keyed: dict[int, list[tuple[int, str, str]]] = {}
+    inside: set[int] = set()
+    blocked: set[int] = set()
     for match in LINE.finditer(text):
-        first = bisect.bisect_right(starts, match.start())
-        last = bisect.bisect_right(starts, match.end() - 1)
-        parsed.update(range(first, last + 1))
-        if NAME.fullmatch(match.group(1)) is None:
-            withheld.append(bisect.bisect_right(starts, match.start(1)))
+        number = bisect.bisect_right(starts, match.start(1))
+        if number in blocked:
             continue
-        value = (match.group(2) or "").strip()
-        if len(value) > 1 and value[0] in QUOTES and value[-1] == value[0]:
-            value = value[1:-1]
-        names[match.group(1)] = bool(value)
-    skipped = [
-        number
-        for number, line in enumerate(text.split("\n"), 1)
-        if number not in parsed and line.strip() and not line.lstrip().startswith("#")
-    ]
-    return names, skipped, withheld
+        if match.group(2):
+            first = bisect.bisect_right(starts, match.start(2))
+            last = bisect.bisect_right(starts, match.end(2) - 1)
+            inside.update(range(first, last + 1))
+        name, value = match.group(1), (match.group(2) or "").strip(SPACE)
+        quoted = len(value) > 1 and value[0] in QUOTES and value[-1] == value[0]
+        if not quoted and "-----BEGIN" in value and "-----END" not in value:
+            blocked.update(_key_block(lines, number))
+            inside.update(blocked)
+        entries = keyed.setdefault(number, [])
+        # A name that reads as a key, or a value of only padding, is a stray value line
+        padding = value and not value.strip("=")
+        if NAME.fullmatch(name) is None or _looks_like_key(name) or padding:
+            entries.append((number, "withheld", name))
+            continue
+        names[name] = bool(value[1:-1] if quoted else value)
+        entries.append((number, "set" if names[name] else "empty", name))
+    outline: list[tuple[int, str, str]] = []
+    for number, line in enumerate(lines, 1):
+        if number in keyed:
+            outline.extend(keyed[number])
+        elif number in inside:
+            continue
+        elif not line.strip(SPACE):
+            outline.append((number, "blank", ""))
+        elif line.lstrip(SPACE).startswith("#"):
+            outline.append((number, "comment", _comment(line)))
+        else:
+            outline.append((number, "skipped", ""))
+    return names, outline
+
+
+def _key_block(lines: list[str], begin: int) -> list[int]:
+    # A key pasted without quotes runs on in base64 lines to its -----END line
+    block: list[int] = []
+    for number in range(begin + 1, len(lines) + 1):
+        line = lines[number - 1].strip(SPACE)
+        block.append(number)
+        if line.startswith("-----END"):
+            return block
+        if not BASE64.fullmatch(line):
+            break
+    return []
+
+
+def _comment(line: str) -> str:
+    text = USERINFO.sub(rf"\1{HIDDEN}@", line.strip(SPACE))
+    text = VALUE_TAIL.sub(rf"\1\2{HIDDEN}", text, count=1)
+    words = re.split(r"(\s+)", text)
+    return "".join(_hide_key(word) for word in words).replace(HIDDEN, "<hidden>")
+
+
+def _hide_key(word: str) -> str:
+    if "://" in word:
+        return "/".join(_hide_key(part) for part in word.split("/"))
+    core = word.strip("\"'`()[]{}<>,;:.!?=" + HIDDEN)
+    return word.replace(core, HIDDEN) if _looks_like_key(core) else word
+
+
+def _looks_like_key(word: str) -> bool:
+    # A long run of letters and digits reads as a key, an env var name does not
+    return (
+        len(word) >= 16
+        and IDENTIFIER.fullmatch(word) is None
+        and any(char.isdigit() for char in word)
+        and any(char.isalpha() for char in word)
+    )
 
 
 def _write(target: Path, data: bytes, *, replace: bool) -> None:
@@ -108,8 +193,15 @@ def _write(target: Path, data: bytes, *, replace: bool) -> None:
 
 def cmd_copy(args: argparse.Namespace) -> int:
     source, target = Path(args.source), Path(args.target)
+    if args.target.endswith(("/", os.sep)) and not target.is_dir():
+        message = f"{args.target} is not a directory"
+        raise EnvError(message)
     if target.is_dir():
         target /= source.name
+    # Another name would fall outside the deny rules and .gitignore patterns for env files
+    if not ENV_FILE.fullmatch(target.name):
+        message = f"{target} is not an env file name (.env* or *.env)"
+        raise EnvError(message)
     data = _read(source)
     # Unlike resolved paths, this catches hard links and case variants
     if target.exists() and os.path.samefile(source, target):
@@ -119,38 +211,51 @@ def cmd_copy(args: argparse.Namespace) -> int:
         message = f"{target} exists; pass --force to replace it"
         raise EnvError(message)
     _write(target, data, replace=args.force)
-    names, _, withheld = _parse(data)
-    print(f"copied {source} -> {target} ({len(names) + len(withheld)} variables)")
+    names, outline = _parse(data)
+    withheld = sum(kind == "withheld" for _, kind, _ in outline)
+    print(f"copied {source} -> {target} ({len(names) + withheld} variables)")
     return 0
 
 
 def cmd_keys(args: argparse.Namespace) -> int:
     files = [args.file, args.against] if args.against else [args.file]
     parsed = {label: _parse(_read(Path(label))) for label in files}
-    names = parsed[args.file][0]
-    width = max((len(name) for name in names), default=0) + 2
-    for name, is_set in names.items():
-        print(f"{name.ljust(width)}{'set' if is_set else 'empty'}")
-    for label, (_, skipped, withheld) in parsed.items():
-        for number in skipped:
-            print(f"line {number} of {label} is not NAME=value")
-        for number in withheld:
-            print(f"line {number} of {label} is withheld: its name looks like a value")
+    outline = parsed[args.file][1]
+    width = max((len(text) for _, kind, text in outline if kind in SET), default=0)
+    for number, kind, text in outline:
+        if kind in SET:
+            print(f"{text.ljust(width + 2)}{kind}")
+        elif kind in ("comment", "blank"):
+            print(text)
+        else:
+            _note(args.file, number, kind)
     if args.against:
-        other = parsed[args.against][0]
-        for label, missing in (
-            (args.file, [name for name in names if name not in other]),
-            (args.against, [name for name in other if name not in names]),
-        ):
+        for number, kind, _ in parsed[args.against][1]:
+            if kind in NOTES:
+                _note(args.against, number, kind)
+        pairs = ((args.file, args.against), (args.against, args.file))
+        for label, other in pairs:
+            known = set(parsed[other][0])
+            known.update(
+                text for _, kind, text in parsed[other][1] if kind == "withheld"
+            )
+            missing = [name for name in parsed[label][0] if name not in known]
             if missing:
                 print(f"only in {label}: {', '.join(missing)}")
+            for number, kind, text in parsed[label][1]:
+                if kind == "withheld" and text not in known:
+                    print(f"line {number} of {label} is withheld and not in {other}")
     return 0
+
+
+def _note(label: str, number: int, kind: str) -> None:
+    print(f"line {number} of {label} {NOTES[kind]}")
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="envfile",
-        description="Copy env files and list their variable names, never values.",
+        description="Copy env files and list their names and comments, values hidden.",
     )
     commands = parser.add_subparsers(dest="command", required=True)
     copy = commands.add_parser("copy", help="copy an env file without showing it")
@@ -158,7 +263,7 @@ def _parser() -> argparse.ArgumentParser:
     copy.add_argument("target", help="a file, or a directory to copy into")
     copy.add_argument("--force", action="store_true", help="replace an existing file")
     copy.set_defaults(func=cmd_copy)
-    keys = commands.add_parser("keys", help="list variable names as set or empty")
+    keys = commands.add_parser("keys", help="list names and comments, values hidden")
     keys.add_argument("file")
     keys.add_argument("--against", help="an example file to compare names with")
     keys.set_defaults(func=cmd_keys)

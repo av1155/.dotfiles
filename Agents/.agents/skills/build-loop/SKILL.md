@@ -28,7 +28,8 @@ is on, never stop to ask. Take the recommended option for an open decision. Hold
 anything on a stop-and-ask surface: leave it undone and finish the rest. Add each
 decision and held item, with why, to the plan file (`bl plan --path`), which survives a
 compaction. `bl context plan` and `bl context round` say `continue`. End with one report
-that lists each decision and held item.
+that lists each decision and held item, and run `bl reset`, which archives the plan,
+only after it.
 
 ## Tier
 
@@ -72,7 +73,8 @@ Step numbers match the repo profiles, so a profile's "step 7" is this step 7.
    the vendor's reference) and the pinned version before writing it.
 4. Plan. Stop for sign-off on stop-and-ask surfaces: the profile's list plus the
    AGENTS.md ask-first boundaries. For decisions outside engineering, decide as a senior
-   practitioner and ask through AskUserQuestion with the recommendation first.
+   practitioner and ask through AskUserQuestion with the recommendation first. In an
+   unattended change, hold and decide instead, as Unattended changes says.
 5. Implement to senior standard, loading the matching skills (security, scalability,
    commenting, the language skill).
 6. Designed UI: follow the profile's design-to-code rules.

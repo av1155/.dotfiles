@@ -27,7 +27,8 @@
   explicit subject and body. Leave branch deletion to housekeeping while a worktree
   holds the branch.
 - If the permission classifier refuses the merge, hand the user the exact line prefixed
-  with `!` and wait. Never route around it through the API or a subagent.
+  with `!` and wait, or in an unattended change hold it for the report. Never route
+  around it through the API or a subagent.
 - Commands only the user may run after the merge (for example pushing a database
   migration to a hosted project) are handed over as a block; never run them.
 

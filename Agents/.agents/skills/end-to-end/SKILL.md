@@ -67,7 +67,8 @@ good enough.
 Authorization comes from the session prompt or the flow's progress-file header. "End to
 end" there means: open the PR, get every check green (fixing failures), merge, and clean
 up. Without authorization, stop at the commit and hand over the PR body or the push
-command. The procedure is in [ship.md](references/ship.md).
+command; in an unattended change, hold them for the report. The procedure is in
+[ship.md](references/ship.md).
 
 ## 6. Housekeeping
 
@@ -79,7 +80,8 @@ tracker closed the issue.
 ## 7. Report
 
 Say plainly whether the work is done. List what remains, what is still running, and every
-command the user must run, as `!` lines with absolute paths.
+command the user must run, as `!` lines with absolute paths. In an unattended change,
+also list each decision taken and item held, from the plan file, before `bl reset`.
 
 ## Other sessions
 
@@ -93,5 +95,6 @@ broadcasts, merge order and resync.
   progress file. The AGENTS.md ask-first boundaries still apply: dependencies, schema,
   CI, infrastructure, hosted systems, settings.
 - Decide as a senior engineer, product manager and designer would. Put genuine product
-  decisions to the user through AskUserQuestion with the recommendation first. Do not
-  hand back work you can do yourself.
+  decisions to the user through AskUserQuestion with the recommendation first; in an
+  unattended change, take the recommendation and record it. Do not hand back work you
+  can do yourself.
