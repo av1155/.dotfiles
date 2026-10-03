@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Simplify and refine the staged code for clarity, consistency and maintainability without changing behavior, then stamp it so the commit gate lets it through. Use right before committing code, when a commit fails with "refine gate", or when asked to refine, simplify, de-slop or clean up changes about to be committed. Skip commits that only touch docs, lockfiles, generated or vendored files.
+description: Claude Code only. Simplify and refine the staged code for clarity, consistency and maintainability without changing behavior, then stamp it so the commit gate lets it through. Use right before committing code, when a commit fails with "refine gate", or when asked to refine, simplify, de-slop or clean up changes about to be committed. Skip commits that only touch docs, lockfiles, generated or vendored files.
 argument-hint: "[light|full]"
 ---
 
@@ -20,11 +20,13 @@ result.
     - `partially_staged` not empty: stage or unstage those files completely first. Never
       stage a file the user did not mean to commit.
     - Depth is `mode` unless the caller passed `light` or `full`. The build-loop skill
-      passes `full` before review round 1 and `light` for review-fix commits.
+      passes `full` before review round 1 at T2 and T3, and `light` at T1 and for
+      review-fix commits.
 2. Read the repo's rules before judging: AGENTS.md or CLAUDE.md, its commenting
    standard if one exists (for example `docs/commenting-standard.md`), its build-loop
    profile, and anything they mark as protected.
-3. Snapshot: `refine snapshot`.
+3. Snapshot: `refine snapshot`. It records HEAD and the staged blobs, and
+   `refine restore` refuses once either has moved.
 4. Review with `refine diff`, which writes the reviewable staged diff as shard files.
     - Claude Code: launch the lenses in one message with the Agent tool, one agent per
       lens per shard. `full`: four `refine-lens` agents (reuse, simplification,
@@ -56,10 +58,11 @@ result.
    removal, code proven unreferenced by search) and record the result as `unverified`.
 7. Re-stage exactly the files you edited (`git add -- <paths>`), then stamp:
    `refine stamp --mode <light|full> --applied N --reported N --deferred N --result <pass|rolled-back|unverified> --checks "<commands run>"`
-8. The caller commits. After that commit lands, apply `tidy.md` if it lists anything:
-   same checks, stage those files, `refine stamp --mode light --tidy ...`, then commit
-   them on their own as `refactor(<scope>): <what got simpler>`. If a check fails,
-   restore and skip the tidy commit. Delete `tidy.md` afterwards.
+8. The caller commits. After that commit lands, if `tidy.md` lists anything:
+   `refine snapshot <its files>`, apply it, run the same checks, stage those files,
+   `refine stamp --mode light --tidy ...`, then commit them on their own as
+   `refactor(<scope>): <what got simpler>`. If a check fails, `refine restore` and skip
+   the tidy commit. Delete `tidy.md` afterwards.
 9. Summarize in at most five lines: applied, deferred, reported and dropped counts; the
    checks run and their results; anything incomplete or unverified.
 
@@ -79,10 +82,14 @@ A global git `pre-commit` hook (`hook.refine` in the user's git config) runs
 `refine gate` whenever `AI_AGENT` or `CLAUDECODE` is set. For agent commits
 (`AI_AGENT` matching `refine.agents`, default `claude-code`) it compares each staged
 reviewable file with the last stamp and blocks the commit when any differs. Human
-commits, merges in progress and exempt-only commits pass untouched.
+commits, merges in progress and exempt-only commits pass untouched. A file moved or
+re-moded without line changes is exempt, and a moved file counts only its changed
+lines.
 
-Settings live in git config: `refine.mode` (`block`, `warn` or `off`),
-`refine.agents`, `refine.exempt` (extra globs, multi-valued, for example generated
-paths), `refine.fullThreshold` (40 changed code lines), `refine.deepThreshold` (300),
-`refine.shardLines` (800). Every stamp and gate decision is logged to
-`$(git rev-parse --git-path refine)/log.jsonl`.
+Settings live in git config: `refine.mode` (`block`, `warn` or `off`; any other value
+blocks), `refine.agents` (several values allowed), `refine.exempt` (extra globs,
+multi-valued, for example generated paths), `refine.fullThreshold` (40 changed code
+lines), `refine.deepThreshold` (300), `refine.shardLines` (800). Stamps, `REFINE_SKIP`
+commits, merge skips, blocks, warnings and passes are logged to
+`$(git rev-parse --git-path refine)/log.jsonl`; exempt-only commits and
+`refine.mode = off` leave no entry.

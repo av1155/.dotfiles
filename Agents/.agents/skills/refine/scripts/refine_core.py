@@ -5,13 +5,19 @@ import datetime as dt
 import fnmatch
 import json
 import os
+import re
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import cast
 
+if sys.version_info < (3, 11):
+    sys.exit("refine needs Python 3.11 or later as python3 on PATH")
+
 DOC_SUFFIXES = frozenset({".md", ".mdx", ".markdown", ".rst", ".adoc", ".txt"})
-DOC_PREFIXES = ("LICENSE", "CHANGELOG", "NOTICE", "AUTHORS", "COPYING")
+DOC_NAME = re.compile(r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][\w.-]*)?")
+NOT_DOCS = frozenset({"CMakeLists.txt"})
 LOCKFILES = frozenset({
     "pnpm-lock.yaml", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock",
     "bun.lock", "bun.lockb", "deno.lock", "Cargo.lock", "poetry.lock", "uv.lock",
@@ -22,8 +28,8 @@ LOCKFILES = frozenset({
 GENERATED_GLOBS = (
     "*.min.js", "*.min.css", "*.map", "*.snap", "*.pb.go", "*_pb2.py", "*_pb2_grpc.py",
     "*.g.dart", "*.freezed.dart", "*.generated.*", "*__generated__/*", "generated/*",
-    "*/generated/*", "node_modules/*", "*/node_modules/*", "vendor/*", "*/vendor/*",
-    "third_party/*", "*/third_party/*",
+    "*/generated/*", "node_modules/*", "*/node_modules/*", "vendor/*", "third_party/*",
+    "*/third_party/*",
 )  # fmt: skip
 TEST_DIRS = frozenset({
     "test", "tests", "__tests__", "spec", "specs", "e2e", "__mocks__", "fixtures",
@@ -76,6 +82,7 @@ class Entry:
     reason: str
     added: int
     deleted: int
+    origin: str | None = None
 
     @property
     def changed(self) -> int:
@@ -163,13 +170,21 @@ def _parse_raw(data: bytes) -> list[tuple[str, str, str, str]]:
     return records
 
 
-def _parse_numstat(data: bytes) -> dict[str, tuple[int, int] | None]:
+def _parse_numstat(
+    data: bytes,
+) -> tuple[dict[str, tuple[int, int] | None], dict[str, str]]:
     counts: dict[str, tuple[int, int] | None] = {}
-    for token in data.split(b"\0"):
-        if token:
-            added, deleted, path = decode(token).split("\t", 2)
-            counts[path] = None if added == "-" else (int(added), int(deleted))
-    return counts
+    origins: dict[str, str] = {}
+    tokens = iter(data.split(b"\0"))
+    for token in tokens:
+        if not token:
+            continue
+        added, deleted, path = decode(token).split("\t", 2)
+        if not path:  # a rename: its source and destination paths follow
+            origin, path = decode(next(tokens)), decode(next(tokens))
+            origins[path] = origin
+        counts[path] = None if added == "-" else (int(added), int(deleted))
+    return counts, origins
 
 
 def _linguist(paths: list[str]) -> dict[str, str]:
@@ -191,7 +206,8 @@ def _matches(path: str, globs: tuple[str, ...] | list[str]) -> bool:
 
 
 def _exempt_reason(path: str, status: str, mode: str, binary: bool) -> str | None:
-    name = PurePosixPath(path).name
+    pure = PurePosixPath(path)
+    name = pure.name
     reasons = (
         (status == "D", "deleted"),
         (status == "U", "unmerged"),
@@ -199,8 +215,8 @@ def _exempt_reason(path: str, status: str, mode: str, binary: bool) -> str | Non
         (binary, "binary"),
         (name in LOCKFILES or name.endswith(".lock"), "lockfile"),
         (_matches(path, GENERATED_GLOBS), "generated or vendored"),
-        (PurePosixPath(path).suffix.lower() in DOC_SUFFIXES, "docs"),
-        (name.upper().startswith(DOC_PREFIXES), "docs"),
+        (pure.suffix.lower() in DOC_SUFFIXES and name not in NOT_DOCS, "docs"),
+        (DOC_NAME.fullmatch(name) is not None, "docs"),
     )
     return next((reason for hit, reason in reasons if hit), None)
 
@@ -228,26 +244,41 @@ def classify(
 
 
 def staged(repo: Repo) -> list[Entry]:
-    common = ("--cached", "-z", "--no-renames", "--no-ext-diff")
-    records = _parse_raw(git("diff", *common, "--raw", "--no-abbrev", repo.base))
-    counts = _parse_numstat(git("diff", *common, "--numstat", repo.base))
+    common = ("--cached", "-z", "--no-ext-diff")
+    raw = git("diff", *common, "--no-renames", "--raw", "--no-abbrev", repo.base)
+    records = _parse_raw(raw)
+    counts, origins = _parse_numstat(git("diff", *common, "-M", "--numstat", repo.base))
     linguist = _linguist([path for status, _, _, path in records if status != "D"])
     exempt_globs = config_all("refine.exempt")
     entries: list[Entry] = []
     for status, mode, blob, path in records:
         count = counts.get(path)
         glob_hit = "refine.exempt" if _matches(path, exempt_globs) else None
-        override = linguist.get(path) or glob_hit
+        unchanged = "no line changes" if count == (0, 0) else None
+        override = linguist.get(path) or glob_hit or unchanged
         kind, reason = classify(
             path, status, mode, binary=count is None, override=override
         )
         added, deleted = count or (0, 0)
-        entries.append(Entry(path, status, blob, kind, reason, added, deleted))
+        origin = origins.get(path)
+        entries.append(Entry(path, status, blob, kind, reason, added, deleted, origin))
     return entries
 
 
 def reviewable(entries: list[Entry]) -> list[Entry]:
     return [entry for entry in entries if entry.kind != "exempt"]
+
+
+def index_blobs(paths: list[str]) -> dict[str, str]:
+    if not paths:
+        return {}
+    specs = [f":(literal){path}" for path in paths]
+    blobs: dict[str, str] = {}
+    for record in git("ls-files", "-s", "-z", "--", *specs).split(b"\0"):
+        if record:
+            meta, path = decode(record).split("\t", 1)
+            blobs[path] = meta.split()[1]
+    return blobs
 
 
 def unstaged() -> set[str]:

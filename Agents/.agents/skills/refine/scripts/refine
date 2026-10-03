@@ -4,14 +4,15 @@
 Usage: refine {scope,diff,snapshot,restore,stamp,gate} [options]
 
 Exit codes: 0 success or an allowed commit; 1 a blocked commit or a failed
-command; 2 invalid usage, or a stamp or snapshot refused because staged files
-carry unstaged edits.
+command; 2 invalid usage, or a stamp or snapshot refused (staged files with
+unstaged edits, or --mode none while files need a pass).
 
-Git config: refine.mode (off|warn|block, default block), refine.agents
-(AI_AGENT prefixes, default claude-code), refine.exempt (extra globs,
+Git config: refine.mode (off|warn|block, default block; any other value
+blocks), refine.agents (AI_AGENT prefixes, separated by spaces or commas or
+given as several values, default claude-code), refine.exempt (extra globs,
 multi-valued), refine.fullThreshold (default 40), refine.deepThreshold
 (default 300), refine.shardLines (default 800). REFINE_SKIP=1 lets one agent
-commit through and logs it.
+commit through and logs it. Needs Python 3.11 or later.
 """
 
 import argparse
@@ -94,13 +95,14 @@ def cmd_diff(args: argparse.Namespace) -> int:
     repo = core.open_repo()
     limit = args.shard_lines or core.config_int("refine.shardLines", 800)
     shards = _shards(core.reviewable(core.staged(repo)), limit)
-    flags = ("--cached", "--no-renames", "--no-ext-diff", f"-U{args.context}")
+    flags = ("--cached", "-M", "--no-ext-diff", f"-U{args.context}")
     out_dir = repo.state_dir / "diff"
     shutil.rmtree(out_dir, ignore_errors=True)
     out_dir.mkdir(parents=True)
     listing: list[dict[str, object]] = []
     for number, shard in enumerate(shards, 1):
-        specs = [f":(literal){entry.path}" for entry in shard]
+        paths = [path for entry in shard for path in (entry.origin, entry.path) if path]
+        specs = [f":(literal){path}" for path in paths]
         target = out_dir / f"shard-{number:02d}.patch"
         target.write_bytes(core.git("diff", *flags, repo.base, "--", *specs))
         listing.append(
@@ -127,20 +129,30 @@ def _refuse_partial(command: str, entries: list[core.Entry]) -> bool:
     return bool(partial)
 
 
-def cmd_snapshot(_args: argparse.Namespace) -> int:
+def cmd_snapshot(args: argparse.Namespace) -> int:
     repo = core.open_repo()
-    review = core.reviewable(core.staged(repo))
-    if _refuse_partial("snapshot", review):
-        return 2
+    if args.paths:
+        paths: list[str] = args.paths
+    else:
+        review = core.reviewable(core.staged(repo))
+        if _refuse_partial("snapshot", review):
+            return 2
+        paths = [entry.path for entry in review]
+    blobs = core.index_blobs(paths)
+    untracked = [path for path in paths if path not in blobs]
+    if untracked:
+        message = f"not tracked: {', '.join(untracked)}"
+        raise core.RefineError(message)
+    manifest = repo.state_dir / "snapshot.json"
+    manifest.unlink(missing_ok=True)
     target = repo.state_dir / "snapshot"
     shutil.rmtree(target, ignore_errors=True)
-    for entry in review:
-        destination = target / entry.path
+    for path in paths:
+        destination = target / path
         destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(repo.root / entry.path, destination)
-    paths = [entry.path for entry in review]
+        shutil.copy2(repo.root / path, destination)
     core.write_json(
-        repo.state_dir / "snapshot.json", {"created": core.now(), "files": paths}
+        manifest, {"created": core.now(), "head": repo.head, "files": blobs}
     )
     _print_json({"snapshot": str(target), "files": paths})
     return 0
@@ -155,14 +167,29 @@ def cmd_restore(args: argparse.Namespace) -> int:
         raise core.RefineError(message) from exc
     data = cast("dict[str, object]", manifest) if isinstance(manifest, dict) else {}
     files = data.get("files")
-    if not isinstance(files, list):
+    if not isinstance(files, dict):
         message = "snapshot manifest is malformed"
         raise core.RefineError(message)
-    known = {str(path) for path in cast("list[object]", files)}
+    if data.get("head") != repo.head:
+        message = (
+            f"the snapshot was taken at {data.get('head')} and HEAD is now {repo.head}; "
+            "take a new snapshot before editing"
+        )
+        raise core.RefineError(message)
+    pairs = cast("dict[object, object]", files).items()
+    known = {str(path): str(blob) for path, blob in pairs}
     requested: list[str] = args.paths or sorted(known)
     unknown = [path for path in requested if path not in known]
     if unknown:
         message = f"not in the snapshot: {', '.join(unknown)}"
+        raise core.RefineError(message)
+    current = core.index_blobs(requested)
+    restaged = [path for path in requested if current.get(path) != known[path]]
+    if restaged:
+        message = (
+            f"staged content changed after the snapshot: {', '.join(restaged)}; "
+            "restoring would leave the index and the tree out of step"
+        )
         raise core.RefineError(message)
     for path in requested:
         shutil.copy2(repo.state_dir / "snapshot" / path, repo.root / path)
@@ -174,6 +201,13 @@ def cmd_stamp(args: argparse.Namespace) -> int:
     repo = core.open_repo()
     review = core.reviewable(core.staged(repo))
     if not args.allow_unstaged and _refuse_partial("stamp", review):
+        return 2
+    if args.mode == "none" and review:
+        print(
+            f"refine stamp: --mode none is for a change with nothing to review; "
+            f"{len(review)} staged file(s) need a refine pass.",
+            file=sys.stderr,
+        )
         return 2
     previous_head, entries = core.load_stamp(repo)
     if previous_head != repo.head:
@@ -199,7 +233,8 @@ def _agent_matches() -> bool:
     agent = os.environ.get("AI_AGENT") or fallback
     if not agent:
         return False
-    allowed = re.split(r"[\s,]+", core.config("refine.agents", "claude-code"))
+    values = core.config_all("refine.agents") or ["claude-code"]
+    allowed = [prefix for value in values for prefix in re.split(r"[\s,]+", value)]
     return any(agent.startswith(prefix) for prefix in allowed if prefix)
 
 
@@ -225,7 +260,7 @@ def cmd_gate(_args: argparse.Namespace) -> int:
     mode = core.config("refine.mode", "block").lower()
     if mode == "off":
         return 0
-    blocking = mode == "block"
+    blocking = mode != "warn"
     if os.environ.get("REFINE_SKIP") == "1":
         print(
             "refine gate: REFINE_SKIP=1, committing without a refine pass.",
@@ -236,12 +271,16 @@ def cmd_gate(_args: argparse.Namespace) -> int:
         return 0
     try:
         repo = core.open_repo()
-        review = [] if core.in_progress(repo) else core.reviewable(core.staged(repo))
+        operation = core.in_progress(repo)
+        review = [] if operation else core.reviewable(core.staged(repo))
         stale = core.stale(repo, review)
     except core.RefineError as exc:
         print(f"refine gate: {exc}. Tell the user; REFINE_SKIP=1 commits without the gate.",
               file=sys.stderr)  # fmt: skip
         return int(blocking)
+    if operation:
+        core.log(repo, {"event": "gate-skip", "reason": operation})
+        return 0
     if not stale:
         if review:
             core.log(repo, {"event": "gate-pass", "files": len(review)})
@@ -267,7 +306,10 @@ def _parser() -> argparse.ArgumentParser:
     diff.add_argument("--context", type=int, default=5)
     diff.add_argument("--shard-lines", type=int, default=0)
     diff.set_defaults(func=cmd_diff)
-    snapshot = commands.add_parser("snapshot", help="copy staged files before editing")
+    snapshot = commands.add_parser(
+        "snapshot", help="copy staged files, or the given tracked files, before editing"
+    )
+    snapshot.add_argument("paths", nargs="*")
     snapshot.set_defaults(func=cmd_snapshot)
     restore = commands.add_parser(
         "restore", help="restore files from the last snapshot"
