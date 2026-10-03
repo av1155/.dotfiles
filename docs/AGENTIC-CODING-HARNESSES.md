@@ -168,6 +168,8 @@ Global git config hooks (git 2.54+, declared in `Git/.gitconfig`): `hook.refine`
 `~/.agents/skills/refine/scripts/refine gate` and `hook.build-loop-tier` runs `bl check-tier`
 on pre-commit; `hook.build-loop-ledger` runs `bl check-ledger` on pre-push. Config hooks run
 in every repository before the repo's own hookdir hook, even when `core.hooksPath` is set.
+An older git ignores them without a word, so the gates do not run under Apple's
+`/usr/bin/git` (2.50); Claude Code here resolves `git` to Homebrew's.
 They act only on agent commits (`AI_AGENT` matching `refine.agents` or `buildloop.agents`,
 default `claude-code`), and each command starts with `test -z "$AI_AGENT$CLAUDECODE" ||`,
 so a human commit or push never starts a script. The refine gate blocks
