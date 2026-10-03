@@ -48,7 +48,8 @@ def _context(line: str) -> tuple[int, bool] | None:
     return (total, False) if total else None
 
 
-def tokens(path: Path) -> tuple[int, bool]:
+def tokens(path: Path) -> tuple[int, bool] | None:
+    """Return the newest reading, or None if this session has logged no request."""
     with path.open("rb") as handle:
         size = handle.seek(0, os.SEEK_END)
         handle.seek(max(0, size - TAIL_BYTES))
@@ -58,5 +59,7 @@ def tokens(path: Path) -> tuple[int, bool]:
         found = _context(line)
         if found is not None:
             return found
+    if size <= TAIL_BYTES:
+        return None
     message = f"no main-thread request recorded near the end of {path.name}"
     raise LoopError(message)

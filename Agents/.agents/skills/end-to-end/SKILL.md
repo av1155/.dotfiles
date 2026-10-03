@@ -1,11 +1,14 @@
 ---
 name: end-to-end
-description: Claude Code only. Take a planned work item end to end. Resolves the next wave or issue, sets up the workspace, plans, implements through the build-loop skill, then ships, merges and cleans up within the session's authorization. Use when asked for the next wave, to work a progress file or a session section of a planning note, or to take a change end to end (PR, green checks, merge, housekeeping). Skip a bare "continue" or "proceed" with no work item, questions, and research.
+description: Claude Code main session only. Take a planned work item end to end. Resolves the next wave or issue, sets up the workspace, plans, implements through the build-loop skill, then ships, merges and cleans up within the session's authorization. Use when asked for the next wave, to work a progress file or a session section of a planning note, or to take a change end to end (PR, green checks, merge, housekeeping). Skip a bare "continue" or "proceed" with no work item, questions, and research.
 ---
 
 # End to end
 
 `bl` below means `~/.agents/skills/build-loop/scripts/bl`.
+
+Main session only. Subagents and workflow agents share its session ID and loop state,
+so they never run this skill or `bl`.
 
 ## After a compaction, interruption or reboot
 

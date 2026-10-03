@@ -1,12 +1,15 @@
 ---
 name: build-loop
-description: Claude Code only. Build and verify a code change to a fixed quality bar. Picks a risk tier, then implements, refines, runs the gates, drives the change for real, commits, and runs adversarial /review and /deep-audit rounds in fresh subagents until each loop reaches an ending. Use when implementing a feature, fix, wave or issue, when asked to follow or run the build loop, before opening a PR, or when the end-to-end skill hands over. Skip for questions, research and docs-only changes.
+description: Claude Code main session only. Build and verify a code change to a fixed quality bar. Picks a risk tier, then implements, refines, runs the gates, drives the change for real, commits, and runs adversarial /review and /deep-audit rounds in fresh subagents until each loop reaches an ending. Use when implementing a feature, fix, wave or issue, when asked to follow or run the build loop, before opening a PR, or when the end-to-end skill hands over. Skip for questions, research and docs-only changes.
 argument-hint: "[T0|T1|T2|T3]"
 ---
 
 # Build loop
 
 `bl` below means `~/.agents/skills/build-loop/scripts/bl`.
+
+Main session only. Subagents and workflow agents share its session ID and loop state,
+so they never run this loop or `bl`.
 
 ## After a compaction, interruption or reboot
 

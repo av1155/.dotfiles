@@ -794,9 +794,12 @@ every tier, so T1 and T2 items also get a written plan. build-loop runs the
 same check before each review round and stops for `/compact` at 60%. `bl context`
 (in `bl_context.py`) reads the latest main-thread request's token usage from the
 session transcript that `CLAUDE_CODE_SESSION_ID` names. When a compaction is logged
-after that request, it reports what the compaction carried over instead. Tune it
-with `git config --global` keys `buildloop.compactAfterPlan`,
-`buildloop.compactBeforeRound` and `buildloop.contextWindow` (default 1000000).
+after that request, it reports what the compaction carried over instead, and a
+session with no request logged yet, as at startup or after `/clear`, reads as just
+started. Subagents and workflow agents share the main session's ID, so both skills
+are main session only. Tune it with `git config --global` keys
+`buildloop.compactAfterPlan`, `buildloop.compactBeforeRound` and
+`buildloop.contextWindow` (default 1000000).
 
 Why: long planning sessions reached 30 to 50% of the window before implementation
 started, and a fixed stop also interrupted short ones that had room to spare.

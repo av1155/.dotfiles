@@ -135,6 +135,18 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(unmeasured.returncode, 1)
         self.assertIn("compacted since the last logged request", unmeasured.stderr)
 
+    def test_a_session_with_no_logged_request_just_started(self) -> None:
+        self.write(
+            {"type": "user", "message": {"content": "hi"}}, {"type": "attachment"}
+        )
+        result = self.context()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "no request logged yet, so this session just started", result.stdout
+        )
+        self.assertIn("after planning: continue", result.stdout)
+        self.assertIn("before a round: continue", result.stdout)
+
     def test_window_and_thresholds_come_from_git_config(self) -> None:
         self.write(_request(100_000))
         self.git("config", "buildloop.contextWindow", "200000")

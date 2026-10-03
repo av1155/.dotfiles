@@ -210,11 +210,18 @@ def _config_int(key: str, default: int) -> int:
 
 
 def cmd_context(_args: argparse.Namespace) -> int:
-    used, compacted = bl_context.tokens(bl_context.transcript())
+    reading = bl_context.tokens(bl_context.transcript())
     window = _config_int("buildloop.contextWindow", 1_000_000)
-    share = 100 * used // window
-    carried = " carried over by a compaction" if compacted else ""
-    print(f"context: {used:,} tokens{carried}, {share}% of a {window:,}-token window")
+    share = 0
+    if reading is None:
+        print("context: no request logged yet, so this session just started")
+    else:
+        used, compacted = reading
+        share = 100 * used // window
+        carried = " carried over by a compaction" if compacted else ""
+        print(
+            f"context: {used:,} tokens{carried}, {share}% of a {window:,}-token window"
+        )
     for label, key, default in COMPACT_POINTS:
         limit = _config_int(key, default)
         verdict = "compact" if share >= limit else "continue"
