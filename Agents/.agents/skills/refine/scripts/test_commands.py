@@ -46,6 +46,8 @@ class ScopeTests(GateTestCase):
             "CHANGELOG.ts": "code",
             "requirements.txt": "config",
             "py/requirements-dev.txt": "config",
+            "dev-requirements.txt": "config",
+            "requirements/base.txt": "config",
             "vendor/lib/x.go": "exempt",
             "web/node_modules/pkg/index.js": "exempt",
             "LICENSE-MIT": "exempt",
@@ -169,6 +171,8 @@ class SnapshotAndStampTests(GateTestCase):
         self.assertEqual(self.refine("restore").returncode, 0)
         self.assertEqual((self.repo / "app.py").read_text(), "x = 1\n")
         self.assertNotEqual(self.refine("snapshot", "missing.py").returncode, 0)
+        self.write("app.py", "x = 3\n")
+        self.assertEqual(self.refine("snapshot", "app.py").returncode, 2)
 
     def test_stamp_merges_entries_until_head_moves(self) -> None:
         self.stage("a.py", "a = 1\n")

@@ -19,7 +19,9 @@ DOC_SUFFIXES = frozenset({".md", ".mdx", ".markdown", ".rst", ".adoc", ".txt"})
 DOC_NAME = re.compile(
     r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][A-Z0-9][A-Z0-9.-]*)?"
 )
-DEPENDENCY_LIST = re.compile(r"(requirements|constraints)[\w.-]*\.txt")
+DEPENDENCY_LIST = re.compile(
+    r"(.*/)?(requirements/[^/]+|[\w.-]*(requirements|constraints)[\w.-]*)\.txt"
+)
 LOCKFILES = frozenset({
     "pnpm-lock.yaml", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock",
     "bun.lock", "bun.lockb", "deno.lock", "Cargo.lock", "poetry.lock", "uv.lock",
@@ -213,7 +215,7 @@ def _exempt_reason(path: str, status: str, mode: str, binary: bool) -> str | Non
     prose = (
         pure.suffix.lower() in DOC_SUFFIXES
         and name != "CMakeLists.txt"
-        and not DEPENDENCY_LIST.fullmatch(name)
+        and not DEPENDENCY_LIST.fullmatch(path)
     )
     reasons = (
         (status == "D", "deleted"),
@@ -245,7 +247,7 @@ def classify(
         suffix in CONFIG_SUFFIXES
         or pure.name in CONFIG_NAMES
         or pure.parts[0] == ".github"
-        or DEPENDENCY_LIST.fullmatch(pure.name)
+        or DEPENDENCY_LIST.fullmatch(path)
     ):
         return "config", "config"
     return "code", "code"

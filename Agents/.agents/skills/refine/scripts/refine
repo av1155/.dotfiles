@@ -38,9 +38,9 @@ def _changed_lines(entries: list[core.Entry], kind: str) -> int:
     return sum(entry.changed for entry in entries if entry.kind == kind)
 
 
-def _partially_staged(entries: list[core.Entry]) -> list[str]:
+def _partially_staged(paths: list[str]) -> list[str]:
     unstaged = core.unstaged()
-    return sorted(entry.path for entry in entries if entry.path in unstaged)
+    return sorted(path for path in paths if path in unstaged)
 
 
 def cmd_scope(_args: argparse.Namespace) -> int:
@@ -65,7 +65,7 @@ def cmd_scope(_args: argparse.Namespace) -> int:
         "code_lines": code_lines,
         "test_lines": _changed_lines(review, "test"),
         "config_lines": _changed_lines(review, "config"),
-        "partially_staged": _partially_staged(review),
+        "partially_staged": _partially_staged([entry.path for entry in review]),
         "stamp_fresh": not stale,
         "stale": stale,
         "files": [
@@ -117,11 +117,11 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 0
 
 
-def _refuse_partial(command: str, entries: list[core.Entry]) -> bool:
-    partial = _partially_staged(entries)
+def _refuse_partial(command: str, paths: list[str]) -> bool:
+    partial = _partially_staged(paths)
     if partial:
         print(
-            f"refine {command}: these staged files also have unstaged edits; "
+            f"refine {command}: these files have unstaged edits; "
             "stage or revert them first:",
             *(f"  {path}" for path in partial),
             sep="\n",
@@ -140,10 +140,9 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     if args.paths:
         paths: list[str] = args.paths
     else:
-        review = core.reviewable(core.staged(repo))
-        if _refuse_partial("snapshot", review):
-            return 2
-        paths = [entry.path for entry in review]
+        paths = [entry.path for entry in core.reviewable(core.staged(repo))]
+    if _refuse_partial("snapshot", paths):
+        return 2
     blobs = core.index_blobs(paths)
     untracked = [path for path in paths if path not in blobs]
     if untracked:
@@ -204,7 +203,7 @@ def cmd_restore(args: argparse.Namespace) -> int:
 def cmd_stamp(args: argparse.Namespace) -> int:
     repo = core.open_repo()
     review = core.reviewable(core.staged(repo))
-    if _refuse_partial("stamp", review):
+    if _refuse_partial("stamp", [entry.path for entry in review]):
         return 2
     if args.mode == "none" and review:
         print(
