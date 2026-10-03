@@ -50,15 +50,18 @@ class ContextTests(unittest.TestCase):
         text = "".join(f"{json.dumps(line)}\n" for line in lines)
         self.transcript.write_text(text + '{"type": "assistant", "message": {"usa')
 
-    def context(self, *point: str, **extra: str) -> subprocess.CompletedProcess[str]:
+    def bl(self, *args: str, **extra: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            [str(SCRIPT), "context", *point],
+            [str(SCRIPT), *args],
             cwd=self.repo,
             env=self.env(**({"CLAUDE_CODE_SESSION_ID": SESSION} | extra)),
             capture_output=True,
             text=True,
             check=False,
         )
+
+    def context(self, *point: str, **extra: str) -> subprocess.CompletedProcess[str]:
+        return self.bl("context", *point, **extra)
 
     def test_reads_the_latest_main_thread_request(self) -> None:
         user = {"type": "user", "message": {"content": "hi"}}
@@ -178,6 +181,22 @@ class ContextTests(unittest.TestCase):
         attended = self.context("round", CLAUDE_CODE_SESSION_ATTENDED="1")
         self.assertIn("compact: 900,000 tokens", attended.stdout)
         self.assertIn("90% of a", self.context(**unattended).stdout)
+
+    def test_an_unattended_change_continues_until_turned_off(self) -> None:
+        self.write(_request(900_000))
+        self.assertEqual(self.bl("unattended").returncode, 2)
+        self.bl("tier", "T1", "--reason", "test")
+        self.assertIn("unattended on", self.bl("unattended").stdout)
+        self.assertIn("unattended: on", self.bl("state").stdout)
+        self.assertEqual(self.context("round").stdout, "continue\n")
+        self.assertEqual(self.context("plan").stdout, "continue\n")
+        self.assertIn("90% of a", self.context().stdout)
+        self.bl("unattended", "--off")
+        self.assertIn("compact: 900,000 tokens", self.context("round").stdout)
+        self.bl("unattended")
+        self.bl("reset", "--force")
+        self.assertNotIn("unattended", self.bl("state").stdout)
+        self.assertIn("compact: 900,000 tokens", self.context("round").stdout)
 
     def test_an_unreadable_transcript_fails_loudly(self) -> None:
         reply = {"type": "assistant", "message": {"model": "claude-opus-5-5"}}

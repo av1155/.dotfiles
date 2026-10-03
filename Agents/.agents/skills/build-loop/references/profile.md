@@ -16,7 +16,8 @@ Keep the skill's step numbers as headings so citations from plans keep working.
 - Tier defaults: which work is always T3 (for example every flow wave, or anything under
   a money or compliance path).
 - Step 1, workspace: main checkout or worktree, branch naming (tracker branch names),
-  env files the agent may not copy, whether stacked PRs work with the repo's CI.
+  the env files a worktree needs (the agent copies them with the security skill's
+  `envfile`), whether stacked PRs work with the repo's CI.
 - Step 3: vendor documentation rules (which reference to fetch first, which mirrors are
   unreliable).
 - Step 4: the stop-and-ask surfaces.

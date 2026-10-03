@@ -1,7 +1,8 @@
 #!/usr/bin/env -S python3 -B
 """Per-branch state for the build-loop skill, plus its warn-only git hooks.
 
-Usage: bl {state,tier,plan,round,ending,reset,context,check-tier,check-ledger} ...
+Usage: bl {state,tier,plan,round,ending,reset,context,unattended,check-tier,
+          check-ledger} ...
 
 State and plan live in $(git rev-parse --git-common-dir)/build-loop/<branch>/, so
 they survive reboots and are shared by worktrees; reset moves a finished change's
@@ -10,7 +11,8 @@ directory into build-loop/.archive/. check-tier (pre-commit) and check-ledger
 commits, and check-ledger checks the branches being pushed. context reads the
 session's context use from its Claude Code transcript; context plan and context
 round print only that checkpoint's verdict, with numbers only at or past its limit, and
-continue in an unattended session, where nobody can run /compact. Git config:
+continue in an unattended session, where nobody can run /compact, and in a change
+marked with unattended, which lasts until unattended --off or reset. Git config:
 buildloop.checks (warn|off, default warn), buildloop.agents (AI_AGENT prefixes,
 default claude-code), buildloop.contextWindow (default 1000000),
 buildloop.compactAfterPlan and buildloop.compactBeforeRound (percent, default 25
@@ -34,11 +36,6 @@ from typing import cast
 import bl_context
 import bl_state as core
 
-COMPACT_POINTS = {
-    "plan": ("after planning", "buildloop.compactAfterPlan", 25),
-    "round": ("before a round", "buildloop.compactBeforeRound", 60),
-}
-
 DOC_SUFFIXES = (".md", ".mdx", ".markdown", ".rst", ".adoc", ".txt")
 DOC_NAME = re.compile(
     r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][A-Z0-9][A-Z0-9.-]*)?"
@@ -55,6 +52,8 @@ def _print_state(state: dict[str, object]) -> None:
     print(f"tier: {state['tier'] or 'not set'}{wave} {state['reason'] or ''}".rstrip())
     print(f"base: {state['base'] or 'not recorded'}")
     print(f"plan: {state['plan'] or 'not recorded'}")
+    if state["unattended"]:
+        print("unattended: on, so never stop to ask")
     print(f"rounds: {len(cast('list[object]', state['rounds']))}")
     for name in core.LOOPS:
         loop = core.loop(state, name)
@@ -202,37 +201,31 @@ def cmd_reset(args: argparse.Namespace) -> int:
     return 0
 
 
-def _config_int(key: str, default: int) -> int:
-    value = core.optional_git("config", "--get", key)
-    if value.isdecimal() and int(value) > 0:
-        return int(value)
-    if value:
-        print(f"bl: ignoring {key}={value}; using {default}", file=sys.stderr)
-    return default
-
-
 def cmd_context(args: argparse.Namespace) -> int:
-    if args.point and os.environ.get("CLAUDE_CODE_SESSION_ATTENDED") == "0":
+    unattended = os.environ.get("CLAUDE_CODE_SESSION_ATTENDED") == "0"
+    if args.point and not unattended:
+        state = _quiet_load(core.current_branch())
+        unattended = bool(state and state["unattended"])
+    if args.point and unattended:
         print("continue")
         return 0
-    reading = bl_context.tokens(bl_context.transcript())
-    window = _config_int("buildloop.contextWindow", 1_000_000)
-    share, detail = 0, "no request logged yet, so this session just started"
-    if reading is not None:
-        used, compacted = reading
-        share = 100 * used // window
-        carried = " carried over by a compaction" if compacted else ""
-        detail = f"{used:,} tokens{carried}, {share}% of a {window:,}-token window"
-    if args.point:
-        _label, key, default = COMPACT_POINTS[args.point]
-        limit = _config_int(key, default)
-        print(f"compact: {detail} (limit {limit}%)" if share >= limit else "continue")
-        return 0
-    print(f"context: {detail}")
-    for label, key, default in COMPACT_POINTS.values():
-        limit = _config_int(key, default)
-        verdict = "compact" if share >= limit else "continue"
-        print(f"{label}: {verdict} (compacts at {limit}%)")
+    print("\n".join(bl_context.report(args.point)))
+    return 0
+
+
+def cmd_unattended(args: argparse.Namespace) -> int:
+    state = core.load(core.current_branch())
+    if state["tier"] is None or core.finished(state):
+        message = "no change in progress here; record its tier with bl tier first"
+        return _refuse("unattended", message)
+    state["unattended"] = not args.off
+    core.save(state)
+    if args.off:
+        print(f"unattended off for {state['branch']}")
+    else:
+        print(
+            f"unattended on for {state['branch']} until bl unattended --off or bl reset"
+        )
     return 0
 
 
@@ -363,10 +356,13 @@ def _parser() -> argparse.ArgumentParser:
     context.add_argument(
         "point",
         nargs="?",
-        choices=tuple(COMPACT_POINTS),
+        choices=tuple(bl_context.COMPACT_POINTS),
         help="print only this checkpoint's verdict",
     )
     context.set_defaults(func=cmd_context)
+    unattended = commands.add_parser("unattended", help="never stop to ask")
+    unattended.add_argument("--off", action="store_true", help="the user is back")
+    unattended.set_defaults(func=cmd_unattended)
     check_tier = commands.add_parser("check-tier", help="pre-commit hook, warn only")
     check_tier.set_defaults(func=cmd_check_tier)
     check_ledger = commands.add_parser("check-ledger", help="pre-push hook, warn only")

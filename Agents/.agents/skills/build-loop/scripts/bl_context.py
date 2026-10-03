@@ -2,13 +2,18 @@
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import cast
 
-from bl_state import LoopError, as_dict
+from bl_state import LoopError, as_dict, optional_git
 
 TAIL_BYTES = 4_000_000
 USAGE_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")
+COMPACT_POINTS = {
+    "plan": ("after planning", "buildloop.compactAfterPlan", 25),
+    "round": ("before a round", "buildloop.compactBeforeRound", 60),
+}
 
 
 def transcript() -> Path:
@@ -105,3 +110,33 @@ def tokens(path: Path) -> tuple[int, bool] | None:
         f"{path.name}; check /context"
     )
     raise LoopError(message)
+
+
+def _config_int(key: str, default: int) -> int:
+    value = optional_git("config", "--get", key)
+    if value.isdecimal() and int(value) > 0:
+        return int(value)
+    if value:
+        print(f"bl: ignoring {key}={value}; using {default}", file=sys.stderr)
+    return default
+
+
+def report(point: str | None) -> list[str]:
+    reading = tokens(transcript())
+    window = _config_int("buildloop.contextWindow", 1_000_000)
+    share, detail = 0, "no request logged yet, so this session just started"
+    if reading is not None:
+        used, compacted = reading
+        share = 100 * used // window
+        carried = " carried over by a compaction" if compacted else ""
+        detail = f"{used:,} tokens{carried}, {share}% of a {window:,}-token window"
+    if point:
+        _label, key, default = COMPACT_POINTS[point]
+        limit = _config_int(key, default)
+        return [f"compact: {detail} (limit {limit}%)" if share >= limit else "continue"]
+    lines = [f"context: {detail}"]
+    for label, key, default in COMPACT_POINTS.values():
+        limit = _config_int(key, default)
+        verdict = "compact" if share >= limit else "continue"
+        lines.append(f"{label}: {verdict} (compacts at {limit}%)")
+    return lines

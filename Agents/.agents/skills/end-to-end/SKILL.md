@@ -30,8 +30,9 @@ so they never run this skill or `bl`.
 ## 2. Workspace
 
 Main checkout or worktree, as the prompt or the repo profile says. For a worktree follow
-[workspace.md](references/workspace.md). Hand the user every command you may not run
-yourself as a `!` line with absolute paths, for example copying an env file.
+[workspace.md](references/workspace.md). Copy env files with the security skill's
+`envfile`, and hand the user every other command you may not run yourself as a `!`
+line with absolute paths.
 
 ## 3. Plan, then stop only if needed
 
@@ -49,15 +50,17 @@ yourself as a `!` line with absolute paths, for example copying an env file.
       ask-first boundaries. Ask for sign-off on those points.
     - The prompt asks for a plan review.
 
-    When you stop, tell the user the plan path, then wait.
+    When you stop, tell the user the plan path, then wait. In an unattended change,
+    hold these points instead, as the build-loop skill says.
 
 4. Run build-loop steps 5 to 13 end to end, after re-reading the plan if you stopped.
 
 ## 4. Build
 
 Follow the build-loop skill at the plan's tier. Stop only on stop-and-ask surfaces, for
-commands only the user may run, and where the plan says to hand over a command. Never
-stop for a judgement that the work is good enough.
+commands only the user may run, and where the plan says to hand over a command; in an
+unattended change, hold those instead. Never stop for a judgement that the work is
+good enough.
 
 ## 5. Ship
 

@@ -89,6 +89,7 @@ def load(branch: str) -> dict[str, object]:
         "reason": "",
         "base": None,
         "docs_wave": False,
+        "unattended": False,
         "plan": None,
         "rounds": [],
     }

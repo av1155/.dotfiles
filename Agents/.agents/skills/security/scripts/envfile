@@ -1,0 +1,158 @@
+#!/usr/bin/env -S python3 -B
+"""Copy env files and list their variable names without ever printing a value.
+
+Usage: envfile copy <source> <target> [--force]
+       envfile keys <file> [--against <example>]
+
+copy writes the file with mode 600, into <target> itself or a directory, and refuses
+to replace an existing file unless --force. keys prints each variable as set or empty
+and the numbers of lines it could not parse; --against also names the variables only
+one of the two files has. Exit codes: 0 success, 1 a failed command, 2 invalid usage.
+"""
+
+import argparse
+import os
+import re
+import sys
+from pathlib import Path
+
+if sys.version_info < (3, 11):
+    sys.exit("envfile needs Python 3.11 or later as python3 on PATH")
+
+ASSIGNMENT = re.compile(r"\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_.-]*)\s*=(.*)")
+QUOTES = "\"'`"
+
+
+class EnvError(Exception):
+    pass
+
+
+def _read(path: Path) -> bytes:
+    try:
+        return path.read_bytes()
+    except OSError as error:
+        message = f"cannot read {path}: {error.strerror}"
+        raise EnvError(message) from None
+
+
+def _closing(text: str, quote: str) -> int:
+    escaped = False
+    for position, char in enumerate(text):
+        if escaped:
+            escaped = False
+        elif char == "\\":
+            escaped = True
+        elif char == quote:
+            return position
+    return -1
+
+
+def _names(data: bytes) -> tuple[dict[str, bool], list[int]]:
+    lines = data.decode("utf-8", errors="replace").splitlines()
+    names: dict[str, bool] = {}
+    skipped: list[int] = []
+    number = 0
+    while number < len(lines):
+        line = lines[number]
+        number += 1
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        match = ASSIGNMENT.fullmatch(line)
+        if match is None:
+            skipped.append(number)
+            continue
+        name, raw = match.group(1), match.group(2)
+        start = raw.strip()
+        if start and start[0] in QUOTES:
+            body = start[1:]
+            # A quoted value may span lines, and those lines are never names
+            while _closing(body, start[0]) < 0 and number < len(lines):
+                body += "\n" + lines[number]
+                number += 1
+            end = _closing(body, start[0])
+            value = body if end < 0 else body[:end]
+        else:
+            value = re.split(r"\s#", raw, maxsplit=1)[0]
+        names[name] = bool(value.strip())
+    return names, skipped
+
+
+def cmd_copy(args: argparse.Namespace) -> int:
+    source, target = Path(args.source), Path(args.target)
+    if target.is_dir():
+        target /= source.name
+    if target.exists() and target.resolve() == source.resolve():
+        message = f"{source} and {target} are the same file"
+        raise EnvError(message)
+    if target.exists() and not args.force:
+        message = f"{target} exists; pass --force to replace it"
+        raise EnvError(message)
+    data = _read(source)
+    names, _ = _names(data)
+    try:
+        descriptor = os.open(target, os.O_WRONLY | os.O_CREAT, 0o600)
+        with os.fdopen(descriptor, "wb") as handle:
+            # Tighten the mode before any byte lands, even in a file that existed
+            os.fchmod(handle.fileno(), 0o600)
+            handle.truncate()
+            handle.write(data)
+    except OSError as error:
+        message = f"cannot write {target}: {error.strerror}"
+        raise EnvError(message) from None
+    print(f"copied {source} -> {target} ({len(names)} variables)")
+    return 0
+
+
+def cmd_keys(args: argparse.Namespace) -> int:
+    path = Path(args.file)
+    names, skipped = _names(_read(path))
+    width = max((len(name) for name in names), default=0) + 2
+    for name, is_set in names.items():
+        print(f"{name.ljust(width)}{'set' if is_set else 'empty'}")
+    for number in skipped:
+        print(f"line {number} of {path.name} is not NAME=value")
+    if args.against:
+        example = Path(args.against)
+        other, _ = _names(_read(example))
+        for label, missing in (
+            (path.name, [name for name in names if name not in other]),
+            (example.name, [name for name in other if name not in names]),
+        ):
+            if missing:
+                print(f"only in {label}: {', '.join(missing)}")
+    return 0
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="envfile",
+        description="Copy env files and list their variable names, never values.",
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+    copy = commands.add_parser("copy", help="copy an env file without showing it")
+    copy.add_argument("source")
+    copy.add_argument("target", help="a file, or a directory to copy into")
+    copy.add_argument("--force", action="store_true", help="replace an existing file")
+    copy.set_defaults(func=cmd_copy)
+    keys = commands.add_parser("keys", help="list variable names as set or empty")
+    keys.add_argument("file")
+    keys.add_argument("--against", help="an example file to compare names with")
+    keys.set_defaults(func=cmd_keys)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    try:
+        return int(args.func(args))
+    except EnvError as error:
+        print(f"envfile: {error}", file=sys.stderr)
+        return 1
+    except Exception as error:  # noqa: BLE001
+        # A message could quote file content, so only the type is shown
+        print(f"envfile: unexpected {type(error).__name__}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

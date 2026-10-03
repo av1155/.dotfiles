@@ -19,6 +19,16 @@ so they never run this loop or `bl`.
    workflows lost no work.
 4. Resume at the stage `bl state` reports. Never restart a loop's counting.
 
+## Unattended changes
+
+When the user hands a change over to run unattended, usually after planning, run
+`bl unattended` once its tier is recorded. It holds until `bl unattended --off`, when
+the user is back, or `bl reset`, and `bl state` shows it after a compaction. While it
+is on, never stop to ask. Take the recommended option for an open decision and record
+it. Hold anything on a stop-and-ask surface: leave it undone, record why, and finish
+the rest. `bl context plan` and `bl context round` say `continue`. End with one report
+that lists each decision and held item.
+
 ## Tier
 
 Start a new change with `bl state`. If it shows state from an earlier change on this

@@ -14,6 +14,10 @@ For backend scale and rate limit specifics, defer to the `scalability` skill (ov
 - Never hardcode credentials, API keys, tokens, or PEM contents in source.
 - Read from environment variables loaded from a secret manager (Vercel env vars, Doppler, 1Password Connect, AWS Secrets Manager, GCP Secret Manager). `.env` files are local-only; never commit them.
 - `.env`, `.env.local`, `.env.*.local`, `secrets/`, `**/credentials*`, `**/*.pem`, `~/.ssh/`, `~/.aws/`, `~/.gnupg/`, `~/.docker/config.json`, `~/.npmrc`, `~/.config/gh/` should be in the project's deny-list and `.gitignore`.
+- Never read or print an env file's values. To copy one, for example into a worktree,
+  or to compare its variable names with `.env.example`, use
+  `~/.agents/skills/security/scripts/envfile` (see `envfile --help`). It never prints a
+  value, and it is the sanctioned route past the `Read` deny rules for env files.
 - When committing, run a secret-scanner pre-commit hook (gitleaks, trufflehog, or the platform's equivalent).
 - Rotate any credential that ever touched a commit, log file, screenshot, paste buffer, or chat — assume it is compromised.
 
