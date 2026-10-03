@@ -814,8 +814,14 @@ fixed first. The review loop ran 1 pass, clean, and ended `one clean`; the audit
 loop ran 2 passes, clean on pass 2, and ended `one clean`. Pass 1 found 1 FAIL
 (API-error entries with zero usage read as 0%), fixed with a regression test, and
 its LOW, NIT and WARN findings were fixed. Pass 2's two test-gap WARNs were fixed
-after pass 2 and had no further independent pass; its third WARN, a commit message
-stating the transcript's logging order as fact, stays in history.
+after pass 2; its third WARN, a commit message stating the transcript's logging
+order as fact, stays in history.
+
+A follow-up the same day, also at T1, made a session with no request logged yet (at
+startup, or after `/clear`, which starts a new session ID) read as just started,
+and made both skills main session only. Its one round also covered the round-2
+test fixes and the ledger above: review and audit were both clean on pass 1 and
+ended `one clean`, with two LOW findings and one WARN left for the next change.
 
 ### 2026-10-02: refine, build-loop and end-to-end skills, agent commit gates
 
