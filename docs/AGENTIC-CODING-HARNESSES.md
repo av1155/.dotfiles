@@ -805,6 +805,15 @@ To re-apply if overwritten: restore `bl`, `bl_state.py`, `bl_context.py` and
 `test_context.py` under build-loop's scripts, and the end-to-end and build-loop
 `SKILL.md` files.
 
+Verified with the build loop at T1 in dotfiles, 2026-10-03. Before round 1, a
+`/compact` showed `bl context` still reading the pre-compaction request, which was
+fixed first. The review loop ran 1 pass, clean, and ended `one clean`; the audit
+loop ran 2 passes, clean on pass 2, and ended `one clean`. Pass 1 found 1 FAIL
+(API-error entries with zero usage read as 0%), fixed with a regression test, and
+its LOW, NIT and WARN findings were fixed. Pass 2's two test-gap WARNs were fixed
+after pass 2 and had no further independent pass; its third WARN, a commit message
+stating the transcript's logging order as fact, stays in history.
+
 ### 2026-10-02: refine, build-loop and end-to-end skills, agent commit gates
 
 Added three user-authored global skills (bucket C), each with its committed
