@@ -5,14 +5,14 @@ Usage: bl {state,tier,plan,round,ending,reset,check-tier,check-ledger} [options]
 
 State and plan live in $(git rev-parse --git-common-dir)/build-loop/<branch>/, so
 they survive reboots and are shared by worktrees; reset moves a finished change's
-directory into build-loop/.archive/. check-tier (pre-commit) and
-check-ledger (pre-push) only warn and always exit 0, and check-tier stays quiet
-on docs-only commits. Git config: buildloop.checks (warn|off, default warn),
-buildloop.agents (AI_AGENT prefixes, default claude-code). Needs Python 3.11 or
-later.
+directory into build-loop/.archive/. check-tier (pre-commit) and check-ledger
+(pre-push) only warn and always exit 0; check-tier stays quiet on docs-only
+commits, and check-ledger checks the branches being pushed. Git config:
+buildloop.checks (warn|off, default warn), buildloop.agents (AI_AGENT prefixes,
+default claude-code). Needs Python 3.11 or later.
 
-Exit codes: 0 success; 1 a failed command; 2 invalid usage, or lowering a tier
-without --force.
+Exit codes: 0 success; 1 a failed command; 2 invalid usage, lowering a tier
+without --force, or retiering a finished change without --reopen.
 """
 
 import argparse
@@ -20,148 +20,17 @@ import datetime as dt
 import json
 import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 from typing import cast
-from urllib.parse import quote
 
-if sys.version_info < (3, 11):
-    sys.exit("bl needs Python 3.11 or later as python3 on PATH")
+import bl_state as core
 
-TIERS = ("T0", "T1", "T2", "T3")
-CAPS = {"T1": 2, "T2": 4, "T3": 8}
-CAP_ENDINGS = {"T1": "cap of two", "T2": "cap of four", "T3": "cap of eight"}
-TARGETS = {"T1": 1, "T2": 2, "T3": 2}
-LOOPS = ("review", "audit")
-OPEN_ENDINGS = (None, "in progress")
-COUNTED_ENDINGS = ("one clean", "two clean", *CAP_ENDINGS.values())
-MANUAL_ENDINGS = ("documentation wave", "stopped early (authorised)",
-                  "stopped early (unauthorised)", "in progress")  # fmt: skip
 DOC_SUFFIXES = (".md", ".mdx", ".markdown", ".rst", ".adoc", ".txt")
-DOC_NAME = re.compile(r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][\w.-]*)?")
-GIT_TIMEOUT_SECONDS = 30
-
-
-class LoopError(Exception):
-    pass
-
-
-def _git(*args: str) -> str:
-    try:
-        proc = subprocess.run(
-            ["git", *args],
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=GIT_TIMEOUT_SECONDS,
-        )
-    except subprocess.TimeoutExpired as exc:
-        message = f"git {' '.join(args)} timed out"
-        raise LoopError(message) from exc
-    if proc.returncode != 0:
-        message = f"git {' '.join(args)} failed: {proc.stderr.strip()}"
-        raise LoopError(message)
-    return proc.stdout.strip()
-
-
-def _optional_git(*args: str) -> str:
-    try:
-        return _git(*args)
-    except LoopError:
-        return ""
-
-
-def _branch() -> str:
-    return _optional_git("symbolic-ref", "--quiet", "--short", "HEAD") or "HEAD"
-
-
-def _state_dir() -> Path:
-    return (
-        Path(_git("rev-parse", "--path-format=absolute", "--git-common-dir"))
-        / "build-loop"
-    )
-
-
-def _branch_dir(branch: str) -> Path:
-    return _state_dir() / quote(branch, safe="")
-
-
-def _state_path(branch: str) -> Path:
-    return _branch_dir(branch) / "state.json"
-
-
-def _now() -> str:
-    return dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
-
-
-def _as_dict(value: object) -> dict[str, object]:
-    return cast("dict[str, object]", value) if isinstance(value, dict) else {}
-
-
-def _load(branch: str) -> dict[str, object]:
-    try:
-        saved = _as_dict(json.loads(_state_path(branch).read_text()))
-    except (OSError, ValueError):
-        saved = {}
-    state: dict[str, object] = {
-        "branch": branch,
-        "tier": None,
-        "reason": "",
-        "base": None,
-        "plan": None,
-        "rounds": [],
-    }
-    state.update(saved)
-    state["branch"] = branch
-    if state["tier"] not in TIERS:
-        state["tier"] = None
-    if not isinstance(state["rounds"], list):
-        state["rounds"] = []
-    loops = _as_dict(saved.get("loops"))
-    state["loops"] = {
-        name: {"passes": 0, "clean": 0, "ending": None} | _as_dict(loops.get(name))
-        for name in LOOPS
-    }
-    return state
-
-
-def _save(state: dict[str, object]) -> None:
-    path = _state_path(str(state["branch"]))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    state["updated"] = _now()
-    temp = path.with_suffix(".tmp")
-    temp.write_text(json.dumps(state, indent=2) + "\n")
-    os.replace(temp, path)
-
-
-def _loop(state: dict[str, object], name: str) -> dict[str, object]:
-    loops = cast("dict[str, dict[str, object]]", state["loops"])
-    return loops[name]
-
-
-def _int(value: object) -> int:
-    return value if isinstance(value, int) else 0
-
-
-def _open_loops(state: dict[str, object]) -> list[str]:
-    return [name for name in LOOPS if _loop(state, name)["ending"] in OPEN_ENDINGS]
-
-
-def _next_step(state: dict[str, object]) -> str:
-    tier = state["tier"]
-    if tier is None:
-        return "pick and record a tier (bl tier)"
-    if tier == "T0":
-        return "gates, then commit; no rounds at T0"
-    open_loops = _open_loops(state)
-    if open_loops:
-        first = "" if state["rounds"] else "build through step 9, then "
-        return f"{first}run a round for: {', '.join(open_loops)}"
-    return (
-        "both loops have an ending: dispositions (step 11), ledger (step 13), ship, "
-        "then bl reset"
-    )
+DOC_NAME = re.compile(
+    r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][A-Z0-9][A-Z0-9.-]*)?"
+)
+DEPENDENCY_LIST = re.compile(r"(requirements|constraints)[\w.-]*\.txt")
 
 
 def _print_state(state: dict[str, object]) -> None:
@@ -171,17 +40,17 @@ def _print_state(state: dict[str, object]) -> None:
     print(f"base: {state['base'] or 'not recorded'}")
     print(f"plan: {state['plan'] or 'not recorded'}")
     print(f"rounds: {len(cast('list[object]', state['rounds']))}")
-    for name in LOOPS:
-        loop = _loop(state, name)
+    for name in core.LOOPS:
+        loop = core.loop(state, name)
         ending = loop["ending"] or "open"
         print(
             f"{name}: {loop['passes']} passes, {loop['clean']} clean, ending: {ending}"
         )
-    print(f"next: {_next_step(state)}")
+    print(f"next: {core.next_step(state)}")
 
 
 def cmd_state(args: argparse.Namespace) -> int:
-    state = _load(_branch())
+    state = core.load(core.current_branch())
     if args.json:
         print(json.dumps(state, indent=2))
     else:
@@ -189,96 +58,91 @@ def cmd_state(args: argparse.Namespace) -> int:
     return 0
 
 
-def _settle(state: dict[str, object], name: str) -> None:
-    tier, loop = state["tier"], _loop(state, name)
-    if not isinstance(tier, str) or tier not in CAPS:
-        return
-    if loop["ending"] not in (*OPEN_ENDINGS, *COUNTED_ENDINGS):
-        return
-    if _int(loop["clean"]) >= TARGETS[tier]:
-        loop["ending"] = "one clean" if TARGETS[tier] == 1 else "two clean"
-    elif _int(loop["passes"]) >= CAPS[tier]:
-        loop["ending"] = CAP_ENDINGS[tier]
-    elif loop["ending"] in COUNTED_ENDINGS:
-        loop["ending"] = None
+def _refuse(message: str) -> int:
+    print(f"bl tier: {message}", file=sys.stderr)
+    return 2
 
 
 def cmd_tier(args: argparse.Namespace) -> int:
-    state = _load(_branch())
+    state = core.load(core.current_branch())
     current = state["tier"]
-    if (
-        isinstance(current, str)
-        and TIERS.index(args.tier) < TIERS.index(current)
-        and not args.force
-    ):
-        print(
-            f"bl tier: {current} is already recorded. Lower it only when the user says "
-            "so, then pass --force.",
-            file=sys.stderr,
+    if core.finished(state) and not args.reopen:
+        return _refuse(
+            "the last change on this branch has rounds and both loop endings. Run bl "
+            "reset to start a new change, or pass --reopen to retier this one."
         )
-        return 2
+    tiers = core.TIERS
+    lowering = isinstance(current, str) and tiers.index(args.tier) < tiers.index(
+        current
+    )
+    if lowering and not args.force:
+        return _refuse(
+            f"{current} is already recorded. Lower it only when the user says so, "
+            "then pass --force."
+        )
+    if args.base:
+        base = core.optional_git(
+            "rev-parse", "--verify", "--quiet", f"{args.base}^{{commit}}"
+        )
+        if not base:
+            message = f"--base {args.base} is not a commit"
+            raise core.LoopError(message)
+        state["base"] = base
+    elif not state["base"]:
+        state["base"] = core.head()
     state["tier"], state["reason"] = args.tier, args.reason
-    if not state["base"]:
-        state["base"] = (
-            _optional_git("rev-parse", "--verify", "--quiet", "HEAD") or None
-        )
-    for name in LOOPS:
-        _settle(state, name)
-    _save(state)
+    for name in core.LOOPS:
+        core.settle(state, name)
+    core.save(state)
     print(f"tier {args.tier} recorded for {state['branch']}")
     return 0
 
 
 def cmd_plan(args: argparse.Namespace) -> int:
-    branch = _branch()
+    branch = core.current_branch()
     if args.path or not args.file:
-        target = _branch_dir(branch) / "plan.md"
+        target = core.branch_dir(branch) / "plan.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         print(target)
         return 0
-    state = _load(branch)
+    state = core.load(branch)
     state["plan"] = str(Path(args.file).expanduser().resolve())
-    _save(state)
+    core.save(state)
     print(f"plan recorded: {state['plan']}")
     return 0
 
 
-def _apply_result(state: dict[str, object], name: str, result: str) -> None:
-    loop = _loop(state, name)
-    if result == "done" or loop["ending"] not in OPEN_ENDINGS:
-        return
-    loop["passes"] = _int(loop["passes"]) + 1
-    if result == "clean":
-        loop["clean"] = _int(loop["clean"]) + 1
-    _settle(state, name)
-
-
 def cmd_round(args: argparse.Namespace) -> int:
-    state = _load(_branch())
-    if state["tier"] not in CAPS:
+    state = core.load(core.current_branch())
+    if state["tier"] not in core.CAPS:
         message = "record a tier of T1 or higher before counting rounds"
-        raise LoopError(message)
+        raise core.LoopError(message)
     cast("list[object]", state["rounds"]).append(
-        {"at": _now(), "review": args.review, "audit": args.audit, "note": args.note}
+        {
+            "at": core.now(),
+            "review": args.review,
+            "audit": args.audit,
+            "note": args.note,
+        }
     )
-    _apply_result(state, "review", args.review)
-    _apply_result(state, "audit", args.audit)
-    _save(state)
+    core.record(state, "review", args.review)
+    core.record(state, "audit", args.audit)
+    core.save(state)
     _print_state(state)
     return 0
 
 
 def cmd_ending(args: argparse.Namespace) -> int:
-    state = _load(_branch())
-    _loop(state, args.loop)["ending"] = args.token
-    _save(state)
+    state = core.load(core.current_branch())
+    core.loop(state, args.loop)["ending"] = args.token
+    core.save(state)
     print(f"{args.loop} ending: {args.token}")
     return 0
 
 
 def cmd_reset(_args: argparse.Namespace) -> int:
-    branch = _branch()
-    current = _branch_dir(branch)
+    branch = core.current_branch()
+    current = core.branch_dir(branch)
     if not current.exists():
         print(f"no build-loop state for {branch}")
         return 0
@@ -294,56 +158,80 @@ def cmd_reset(_args: argparse.Namespace) -> int:
 def _checks_active() -> bool:
     fallback = "claude-code" if os.environ.get("CLAUDECODE") == "1" else ""
     agent = os.environ.get("AI_AGENT") or fallback
-    if not agent or _optional_git("config", "--get", "buildloop.checks") == "off":
+    if not agent or core.optional_git("config", "--get", "buildloop.checks") == "off":
         return False
-    allowed = _optional_git("config", "--get-all", "buildloop.agents") or "claude-code"
-    return any(agent.startswith(p) for p in re.split(r"[\s,]+", allowed) if p)
+    allowed = core.optional_git("config", "--get-all", "buildloop.agents")
+    prefixes = re.split(r"[\s,]+", allowed or "claude-code")
+    return any(agent.startswith(prefix) for prefix in prefixes if prefix)
 
 
-def _hook_state() -> dict[str, object] | None:
-    if not _checks_active():
-        return None
+def _quiet_load(branch: str) -> dict[str, object] | None:
     try:
-        return _load(_branch())
-    except LoopError:
+        return core.load(branch)
+    except core.LoopError:
         return None
 
 
 def _is_doc(path: str) -> bool:
     name = path.rsplit("/", 1)[-1]
-    by_suffix = name.lower().endswith(DOC_SUFFIXES) and name != "CMakeLists.txt"
-    return by_suffix or DOC_NAME.fullmatch(name) is not None
+    prose = (
+        name.lower().endswith(DOC_SUFFIXES)
+        and name != "CMakeLists.txt"
+        and not DEPENDENCY_LIST.fullmatch(name)
+    )
+    return prose or DOC_NAME.fullmatch(name) is not None
 
 
 def _docs_only() -> bool:
-    staged = _optional_git("diff", "--cached", "--name-only", "-z").split("\0")
+    staged = core.optional_git("diff", "--cached", "--name-only", "-z").split("\0")
     paths = [path for path in staged if path]
     return bool(paths) and all(_is_doc(path) for path in paths)
 
 
 def cmd_check_tier(_args: argparse.Namespace) -> int:
-    state = _hook_state()
-    if state is not None and state["tier"] is None and not _docs_only():
-        print(
-            f"build-loop (warn): no tier recorded for {state['branch']}. Pick one with the "
-            "build-loop skill and record it: bl tier <T0|T1|T2|T3> --reason '<why>'.",
-            file=sys.stderr,
-        )
+    if not _checks_active():
+        return 0
+    state = _quiet_load(core.current_branch())
+    if state is None or state["tier"] is not None or _docs_only():
+        return 0
+    head = core.head()
+    base = f" --base {head}" if head else ""
+    print(
+        f"build-loop (warn): no tier recorded for {state['branch']}. Pick one with the "
+        f"build-loop skill and record it: bl tier <T0|T1|T2|T3> --reason '<why>'{base}.",
+        file=sys.stderr,
+    )
     return 0
 
 
+def _pushed_branches() -> list[str]:
+    if sys.stdin.isatty():
+        return [core.current_branch()]
+    branches: list[str] = []
+    for line in sys.stdin.read().splitlines():
+        ref = line.split(" ", 1)[0]
+        if ref == "HEAD":
+            branches.append(core.current_branch())
+        elif ref.startswith("refs/heads/"):
+            branches.append(ref.removeprefix("refs/heads/"))
+    return branches
+
+
 def cmd_check_ledger(_args: argparse.Namespace) -> int:
-    state = _hook_state()
-    if state is None or state["tier"] not in CAPS:
+    if not _checks_active():
         return 0
-    open_loops = _open_loops(state)
-    if open_loops:
-        print(
-            f"build-loop (warn): pushing {state['branch']} before these loops have an "
-            f"ending: {', '.join(open_loops)}. Push once, after both loops end, unless "
-            "the user asked for an early push.",
-            file=sys.stderr,
-        )
+    for branch in _pushed_branches():
+        state = _quiet_load(branch)
+        if state is None or state["tier"] not in core.CAPS:
+            continue
+        pending = core.open_loops(state)
+        if pending:
+            print(
+                f"build-loop (warn): pushing {branch} before these loops have an "
+                f"ending: {', '.join(pending)}. Push once, after both loops end, "
+                "unless the user asked for an early push.",
+                file=sys.stderr,
+            )
     return 0
 
 
@@ -356,10 +244,16 @@ def _parser() -> argparse.ArgumentParser:
     state.add_argument("--json", action="store_true")
     state.set_defaults(func=cmd_state)
     tier = commands.add_parser("tier", help="record the risk tier")
-    tier.add_argument("tier", choices=TIERS)
+    tier.add_argument("tier", choices=core.TIERS)
     tier.add_argument("--reason", required=True)
     tier.add_argument(
+        "--base", help="the commit before the change, when tiering after committing"
+    )
+    tier.add_argument(
         "--force", action="store_true", help="lower a tier the user approved"
+    )
+    tier.add_argument(
+        "--reopen", action="store_true", help="retier a change whose loops ended"
     )
     tier.set_defaults(func=cmd_tier)
     plan = commands.add_parser("plan", help="print the plan path, or record one")
@@ -367,13 +261,13 @@ def _parser() -> argparse.ArgumentParser:
     plan.add_argument("--path", action="store_true")
     plan.set_defaults(func=cmd_plan)
     rnd = commands.add_parser("round", help="record one round's results")
-    for loop in LOOPS:
+    for loop in core.LOOPS:
         rnd.add_argument(f"--{loop}", choices=("clean", "dirty", "done"), required=True)
     rnd.add_argument("--note", default="")
     rnd.set_defaults(func=cmd_round)
     ending = commands.add_parser("ending", help="set a loop's ending token")
-    ending.add_argument("--loop", choices=LOOPS, required=True)
-    ending.add_argument("--token", choices=MANUAL_ENDINGS, required=True)
+    ending.add_argument("--loop", choices=core.LOOPS, required=True)
+    ending.add_argument("--token", choices=core.MANUAL_ENDINGS, required=True)
     ending.set_defaults(func=cmd_ending)
     reset = commands.add_parser("reset", help="archive this branch's state and plan")
     reset.set_defaults(func=cmd_reset)
@@ -389,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         return int(args.func(args))
-    except LoopError as exc:
+    except core.LoopError as exc:
         print(f"bl {args.command}: {exc}", file=sys.stderr)
         return 1
 

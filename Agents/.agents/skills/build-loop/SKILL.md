@@ -20,17 +20,20 @@ argument-hint: "[T0|T1|T2|T3]"
 
 Start a new change with `bl state`. If it shows state from an earlier change on this
 branch, which long-lived branches such as main keep, `bl reset` archives it; a change
-you are resuming keeps its state. Then pick the tier before writing code and record it:
-`bl tier <T> --reason "<why>"`. Raise it the moment new risk appears, which reopens any
+you are resuming keeps its state. `bl tier` refuses a change whose loops have both
+ended until you reset, or pass `--reopen` to retier that same change. Then pick the
+tier before writing code and record it: `bl tier <T> --reason "<why>"`, which also
+records the change's base commit. If you committed first, pass `--base` with the commit
+the hook warning names. Raise the tier the moment new risk appears, which reopens any
 loop the lower tier's target or cap had closed; lower it only when the user says so. The
 user's prompt or the repo profile can set it.
 
-| Tier | When                                                                                                                                                                          | Loop                                                                                      |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| T0   | Docs, comments, config with no behavior change, generated or vendored refreshes                                                                                               | The gates for what changed, and a refine stamp for any code or config file. No rounds.    |
-| T1   | A small single-concern fix, roughly under 150 changed code lines, touching no risk surface                                                                                    | Steps 2 to 13, `light` refine. Rounds until each loop has one clean pass, cap 2 per loop. |
-| T2   | A single-issue feature or fix touching no risk surface                                                                                                                        | Steps 1 to 13. Two clean passes per loop, cap 4.                                          |
-| T3   | Money, auth or sessions, PII or secrets, schema or migrations, data deletion, vendor contracts, security-sensitive code, several issues in one change, or the profile says so | Steps 1 to 13 with stop-and-ask surfaces. Two clean passes per loop, cap 8.               |
+| Tier | When                                                                                                                                                                          | Loop                                                                                                    |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| T0   | Docs, comments, config with no behavior change, generated or vendored refreshes                                                                                               | The gates for what changed, and a refine stamp for any code or config file. No rounds. Then `bl reset`. |
+| T1   | A small single-concern fix, roughly under 150 changed code lines, touching no risk surface                                                                                    | Steps 2 to 13, `light` refine. Rounds until each loop has one clean pass, cap 2 per loop.               |
+| T2   | A single-issue feature or fix touching no risk surface                                                                                                                        | Steps 1 to 13. Two clean passes per loop, cap 4.                                                        |
+| T3   | Money, auth or sessions, PII or secrets, schema or migrations, data deletion, vendor contracts, security-sensitive code, several issues in one change, or the profile says so | Steps 1 to 13 with stop-and-ask surfaces. Two clean passes per loop, cap 8.                             |
 
 Dependency or lockfile changes are never below T1, and need the user's yes first.
 

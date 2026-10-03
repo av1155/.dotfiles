@@ -137,7 +137,8 @@ class TierAndPlanTests(BlTestCase):
         self.assertEqual((archive / "plan.md").read_text(), "old plan\n")
         self.assertFalse(plan.exists())
         self.assertIsNone(self.state()["tier"])
-        self.assertEqual(self.loop("review"), {"passes": 0, "clean": 0, "ending": None})
+        fresh = {"passes": 0, "clean": 0, "ending": None, "last": None}
+        self.assertEqual(self.loop("review"), fresh)
         self.assertIn("no build-loop state for main", self.bl("reset").stdout)
 
     def test_reset_leaves_other_branches_alone(self) -> None:
@@ -170,9 +171,13 @@ class RoundTests(BlTestCase):
         self.bl("tier", "T2", "--reason", "feature")
         self.rounds(("clean", "dirty"), ("dirty", "clean"), ("clean", "dirty"))
         self.assertEqual(
-            self.loop("review"), {"passes": 3, "clean": 2, "ending": "two clean"}
+            self.loop("review"),
+            {"passes": 3, "clean": 2, "ending": "two clean", "last": "clean"},
         )
-        self.assertEqual(self.loop("audit"), {"passes": 3, "clean": 1, "ending": None})
+        self.assertEqual(
+            self.loop("audit"),
+            {"passes": 3, "clean": 1, "ending": None, "last": "dirty"},
+        )
         self.rounds(("done", "clean"))
         self.assertEqual(self.loop("review")["passes"], 3)
         self.assertEqual(self.loop("audit")["ending"], "two clean")
@@ -194,13 +199,32 @@ class RoundTests(BlTestCase):
     def test_tier_change_rechecks_counted_endings(self) -> None:
         self.bl("tier", "T1", "--reason", "small fix")
         self.rounds(("clean", "dirty"), ("done", "dirty"))
-        self.bl("tier", "T3", "--reason", "touches auth")
-        self.assertEqual(self.loop("review"), {"passes": 1, "clean": 1, "ending": None})
-        self.assertEqual(self.loop("audit"), {"passes": 2, "clean": 0, "ending": None})
+        self.assertEqual(self.bl("tier", "T3", "--reason", "new change").returncode, 2)
+        self.bl("tier", "T3", "--reason", "touches auth", "--reopen")
+        review = {"passes": 1, "clean": 1, "ending": None, "last": "clean"}
+        self.assertEqual(self.loop("review"), review)
+        audit = {"passes": 2, "clean": 0, "ending": None, "last": "dirty"}
+        self.assertEqual(self.loop("audit"), audit)
         self.bl("ending", "--loop", "audit", "--token", "stopped early (authorised)")
         self.bl("tier", "T1", "--reason", "user said", "--force")
         self.assertEqual(self.loop("review")["ending"], "one clean")
         self.assertEqual(self.loop("audit")["ending"], "stopped early (authorised)")
+
+    def test_a_reopened_loop_needs_a_clean_last_pass(self) -> None:
+        self.bl("tier", "T2", "--reason", "feature")
+        self.rounds(("clean", "clean"), ("clean", "clean"))
+        self.bl("ending", "--loop", "review", "--token", "in progress")
+        self.rounds(("dirty", "done"))
+        review = {"passes": 3, "clean": 2, "ending": "in progress", "last": "dirty"}
+        self.assertEqual(self.loop("review"), review)
+        self.rounds(("clean", "done"))
+        self.assertEqual(self.loop("review")["ending"], "two clean")
+
+    def test_retiering_ignores_passes_an_ended_loop_never_counted(self) -> None:
+        self.bl("tier", "T1", "--reason", "fix")
+        self.rounds(("clean", "dirty"), ("dirty", "dirty"))
+        self.bl("tier", "T1", "--reason", "same change", "--reopen")
+        self.assertEqual(self.loop("review")["ending"], "one clean")
 
     def test_manual_ending(self) -> None:
         self.bl("tier", "T2", "--reason", "feature")
@@ -233,9 +257,28 @@ class HookTests(BlTestCase):
         self.assertNotIn("no tier recorded", self.commit(AGENT).stderr)
 
     def test_check_tier_is_quiet_on_docs_only_commits(self) -> None:
-        for path in ("NOTES.md", "LICENSE"):
+        for path in ("NOTES.md", "LICENSE", "LICENSE-2.0.txt", "CHANGELOG.md"):
             self.assertNotIn("no tier recorded", self.commit(AGENT, path).stderr)
-        self.assertIn("no tier recorded", self.commit(AGENT, "CMakeLists.txt").stderr)
+        for path in ("CMakeLists.txt", "requirements.txt", "LICENSE_KEY.ts"):
+            self.assertIn("no tier recorded", self.commit(AGENT, path).stderr)
+
+    def test_late_tier_takes_the_base_the_warning_names(self) -> None:
+        head = self.git("rev-parse", "HEAD").stdout.strip()
+        self.assertIn(f"--base {head}", self.commit(AGENT).stderr)
+        self.bl("tier", "T1", "--reason", "fix", "--base", head)
+        self.assertEqual(self.state()["base"], head)
+        self.assertEqual(
+            self.bl("tier", "T1", "--reason", "x", "--base", "nope").returncode, 1
+        )
+
+    def test_check_ledger_checks_the_branches_being_pushed(self) -> None:
+        self.git("checkout", "-q", "-b", "open-y", agent=None)
+        self.bl("tier", "T2", "--reason", "feature")
+        self.git("checkout", "-q", "main", agent=None)
+        pushed = self.git("push", "-q", "origin", "open-y").stderr
+        self.assertIn("pushing open-y before these loops have an ending", pushed)
+        self.git("tag", "v1", agent=None)
+        self.assertNotIn("build-loop", self.git("push", "-q", "origin", "v1").stderr)
 
     def test_hooks_honor_every_configured_agent_prefix(self) -> None:
         self.assertNotIn("no tier recorded", self.commit("codex_1").stderr)
@@ -261,7 +304,8 @@ class HookTests(BlTestCase):
         result = self.git("push", "-q", "origin", "main")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("before these loops have an ending: review, audit", result.stderr)
-        self.assertEqual(self.loop("review"), {"passes": 0, "clean": 1, "ending": None})
+        partial_loop = {"passes": 0, "clean": 1, "ending": None, "last": None}
+        self.assertEqual(self.loop("review"), partial_loop)
         state_file.write_text('{"tier": "T9"}')
         self.assertIn("tier: not set", self.bl("state").stdout)
 

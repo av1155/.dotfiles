@@ -6,9 +6,11 @@ audit must mutate something.
 
 Fill every `<placeholder>` from the repo profile before sending, including `<PORT>`, a
 free port that is never a default another session may hold, and `<range>`, the change's
-commits as `<base>..<the commit under review>` with the base from `bl state` (after a
-rebase, the merge-base with the default branch). `<n>` is the pass number. A prompt sent
-with a placeholder still in it has not been read.
+commits as `<base>..<the commit under review>`. On the default branch the base is the one
+`bl state` prints. On any other branch it is
+`git merge-base origin/<default branch> <the commit under review>`, so a merge or rebase
+of the default branch never pulls a peer's commits into the review. `<n>` is the pass
+number. A prompt sent with a placeholder still in it has not been read.
 
 ## Prompt 1, fix (implementer)
 
