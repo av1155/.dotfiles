@@ -18,10 +18,12 @@ argument-hint: "[T0|T1|T2|T3]"
 
 ## Tier
 
-Pick the tier before writing code and record it: `bl tier <T> --reason "<why>"`. Raise it
-the moment new risk appears, which reopens any loop the lower tier's target or cap had
-closed; lower it only when the user says so. The user's prompt or the repo profile can
-set it.
+Start a new change with `bl state`. A tier, plan or rounds already on file belong to an
+earlier change on this branch, which long-lived branches such as main keep: `bl reset`
+archives them. Then pick the tier before writing code and record it:
+`bl tier <T> --reason "<why>"`. Raise it the moment new risk appears, which reopens any
+loop the lower tier's target or cap had closed; lower it only when the user says so. The
+user's prompt or the repo profile can set it.
 
 | Tier | When                                                                                                                                                                          | Loop                                                                                      |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -71,7 +73,7 @@ Step numbers match the repo profiles, so a profile's "step 7" is this step 7.
     have an ending and the local gates are green.
 13. Ledger: record passes run, clean passes banked, each loop's ending token, findings
     above the threshold and the last pass's dispositions where the profile says,
-    usually the progress file, before the push.
+    usually the progress file, before the push. Then `bl reset`.
 
 ## Rounds
 
@@ -124,5 +126,6 @@ Binding. Detail and the commands are in [safety.md](references/safety.md).
 
 `bl` keeps per-branch state under `$(git rev-parse --git-common-dir)/build-loop/`, which
 survives reboots and is shared by worktrees: `bl tier`, `bl plan` (`bl plan --path`
-prints where to write the plan), `bl round`, `bl ending`, `bl state`. Git hooks warn on
-an agent commit with no tier and on an agent push before both loops have an ending.
+prints where to write the plan), `bl round`, `bl ending`, `bl state`, and `bl reset`,
+which moves a finished change's state and plan to `build-loop/.archive/`. Git hooks warn
+on an agent commit with no tier and on an agent push before both loops have an ending.

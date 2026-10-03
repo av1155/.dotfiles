@@ -1,10 +1,11 @@
 #!/usr/bin/env -S python3 -B
 """Per-branch state for the build-loop skill, plus its warn-only git hooks.
 
-Usage: bl {state,tier,plan,round,ending,check-tier,check-ledger} [options]
+Usage: bl {state,tier,plan,round,ending,reset,check-tier,check-ledger} [options]
 
-State lives in $(git rev-parse --git-common-dir)/build-loop/<branch>.json, so it
-survives reboots and is shared by worktrees. check-tier (pre-commit) and
+State and plan live in $(git rev-parse --git-common-dir)/build-loop/<branch>/, so
+they survive reboots and are shared by worktrees; reset moves a finished change's
+directory into build-loop/.archive/. check-tier (pre-commit) and
 check-ledger (pre-push) only warn and always exit 0. Git config:
 buildloop.checks (warn|off, default warn), buildloop.agents (AI_AGENT
 prefixes, default claude-code).
@@ -72,8 +73,12 @@ def _state_dir() -> Path:
     )
 
 
+def _branch_dir(branch: str) -> Path:
+    return _state_dir() / re.sub(r"[^A-Za-z0-9._-]", "__", branch)
+
+
 def _state_path(branch: str) -> Path:
-    return _state_dir() / f"{re.sub(r'[^A-Za-z0-9._-]', '__', branch)}.json"
+    return _branch_dir(branch) / "state.json"
 
 
 def _now() -> str:
@@ -141,11 +146,15 @@ def _next_step(state: dict[str, object]) -> str:
     open_loops = _open_loops(state)
     if open_loops:
         return f"run a round for: {', '.join(open_loops)}"
-    return "both loops have an ending: dispositions (step 11), ledger (step 13), ship"
+    return (
+        "both loops have an ending: dispositions (step 11), ledger (step 13), ship, "
+        "then bl reset"
+    )
 
 
 def _print_state(state: dict[str, object]) -> None:
     print(f"branch: {state['branch']}")
+    print(f"updated: {state.get('updated') or 'never'}")
     print(f"tier: {state['tier'] or 'not set'} {state['reason'] or ''}".rstrip())
     print(f"plan: {state['plan'] or 'not recorded'}")
     print(f"rounds: {len(cast('list[object]', state['rounds']))}")
@@ -206,7 +215,7 @@ def cmd_tier(args: argparse.Namespace) -> int:
 def cmd_plan(args: argparse.Namespace) -> int:
     branch = _branch()
     if args.path or not args.file:
-        target = _state_path(branch).with_suffix("") / "plan.md"
+        target = _branch_dir(branch) / "plan.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         print(target)
         return 0
@@ -247,6 +256,21 @@ def cmd_ending(args: argparse.Namespace) -> int:
     _loop(state, args.loop)["ending"] = args.token
     _save(state)
     print(f"{args.loop} ending: {args.token}")
+    return 0
+
+
+def cmd_reset(_args: argparse.Namespace) -> int:
+    branch = _branch()
+    current = _branch_dir(branch)
+    if not current.exists():
+        print(f"no build-loop state for {branch}")
+        return 0
+    stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    # Git ref components never start with a dot, so no branch directory collides.
+    archive = current.parent / ".archive" / f"{current.name}-{stamp}"
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    current.rename(archive)
+    print(f"archived the build-loop state for {branch} to {archive}")
     return 0
 
 
@@ -322,6 +346,8 @@ def _parser() -> argparse.ArgumentParser:
     ending.add_argument("--loop", choices=LOOPS, required=True)
     ending.add_argument("--token", required=True)
     ending.set_defaults(func=cmd_ending)
+    reset = commands.add_parser("reset", help="archive this branch's state and plan")
+    reset.set_defaults(func=cmd_reset)
     check_tier = commands.add_parser("check-tier", help="pre-commit hook, warn only")
     check_tier.set_defaults(func=cmd_check_tier)
     check_ledger = commands.add_parser("check-ledger", help="pre-push hook, warn only")

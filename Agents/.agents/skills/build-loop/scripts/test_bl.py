@@ -92,7 +92,10 @@ class TierAndPlanTests(BlTestCase):
     def test_fresh_branch_reports_no_tier(self) -> None:
         result = self.bl("state")
         self.assertIn("tier: not set", result.stdout)
+        self.assertIn("updated: never", result.stdout)
         self.assertIn("next: pick and record a tier", result.stdout)
+        self.bl("tier", "T1", "--reason", "fix")
+        self.assertRegex(self.bl("state").stdout, r"updated: \d{4}-\d\d-\d\dT")
 
     def test_tier_can_rise_but_lowers_only_with_force(self) -> None:
         self.assertEqual(self.bl("tier", "T2", "--reason", "feature").returncode, 0)
@@ -116,6 +119,31 @@ class TierAndPlanTests(BlTestCase):
         path.write_text("plan\n")
         self.assertEqual(self.bl("plan", str(path)).returncode, 0)
         self.assertEqual(self.state()["plan"], str(path.resolve()))
+
+    def test_reset_archives_the_state_and_plan(self) -> None:
+        self.bl("tier", "T1", "--reason", "fix")
+        self.rounds(("clean", "clean"))
+        plan = Path(self.bl("plan", "--path").stdout.strip())
+        plan.write_text("old plan\n")
+        self.assertIn("ship, then bl reset", self.bl("state").stdout)
+        self.assertEqual(self.bl("reset").returncode, 0)
+        archive_root = self.repo / ".git" / "build-loop" / ".archive"
+        [archive] = list(archive_root.iterdir())
+        self.assertTrue((archive / "state.json").is_file())
+        self.assertEqual((archive / "plan.md").read_text(), "old plan\n")
+        self.assertFalse(plan.exists())
+        self.assertIsNone(self.state()["tier"])
+        self.assertEqual(self.loop("review"), {"passes": 0, "clean": 0, "ending": None})
+        self.assertIn("no build-loop state for main", self.bl("reset").stdout)
+
+    def test_reset_leaves_other_branches_alone(self) -> None:
+        self.git("checkout", "-q", "-b", "x", agent=None)
+        self.bl("tier", "T2", "--reason", "feature")
+        self.git("checkout", "-q", "-b", "x.json", agent=None)
+        self.bl("plan", "--path")
+        self.bl("reset")
+        self.git("checkout", "-q", "x", agent=None)
+        self.assertEqual(self.state()["tier"], "T2")
 
     def test_rounds_need_a_tier(self) -> None:
         self.assertEqual(
@@ -199,8 +227,8 @@ class HookTests(BlTestCase):
         self.assertNotIn("build-loop", self.git("push", "-q", "origin", "main").stderr)
 
     def test_malformed_state_never_breaks_the_hooks(self) -> None:
-        state_file = self.repo / ".git" / "build-loop" / "main.json"
-        state_file.parent.mkdir()
+        state_file = self.repo / ".git" / "build-loop" / "main" / "state.json"
+        state_file.parent.mkdir(parents=True)
         partial = {"tier": "T2", "rounds": "x", "loops": {"review": {"clean": 1}}}
         state_file.write_text(json.dumps(partial))
         result = self.git("push", "-q", "origin", "main")
