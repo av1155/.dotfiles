@@ -828,6 +828,14 @@ and made both skills main session only. Its one round also covered the round-2
 test fixes and the ledger above: review and audit were both clean on pass 1 and
 ended `one clean`, with two LOW findings and one WARN left for the next change.
 
+A second follow-up, also at T1, fixed those three, hid the figures below each
+checkpoint's limit, made unattended sessions always continue, and made any
+transcript bl cannot read fail loudly. The review loop was clean on pass 1 and
+ended `one clean`; the audit loop ran 2 passes, clean on pass 2, and ended
+`one clean`. Pass 1 found 1 FAIL (an unreadable transcript could pass as a fresh
+session), fixed with regression tests. Pass 2's three WARNs and two of its
+residual notes were fixed after pass 2 and had no further independent pass.
+
 ### 2026-10-02: refine, build-loop and end-to-end skills, agent commit gates
 
 Added three user-authored global skills (bucket C), each with its committed
