@@ -798,8 +798,9 @@ after that request, it reports what the compaction carried over instead, and a
 session with no request logged yet, as at startup or after `/clear`, reads as just
 started. Subagents and workflow agents share the main session's ID, so both skills
 are main session only. The agent runs `bl context plan` or `bl context round`,
-which print only `continue` below the limit, and always in an unattended session
-(`claude -p` or the SDK), where nobody can run `/compact`. Tune it with
+which print only `continue` below the limit, and always in a session Claude Code
+marks unattended with `CLAUDE_CODE_SESSION_ATTENDED=0`, such as `claude -p` or the
+SDK, where nobody is there to run `/compact`. Tune it with
 `git config --global` keys `buildloop.compactAfterPlan`,
 `buildloop.compactBeforeRound` and `buildloop.contextWindow` (default 1000000).
 

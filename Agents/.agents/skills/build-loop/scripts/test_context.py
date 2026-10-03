@@ -112,7 +112,7 @@ class ContextTests(unittest.TestCase):
         self.transcript.write_text(f"{old}{run}\n{recent}", encoding="utf-8")
         self.assertIn("context: 300,000 tokens", self.context().stdout)
         self.transcript.write_text(f"{old}{run}\n", encoding="utf-8")
-        self.assertIn("no main-thread request recorded", self.context().stderr)
+        self.assertIn("no request bl can read", self.context().stderr)
 
     def test_a_newer_compaction_replaces_the_stale_request(self) -> None:
         carried = _boundary(
@@ -147,7 +147,7 @@ class ContextTests(unittest.TestCase):
         self.assertIn("after planning: continue", result.stdout)
         self.assertIn("before a round: continue", result.stdout)
 
-    def test_checkpoints_show_numbers_only_past_their_limit(self) -> None:
+    def test_checkpoints_show_numbers_only_from_their_limit(self) -> None:
         self.write(_request(240_000))
         self.assertEqual(self.context("plan").stdout, "continue\n")
         self.assertEqual(self.context("round").stdout, "continue\n")
@@ -158,6 +158,11 @@ class ContextTests(unittest.TestCase):
         )
         self.assertEqual(self.context("round").stdout, "continue\n")
         self.write({"type": "user"})
+        self.assertEqual(self.context("round").stdout, "continue\n")
+        self.git("config", "buildloop.compactBeforeRound", "40")
+        self.write(_request(400_000))
+        self.assertIn("compact: 400,000 tokens, 40% of", self.context("round").stdout)
+        self.write(_request(399_999))
         self.assertEqual(self.context("round").stdout, "continue\n")
 
     def test_an_unattended_session_always_continues(self) -> None:
@@ -170,15 +175,20 @@ class ContextTests(unittest.TestCase):
         self.assertIn("compact: 900,000 tokens", attended.stdout)
         self.assertIn("90% of a", self.context(**unattended).stdout)
 
-    def test_replies_without_readable_usage_fail_loudly(self) -> None:
+    def test_an_unreadable_transcript_fails_loudly(self) -> None:
         reply = {"type": "assistant", "message": {"model": "claude-opus-5-5"}}
-        self.write(reply)
-        result = self.context("plan")
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("replies without readable usage", result.stderr)
+        renamed = _request(700_000) | {"type": "model_response"}
+        ran = {"type": "user", "message": {"content": [{"type": "tool_result"}]}}
+        for lines in ([reply], [{"entry": _request(700_000)}], [renamed, ran]):
+            self.write(*lines)
+            result = self.context("round")
+            self.assertEqual(result.returncode, 1, lines)
+            self.assertIn("no request bl can read", result.stderr)
+        self.transcript.write_text("not json\n" * 3)
+        self.assertEqual(self.context("round").returncode, 1)
         error: dict[str, object] = {"type": "assistant", "isApiErrorMessage": True}
         synthetic = {"type": "assistant", "message": {"model": "<synthetic>"}}
-        self.write(error, synthetic)
+        self.write(error, synthetic, {"type": "user", "message": {"content": "hi"}})
         self.assertIn("just started", self.context().stdout)
 
     def test_window_and_thresholds_come_from_git_config(self) -> None:

@@ -9,7 +9,7 @@ directory into build-loop/.archive/. check-tier (pre-commit) and check-ledger
 (pre-push) only warn and always exit 0; check-tier stays quiet on docs-only
 commits, and check-ledger checks the branches being pushed. context reads the
 session's context use from its Claude Code transcript; context plan and context
-round print only that checkpoint's verdict, with numbers only past its limit, and
+round print only that checkpoint's verdict, with numbers only at or past its limit, and
 continue in an unattended session, where nobody can run /compact. Git config:
 buildloop.checks (warn|off, default warn), buildloop.agents (AI_AGENT prefixes,
 default claude-code), buildloop.contextWindow (default 1000000),

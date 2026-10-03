@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+from typing import cast
 
 from bl_state import LoopError, as_dict
 
@@ -33,7 +34,10 @@ def _context(line: str) -> tuple[int, bool] | None:
         carried = as_dict(record.get("compactMetadata")).get("postTokens")
         if isinstance(carried, int):
             return carried, True
-        message = "compacted since the last logged request; run bl context next step"
+        message = (
+            "compacted since the last logged request; "
+            "run the same command again after your next step"
+        )
         raise LoopError(message)
     if record.get("type") != "assistant":
         return None
@@ -52,15 +56,29 @@ def _record(line: str) -> dict[str, object]:
     return as_dict(entry)
 
 
-def _is_reply(line: str) -> bool:
-    record = _record(line)
+def _is_reply(record: dict[str, object]) -> bool:
     model = as_dict(record.get("message")).get("model")
     return (
         record.get("type") == "assistant"
-        and not record.get("isSidechain")
         and not record.get("isApiErrorMessage")
         and model != "<synthetic>"
     )
+
+
+def _ran_a_tool(record: dict[str, object]) -> bool:
+    content = as_dict(record.get("message")).get("content")
+    blocks = cast("list[object]", content) if isinstance(content, list) else []
+    return any(as_dict(block).get("type") == "tool_result" for block in blocks)
+
+
+def _just_started(lines: list[str]) -> bool:
+    records = (_record(line) for line in lines)
+    main = [
+        r
+        for r in records
+        if isinstance(r.get("type"), str) and not r.get("isSidechain")
+    ]
+    return bool(main) and not any(_is_reply(r) or _ran_a_tool(r) for r in main)
 
 
 def tokens(path: Path) -> tuple[int, bool] | None:
@@ -75,10 +93,10 @@ def tokens(path: Path) -> tuple[int, bool] | None:
         found = _context(line)
         if found is not None:
             return found
-    if size > TAIL_BYTES:
-        message = f"no main-thread request recorded near the end of {path.name}"
-    elif any(_is_reply(line) for line in lines):
-        message = f"{path.name} has replies without readable usage; check /context"
-    else:
+    if size <= TAIL_BYTES and _just_started(lines):
         return None
+    message = (
+        f"no request bl can read in the last {TAIL_BYTES // 1_000_000} MB of "
+        f"{path.name}; check /context"
+    )
     raise LoopError(message)

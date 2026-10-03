@@ -87,9 +87,10 @@ Step numbers match the repo profiles, so a profile's "step 7" is this step 7.
 A round, for T1 to T3:
 
 1. Commit, with the gates green on that commit. Then run `bl context round`: if it says
-   `compact` (past 60% of the window by default), stop and give the user a `/compact`
-   note naming the round number, the commit under review and `bl state`, and resume
-   from `bl state` afterwards. If it cannot measure, treat the context as high.
+   `compact` (at 60% of the window or more by default), stop and give the user a
+   `/compact` note naming the round number, the commit under review and `bl state`,
+   and resume from `bl state` afterwards. If it cannot measure, treat the context as
+   high and quote its error in the note.
 2. In one message, launch a fresh `/review` subagent (Prompt 2) and a fresh `/deep-audit`
    subagent (Prompt 3) on the change's range, `<range>` as
    [prompts.md](references/prompts.md) defines it.
@@ -140,8 +141,8 @@ Binding. Detail and the commands are in [safety.md](references/safety.md).
 `bl` keeps per-branch state under `$(git rev-parse --git-common-dir)/build-loop/`, which
 survives reboots and is shared by worktrees: `bl tier` (the first one also records the
 change's base commit), `bl plan` (`bl plan --path` prints where to write the plan),
-`bl round`, `bl ending`, `bl state`, `bl context` (this session's context use, read
-from its transcript; `bl context plan` and `bl context round` print only that
-checkpoint's verdict), and `bl reset`,
+`bl round`, `bl ending`, `bl state`, `bl context plan` and `bl context round` (one
+checkpoint's verdict from this session's transcript, the only forms an agent runs;
+bare `bl context` is the full report, for people), and `bl reset`,
 which moves a finished change's state and plan to `build-loop/.archive/`. Git hooks warn
 on an agent commit with no tier and on an agent push before both loops have an ending.
