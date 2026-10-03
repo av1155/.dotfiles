@@ -1,0 +1,302 @@
+#!/usr/bin/env -S python3 -B
+"""Support commands for the refine skill and its pre-commit gate.
+
+Usage: refine {scope,diff,snapshot,restore,stamp,gate} [options]
+
+Exit codes: 0 success or an allowed commit; 1 a blocked commit or a failed
+command; 2 invalid usage, or a stamp or snapshot refused because staged files
+carry unstaged edits.
+
+Git config: refine.mode (off|warn|block, default block), refine.agents
+(AI_AGENT prefixes, default claude-code), refine.exempt (extra globs,
+multi-valued), refine.fullThreshold (default 40), refine.deepThreshold
+(default 300), refine.shardLines (default 800). REFINE_SKIP=1 lets one agent
+commit through and logs it.
+"""
+
+import argparse
+import contextlib
+import json
+import os
+import re
+import shutil
+import sys
+from typing import cast
+
+import refine_core as core
+
+GATE_LIST_LIMIT = 10
+
+
+def _print_json(payload: object) -> None:
+    print(json.dumps(payload, indent=2))
+
+
+def _changed_lines(entries: list[core.Entry], kind: str) -> int:
+    return sum(entry.changed for entry in entries if entry.kind == kind)
+
+
+def _partially_staged(entries: list[core.Entry]) -> list[str]:
+    unstaged = core.unstaged()
+    return sorted(entry.path for entry in entries if entry.path in unstaged)
+
+
+def cmd_scope(_args: argparse.Namespace) -> int:
+    repo = core.open_repo()
+    entries = core.staged(repo)
+    review = core.reviewable(entries)
+    code_lines = _changed_lines(review, "code")
+    if not review:
+        mode = "none"
+    elif code_lines >= core.config_int("refine.fullThreshold", 40):
+        mode = "full"
+    else:
+        mode = "light"
+    stale = core.stale(repo, review)
+    _print_json({
+        "root": str(repo.root),
+        "branch": repo.branch,
+        "state_dir": str(repo.state_dir),
+        "in_progress": core.in_progress(repo),
+        "mode": mode,
+        "deep_altitude": code_lines >= core.config_int("refine.deepThreshold", 300),
+        "code_lines": code_lines,
+        "test_lines": _changed_lines(review, "test"),
+        "config_lines": _changed_lines(review, "config"),
+        "partially_staged": _partially_staged(review),
+        "stamp_fresh": not stale,
+        "stale": stale,
+        "files": [
+            {"path": e.path, "status": e.status, "kind": e.kind, "reason": e.reason,
+             "added": e.added, "deleted": e.deleted}
+            for e in entries
+        ],
+    })  # fmt: skip
+    return 0
+
+
+def _shards(entries: list[core.Entry], limit: int) -> list[list[core.Entry]]:
+    shards: list[list[core.Entry]] = []
+    current: list[core.Entry] = []
+    size = 0
+    for entry in sorted(entries, key=lambda item: item.path):
+        if current and size + entry.changed > limit:
+            shards.append(current)
+            current, size = [], 0
+        current.append(entry)
+        size += entry.changed
+    if current:
+        shards.append(current)
+    return shards
+
+
+def cmd_diff(args: argparse.Namespace) -> int:
+    repo = core.open_repo()
+    limit = args.shard_lines or core.config_int("refine.shardLines", 800)
+    shards = _shards(core.reviewable(core.staged(repo)), limit)
+    flags = ("--cached", "--no-renames", "--no-ext-diff", f"-U{args.context}")
+    out_dir = repo.state_dir / "diff"
+    shutil.rmtree(out_dir, ignore_errors=True)
+    out_dir.mkdir(parents=True)
+    listing: list[dict[str, object]] = []
+    for number, shard in enumerate(shards, 1):
+        specs = [f":(literal){entry.path}" for entry in shard]
+        target = out_dir / f"shard-{number:02d}.patch"
+        target.write_bytes(core.git("diff", *flags, repo.base, "--", *specs))
+        listing.append(
+            {
+                "file": str(target),
+                "changed_lines": sum(entry.changed for entry in shard),
+                "paths": {entry.path: entry.kind for entry in shard},
+            }
+        )
+    _print_json({"shards": listing})
+    return 0
+
+
+def _refuse_partial(command: str, entries: list[core.Entry]) -> bool:
+    partial = _partially_staged(entries)
+    if partial:
+        print(
+            f"refine {command}: these staged files also have unstaged edits; "
+            "stage or revert them first:",
+            *(f"  {path}" for path in partial),
+            sep="\n",
+            file=sys.stderr,
+        )
+    return bool(partial)
+
+
+def cmd_snapshot(_args: argparse.Namespace) -> int:
+    repo = core.open_repo()
+    review = core.reviewable(core.staged(repo))
+    if _refuse_partial("snapshot", review):
+        return 2
+    target = repo.state_dir / "snapshot"
+    shutil.rmtree(target, ignore_errors=True)
+    for entry in review:
+        destination = target / entry.path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(repo.root / entry.path, destination)
+    paths = [entry.path for entry in review]
+    core.write_json(
+        repo.state_dir / "snapshot.json", {"created": core.now(), "files": paths}
+    )
+    _print_json({"snapshot": str(target), "files": paths})
+    return 0
+
+
+def cmd_restore(args: argparse.Namespace) -> int:
+    repo = core.open_repo()
+    try:
+        manifest: object = json.loads((repo.state_dir / "snapshot.json").read_text())
+    except (OSError, ValueError) as exc:
+        message = "no snapshot to restore; run 'refine snapshot' before editing"
+        raise core.RefineError(message) from exc
+    data = cast("dict[str, object]", manifest) if isinstance(manifest, dict) else {}
+    files = data.get("files")
+    if not isinstance(files, list):
+        message = "snapshot manifest is malformed"
+        raise core.RefineError(message)
+    known = {str(path) for path in cast("list[object]", files)}
+    requested: list[str] = args.paths or sorted(known)
+    unknown = [path for path in requested if path not in known]
+    if unknown:
+        message = f"not in the snapshot: {', '.join(unknown)}"
+        raise core.RefineError(message)
+    for path in requested:
+        shutil.copy2(repo.state_dir / "snapshot" / path, repo.root / path)
+    _print_json({"restored": requested})
+    return 0
+
+
+def cmd_stamp(args: argparse.Namespace) -> int:
+    repo = core.open_repo()
+    review = core.reviewable(core.staged(repo))
+    if not args.allow_unstaged and _refuse_partial("stamp", review):
+        return 2
+    previous_head, entries = core.load_stamp(repo)
+    if previous_head != repo.head:
+        entries = {}
+    entries.update({entry.path: entry.blob for entry in review})
+    core.write_json(repo.state_dir / "stamp.json", {
+        "version": 1, "created": core.now(), "head": repo.head, "branch": repo.branch,
+        "mode": args.mode, "tidy": args.tidy, "entries": entries,
+    })  # fmt: skip
+    core.log(repo, {
+        "event": "stamp", "mode": args.mode, "tidy": args.tidy, "files": len(review),
+        "code_lines": _changed_lines(review, "code"),
+        "applied": args.applied, "reported": args.reported, "deferred": args.deferred,
+        "result": args.result, "checks": args.checks,
+    })  # fmt: skip
+    tidy = ", tidy" if args.tidy else ""
+    print(f"refine stamp: {len(review)} staged file(s) stamped ({args.mode}{tidy}).")
+    return 0
+
+
+def _agent_matches() -> bool:
+    fallback = "claude-code" if os.environ.get("CLAUDECODE") == "1" else ""
+    agent = os.environ.get("AI_AGENT") or fallback
+    if not agent:
+        return False
+    allowed = re.split(r"[\s,]+", core.config("refine.agents", "claude-code"))
+    return any(agent.startswith(prefix) for prefix in allowed if prefix)
+
+
+def _gate_message(stale: list[str], *, blocking: bool) -> str:
+    shown = stale[:GATE_LIST_LIMIT]
+    extra = len(stale) - len(shown)
+    lines = [f"  {path}" for path in shown] + ([f"  (+{extra} more)"] if extra else [])
+    lead = "commit blocked." if blocking else "(warn)"
+    header = (
+        f"refine gate {lead} {len(stale)} staged file(s) have no refine pass for "
+        "their current content:"
+    )
+    footer = (
+        "Run the refine skill on the staged changes, re-stage, then commit again. Never "
+        "bypass this with --no-verify or REFINE_SKIP unless the user explicitly says so."
+    )
+    return "\n".join([header, *lines, footer])
+
+
+def cmd_gate(_args: argparse.Namespace) -> int:
+    if not _agent_matches():
+        return 0
+    mode = core.config("refine.mode", "block").lower()
+    if mode == "off":
+        return 0
+    blocking = mode == "block"
+    if os.environ.get("REFINE_SKIP") == "1":
+        print(
+            "refine gate: REFINE_SKIP=1, committing without a refine pass.",
+            file=sys.stderr,
+        )
+        with contextlib.suppress(core.RefineError):  # never block an authorized skip
+            core.log(core.open_repo(), {"event": "skip"})
+        return 0
+    try:
+        repo = core.open_repo()
+        review = [] if core.in_progress(repo) else core.reviewable(core.staged(repo))
+        stale = core.stale(repo, review)
+    except core.RefineError as exc:
+        print(f"refine gate: {exc}. Tell the user; REFINE_SKIP=1 commits without the gate.",
+              file=sys.stderr)  # fmt: skip
+        return int(blocking)
+    if not stale:
+        if review:
+            core.log(repo, {"event": "gate-pass", "files": len(review)})
+        return 0
+    event = "gate-block" if blocking else "gate-warn"
+    core.log(repo, {"event": event, "files": len(review), "stale": len(stale)})
+    print(_gate_message(stale, blocking=blocking), file=sys.stderr)
+    return int(blocking)
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="refine", description="Support commands for refine."
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+    scope = commands.add_parser(
+        "scope", help="classify staged files, suggest a pass depth"
+    )
+    scope.set_defaults(func=cmd_scope)
+    diff = commands.add_parser(
+        "diff", help="write sharded patches of the reviewable diff"
+    )
+    diff.add_argument("--context", type=int, default=5)
+    diff.add_argument("--shard-lines", type=int, default=0)
+    diff.set_defaults(func=cmd_diff)
+    snapshot = commands.add_parser("snapshot", help="copy staged files before editing")
+    snapshot.set_defaults(func=cmd_snapshot)
+    restore = commands.add_parser(
+        "restore", help="restore files from the last snapshot"
+    )
+    restore.add_argument("paths", nargs="*")
+    restore.set_defaults(func=cmd_restore)
+    stamp = commands.add_parser("stamp", help="record the staged content as refined")
+    stamp.add_argument("--mode", choices=("none", "light", "full"), required=True)
+    stamp.add_argument("--tidy", action="store_true")
+    for counter in ("--applied", "--reported", "--deferred"):
+        stamp.add_argument(counter, type=int, default=0)
+    results = ("pass", "rolled-back", "unverified", "none")
+    stamp.add_argument("--result", choices=results, default="pass")
+    stamp.add_argument("--checks", default="")
+    stamp.add_argument("--allow-unstaged", action="store_true")
+    stamp.set_defaults(func=cmd_stamp)
+    gate = commands.add_parser("gate", help="pre-commit hook entry point")
+    gate.set_defaults(func=cmd_gate)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    try:
+        return int(args.func(args))
+    except core.RefineError as exc:
+        print(f"refine {args.command}: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
