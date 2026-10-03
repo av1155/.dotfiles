@@ -789,7 +789,8 @@ harnesses.
 end-to-end used to stop after every T3 plan with a `/compact` note. It now stops
 only when `bl context` puts the session at 25% of its context window or more after
 planning, when the plan touches a stop-and-ask surface, or when the prompt asks for
-a plan review; otherwise it goes straight into implementation. build-loop runs the
+a plan review; otherwise it goes straight into implementation. Step 3 now runs at
+every tier, so T1 and T2 items also get a written plan. build-loop runs the
 same check before each review round and stops for `/compact` at 60%. `bl context`
 (in `bl_context.py`) reads the latest main-thread request's token usage from the
 session transcript that `CLAUDE_CODE_SESSION_ID` names. When a compaction is logged

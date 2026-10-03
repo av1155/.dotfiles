@@ -79,6 +79,10 @@ class ContextTests(unittest.TestCase):
         result = self.context()
         self.assertIn("59% of a 1,000,000-token window", result.stdout)
         self.assertIn("before a round: continue", result.stdout)
+        self.write(_request(600_000))
+        self.assertIn(
+            "before a round: compact (compacts at 60%)", self.context().stdout
+        )
 
     def test_skips_api_errors_and_splits_only_on_newlines(self) -> None:
         keys = (
@@ -92,8 +96,23 @@ class ContextTests(unittest.TestCase):
         self.write(_request(786_168), error, {"type": "user"})
         self.assertIn("context: 786,168 tokens, 78% of", self.context().stdout)
         line = json.dumps(_request(640_000) | {"note": "\u2028"}, ensure_ascii=False)
-        self.transcript.write_text(f"{json.dumps(_request(300_000))}\n{line}\n")
+        self.transcript.write_text(
+            f"{json.dumps(_request(300_000))}\n{line}\n", encoding="utf-8"
+        )
         self.assertIn("context: 640,000 tokens", self.context().stdout)
+
+    def test_reads_only_the_last_four_megabytes(self) -> None:
+        old = f"{json.dumps(_request(500_000))}\n"
+        run = json.dumps({"type": "user", "pad": "é" * 2_000_001}, ensure_ascii=False)
+        recent = (
+            f"{json.dumps(_request(300_000))}\n{json.dumps({'pad': 'x' * 2_000})}\n"
+        )
+        # An even length puts the 4 MB cut inside a two-byte character
+        recent += "\n" * (len(recent) % 2)
+        self.transcript.write_text(f"{old}{run}\n{recent}", encoding="utf-8")
+        self.assertIn("context: 300,000 tokens", self.context().stdout)
+        self.transcript.write_text(f"{old}{run}\n", encoding="utf-8")
+        self.assertIn("no main-thread request recorded", self.context().stderr)
 
     def test_a_newer_compaction_replaces_the_stale_request(self) -> None:
         carried = _boundary(
