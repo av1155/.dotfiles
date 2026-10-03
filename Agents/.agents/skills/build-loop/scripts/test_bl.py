@@ -201,7 +201,8 @@ class RoundTests(BlTestCase):
         self.bl("tier", "T3", "--reason", "money")
         self.rounds(*[("dirty", "dirty")] * 8)
         self.assertEqual(self.loop("review")["ending"], "cap of eight")
-        self.rounds(("dirty", "dirty"))
+        late = ("round", "--round", "9", "--review", "dirty", "--audit", "dirty")
+        self.assertEqual(self.bl(*late).returncode, 2)
         self.assertEqual(self.loop("review")["passes"], 8)
 
     def test_tier_change_rechecks_counted_endings(self) -> None:
@@ -228,10 +229,13 @@ class RoundTests(BlTestCase):
         self.rounds(("clean", "done"))
         self.assertEqual(self.loop("review")["ending"], "two clean")
 
-    def test_retiering_ignores_passes_an_ended_loop_never_counted(self) -> None:
+    def test_a_result_for_an_ended_loop_is_refused(self) -> None:
         self.bl("tier", "T1", "--reason", "fix")
-        self.rounds(("clean", "dirty"), ("dirty", "dirty"))
-        self.bl("tier", "T1", "--reason", "same change", "--reopen")
+        self.rounds(("clean", "dirty"))
+        late = ("round", "--round", "2", "--review", "dirty", "--audit", "dirty")
+        self.assertEqual(self.bl(*late).returncode, 2)
+        self.assertEqual(len(cast("list[object]", self.state()["rounds"])), 1)
+        self.rounds(("done", "dirty"))
         self.assertEqual(self.loop("review")["ending"], "one clean")
 
     def test_retiering_keeps_a_reopened_loop_open(self) -> None:
@@ -243,11 +247,12 @@ class RoundTests(BlTestCase):
         self.rounds(("clean", "done"))
         self.assertEqual(self.loop("review")["ending"], "one clean")
 
-    def test_a_repeated_round_number_is_refused(self) -> None:
+    def test_a_round_number_out_of_sequence_is_refused(self) -> None:
         self.bl("tier", "T2", "--reason", "feature")
         self.rounds(("clean", "clean"))
-        retry = ("round", "--round", "1", "--review", "clean", "--audit", "clean")
-        self.assertEqual(self.bl(*retry).returncode, 2)
+        for number in ("1", "3"):
+            retry = ("--round", number, "--review", "clean", "--audit", "clean")
+            self.assertEqual(self.bl("round", *retry).returncode, 2)
         self.assertEqual(self.loop("review")["passes"], 1)
 
     def test_a_documentation_wave_runs_past_two_clean(self) -> None:
@@ -267,12 +272,22 @@ class RoundTests(BlTestCase):
         self.assertEqual(
             self.bl("ending", "--loop", "audit", "--token", "").returncode, 2
         )
+        wave = ("ending", "--loop", "review", "--token", "documentation wave")
+        self.assertEqual(self.bl(*wave).returncode, 2)
+
+    def test_reset_keeps_open_loops_unless_forced(self) -> None:
+        self.bl("tier", "T2", "--reason", "feature")
+        self.rounds(("dirty", "dirty"))
+        self.assertEqual(self.bl("reset").returncode, 2)
+        self.assertEqual(self.bl("reset", "--force").returncode, 0)
+        self.assertIsNone(self.state()["tier"])
 
 
 class HookTests(BlTestCase):
     def commit(
         self, agent: str | None, path: str = "app.py"
     ) -> subprocess.CompletedProcess[str]:
+        (self.repo / path).parent.mkdir(parents=True, exist_ok=True)
         (self.repo / path).write_text(
             f"x = {len(self.git('log', '--oneline').stdout)}\n"
         )
@@ -290,7 +305,12 @@ class HookTests(BlTestCase):
     def test_check_tier_is_quiet_on_docs_only_commits(self) -> None:
         for path in ("NOTES.md", "LICENSE", "LICENSE-2.0.txt", "CHANGELOG.md"):
             self.assertNotIn("no tier recorded", self.commit(AGENT, path).stderr)
-        for path in ("CMakeLists.txt", "dev-requirements.txt", "LICENSE_KEY.ts"):
+        for path in (
+            "CMakeLists.txt",
+            "dev-requirements.txt",
+            "requirements/base.txt",
+            "LICENSE_KEY.ts",
+        ):
             self.assertIn("no tier recorded", self.commit(AGENT, path).stderr)
 
     def test_late_tier_takes_the_base_the_warning_names(self) -> None:

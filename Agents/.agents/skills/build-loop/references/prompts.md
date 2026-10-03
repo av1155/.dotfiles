@@ -39,9 +39,10 @@ fails, fix it before committing.
 ## Prompt 2, review (fresh reviewer subagent)
 
 ```
-Run /review on the change's commits, <range> (`git log <range>`). Review pass <n>.
-You are in a fresh context, isolated from
-the implementer, so trust only the code and the diff, not any prior narrative.
+Run /review on the change's commits, <range> (`git log <range>`); wherever the
+review skill says main..HEAD, use <range>. Review pass <n>. You are in a fresh
+context, isolated from the implementer, so trust only the code and the diff, not
+any prior narrative.
 The implementer committed fixes for the previous findings. Focus on:
 1. Whether the previous CRITICAL/HIGH/MEDIUM findings are actually resolved.
 2. Whether the fixes introduced new problems.

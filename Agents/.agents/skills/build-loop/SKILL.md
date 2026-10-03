@@ -76,7 +76,8 @@ Step numbers match the repo profiles, so a profile's "step 7" is this step 7.
     have an ending and the local gates are green.
 13. Ledger: record passes run, clean passes banked, each loop's ending token, findings
     above the threshold and the last pass's dispositions where the profile says,
-    usually the progress file, before the push. Then `bl reset`.
+    usually the progress file, before the push. Then `bl reset`, which refuses while a
+    loop is still open.
 
 ## Rounds
 
@@ -89,8 +90,9 @@ A round, for T1 to T3:
 3. Change nothing in the repo while either runs.
 4. Disposition both reports under Prompt 1: a `light` refine pass on the fix hunks, the
    gates, then commit.
-5. Record it: `bl round --round <n> --review clean|dirty|done --audit clean|dirty|done`.
-   A round number that is not the next one is refused, so a retry never counts twice.
+5. Record it: `bl round --round <round> --review clean|dirty|done --audit clean|dirty|done`,
+   with `done` for a loop that already has an ending. A round number that is not the
+   next one is refused, so a retry never counts twice.
 6. Start the next round until each loop has an ending.
 
 The prompts are in [prompts.md](references/prompts.md). Counting, endings and the ledger

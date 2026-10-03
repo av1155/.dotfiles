@@ -12,8 +12,9 @@ buildloop.checks (warn|off, default warn), buildloop.agents (AI_AGENT prefixes,
 default claude-code). Needs Python 3.11 or later.
 
 Exit codes: 0 success; 1 a failed command; 2 invalid usage, lowering a tier
-without --force, retiering a finished change without --reopen, or a round
-number that is not the next one.
+without --force, retiering a finished change without --reopen, a round number
+that is not the next one, a result for a loop that has ended, a documentation-wave
+ending on another change, or resetting open loops without --force.
 """
 
 import argparse
@@ -74,8 +75,8 @@ def cmd_tier(args: argparse.Namespace) -> int:
         return _refuse(
             "tier",
             "the last change on this branch has rounds and both loop endings. Run bl "
-            "reset to start a new change (with --base <the commit before it> if it "
-            "is already committed), or pass --reopen to retier this one.",
+            "reset, then bl tier (with --base <the commit before the new change> if "
+            "it is already committed), or pass --reopen to retier this one.",
         )
     order = core.TIERS.index
     lowering = isinstance(current, str) and order(args.tier) < order(current)
@@ -131,6 +132,14 @@ def cmd_round(args: argparse.Namespace) -> int:
             f"round {args.round} does not follow the {len(rounds)} on record; check "
             "bl state before recording again.",
         )
+    pending = core.open_loops(state)
+    for name, result in (("review", args.review), ("audit", args.audit)):
+        if result != "done" and name not in pending:
+            return _refuse(
+                "round",
+                f"the {name} loop has an ending, so pass --{name} done, or reopen it "
+                f"first: bl ending --loop {name} --token 'in progress'.",
+            )
     rounds.append(
         {
             "at": core.now(),
@@ -148,18 +157,31 @@ def cmd_round(args: argparse.Namespace) -> int:
 
 def cmd_ending(args: argparse.Namespace) -> int:
     state = core.load(core.current_branch())
+    if args.token == "documentation wave" and not state["docs_wave"]:
+        return _refuse(
+            "ending",
+            "this change is not a documentation wave; declare one when recording the "
+            "tier: bl tier <T> --reason '<why>' --docs-wave.",
+        )
     core.set_ending(state, args.loop, args.token)
     core.save(state)
     print(f"{args.loop} ending: {args.token}")
     return 0
 
 
-def cmd_reset(_args: argparse.Namespace) -> int:
+def cmd_reset(args: argparse.Namespace) -> int:
     branch = core.current_branch()
     current = core.branch_dir(branch)
     if not current.exists():
         print(f"no build-loop state for {branch}")
         return 0
+    state = core.load(branch)
+    if state["rounds"] and core.open_loops(state) and not args.force:
+        return _refuse(
+            "reset",
+            "a loop on this branch is still open (see bl state); end it first, or "
+            "pass --force to archive it anyway.",
+        )
     stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%S%fZ")
     # Git ref components never start with a dot, so no branch directory collides.
     archive = current.parent / ".archive" / f"{current.name}-{stamp}"
@@ -288,6 +310,7 @@ def _parser() -> argparse.ArgumentParser:
     ending.add_argument("--token", choices=core.MANUAL_ENDINGS, required=True)
     ending.set_defaults(func=cmd_ending)
     reset = commands.add_parser("reset", help="archive this branch's state and plan")
+    reset.add_argument("--force", action="store_true", help="archive open loops too")
     reset.set_defaults(func=cmd_reset)
     check_tier = commands.add_parser("check-tier", help="pre-commit hook, warn only")
     check_tier.set_defaults(func=cmd_check_tier)
