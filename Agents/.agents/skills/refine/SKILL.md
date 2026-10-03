@@ -29,10 +29,12 @@ result.
    `refine restore` refuses once either has moved.
 4. Review with `refine diff`, which writes the reviewable staged diff as shard files.
     - Claude Code: launch the lenses in one message with the Agent tool, one agent per
-      lens per shard. `full`: four `refine-lens` agents (reuse, simplification,
-      efficiency, altitude); use `refine-lens-deep` for altitude when `deep_altitude` is
-      true. `light`: one `refine-lens` agent with lens `combined`. Give each the shard
-      path, the lens, the repo root, the rule files from step 2, the rubric path
+      lens per shard. If a launch is refused at the concurrent-subagent limit, launch
+      the rest as earlier lenses finish, and never retry one in a loop. `full`: four
+      `refine-lens` agents (reuse, simplification, efficiency, altitude); use
+      `refine-lens-deep` for altitude when `deep_altitude` is true. `light`: one
+      `refine-lens` agent with lens `combined`. Give each the shard path, the lens,
+      the repo root, the rule files from step 2, the rubric path
       `~/.agents/skills/refine/references/lenses.md` (expanded to an absolute path), and
       any pins: choices the session settled that must survive, such as a guard a reviewer
       asked for.
@@ -62,8 +64,9 @@ result.
    `refine snapshot <its files>` (paths from the repo root, as `tidy.md` lists them),
    apply it, run the same checks, stage those files,
    `refine stamp --mode light --tidy ...`, then commit them on their own as
-   `refactor(<scope>): <what got simpler>`. If a check fails, `refine restore` and skip
-   the tidy commit. Delete `tidy.md` afterwards.
+   `refactor(<scope>): <what got simpler>`. If the snapshot refuses a file, leave it
+   out of the tidy pass and report its `tidy.md` entry. If a check fails,
+   `refine restore` and skip the tidy commit. Delete `tidy.md` afterwards.
 9. Summarize in at most five lines: applied, deferred, reported and dropped counts; the
    checks run and their results; anything incomplete or unverified.
 

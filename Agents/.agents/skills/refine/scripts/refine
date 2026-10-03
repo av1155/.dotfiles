@@ -4,8 +4,8 @@
 Usage: refine {scope,diff,snapshot,restore,stamp,gate} [options]
 
 Exit codes: 0 success or an allowed commit; 1 a blocked commit or a failed
-command; 2 invalid usage, or a stamp or snapshot refused (staged files with
-unstaged edits, or --mode none while files need a pass).
+command; 2 invalid usage, or a stamp or snapshot refused (files with unstaged
+edits, or --mode none while files need a pass).
 
 Git config: refine.mode (off|warn|block, default block; any other value
 blocks), refine.agents (AI_AGENT prefixes, separated by spaces or commas or
@@ -121,9 +121,10 @@ def _refuse_partial(command: str, paths: list[str]) -> bool:
     partial = _partially_staged(paths)
     if partial:
         print(
-            f"refine {command}: these files have unstaged edits; "
-            "stage or revert them first:",
+            f"refine {command}: these files have unstaged edits:",
             *(f"  {path}" for path in partial),
+            "Stage them fully if the edits belong to this change; otherwise leave the "
+            "files out of the pass. Never revert edits that are not yours.",
             sep="\n",
             file=sys.stderr,
         )
