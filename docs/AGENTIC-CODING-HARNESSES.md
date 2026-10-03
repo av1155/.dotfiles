@@ -677,6 +677,8 @@ ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
 
 1. Pause the refine gate everywhere: `git config --global refine.mode warn` (warn and log)
    or `off`. Let one commit through, only with the user's say-so: `REFINE_SKIP=1 git commit ...`.
+   With a python3 older than 3.11 first on PATH the gate blocks whatever `refine.mode` says;
+   `git config --global hook.refine.enabled false` turns the hook off without starting Python.
 2. Per repository: `git config refine.mode off`, or exempt generated or data paths with
    `git config --add refine.exempt '<glob>'` (repo-local and untracked). invest-platform,
    wedding-site and BAI-Capital-Platform carry their generated paths this way.
@@ -685,7 +687,9 @@ ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
    and drop "Claude Code only." from the refine, build-loop and end-to-end descriptions.
    Codex exports `CODEX_THREAD_ID` instead of `AI_AGENT`, so it needs a code change in both
    scripts and in the hook guard first.
-4. Silence the build-loop warnings: `git config --global buildloop.checks off`.
+4. Silence the build-loop warnings: `git config --global buildloop.checks off`, or, with a
+   python3 older than 3.11, set `hook.build-loop-tier.enabled` and
+   `hook.build-loop-ledger.enabled` to `false`.
 5. Verify after any change: `git hook list --show-scope pre-commit` lists `refine` and
    `build-loop-tier`, and both suites pass:
    `python3 -m unittest discover -s ~/.agents/skills/refine/scripts -p 'test_*.py'`, then the
@@ -699,8 +703,10 @@ ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
    before the hookdir hook, whatever `core.hooksPath` says.
 2. Keep it fast. When human commits should pass untouched, start the command with
    `test -z "$AI_AGENT$CLAUDECODE" ||`, so a broken or missing script can only block an
-   agent, and end a warn-only hook with `|| true`. Test it by driving real commits in
-   throwaway repositories with
+   agent, and end a warn-only hook with `|| true`. Git appends the hook's arguments to the
+   end of the command, so after `|| true` they reach `true`; a warn-only hook that needs
+   them masks its own exit status instead. Test it by driving real commits in throwaway
+   repositories with
    `GIT_CONFIG_GLOBAL` pointed at a scratch config.
 3. Confirm it is registered with `git hook list --show-scope <event>` in a few repositories.
 
@@ -721,7 +727,7 @@ Per-harness diagnostic flow:
 
 1. Hash check: `for p in ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.config/opencode/AGENTS.md ~/.pi/agent/AGENTS.md ~/.agents/AGENTS.md; do shasum -a 256 "$p"; done` — all 5 should match.
 2. Claude Code: launch any session, run `/memory`, confirm CLAUDE.md content matches canonical.
-3. Codex: launch `codex` in any directory, confirm session-start instructions match. For repos near the 32 KiB cap, watch for missing leading content (silent truncation from start).
+3. Codex: launch `codex` in any directory, confirm session-start instructions match. For repos near the 32 KiB cap, watch for missing trailing content: Codex keeps the first bytes of an oversized project AGENTS.md and logs a warning.
 4. OpenCode: launch `opencode`, check session-start.
 5. Pi: launch `pi`, ask about agentic environment to confirm `agentic-coding-harnesses` skill triggers.
 6. Slash invocation: in Claude, try `/ship` or `/catchup` — should resolve to canonical skill.
@@ -792,9 +798,10 @@ Added three user-authored global skills (bucket C), each with its committed
 - `build-loop` is the generic core of the invest-platform and wedding-site build
   loops with four risk tiers (T0 gates only; T1 one clean pass or a cap of 2; T2
   two clean or a cap of 4; T3 two clean or a cap of 8), the round prompts, and
-  the tree and machine safety rules from both copies. Script `bl`, with tests,
-  keeps per-branch state under `$(git rev-parse --git-common-dir)/build-loop/`
-  and archives a finished change's state with `bl reset`. Both repos'
+  the tree and machine safety rules from both copies. Scripts `bl` and
+  `bl_state.py`, with tests, keep per-branch state under
+  `$(git rev-parse --git-common-dir)/build-loop/` and archive a finished change's
+  state with `bl reset`. Both repos'
   `build-loop.md` files became their profiles in place.
 - `end-to-end` is the session lifecycle the user typed every session: resolve the
   work item, workspace, plan and stop for `/compact`, ship, housekeeping, the
@@ -814,8 +821,10 @@ pointer to build-loop and end-to-end under Operating defaults, and ask-first
 exceptions for refine's file-private helpers and tidy commits. No Claude Code
 settings changed.
 
-Why: in the user's own sessions an advisory "run X before committing" was
-followed about 0% of the time, so a hook enforces the step. A prompted cleanup
+Why: in the user's Claude Code transcripts (measured 2026-10-02), a skill the
+instructions said to run before committing was invoked before about 0% of
+commits, while some gate command ran before about 80%, so a hook enforces the
+step. A prompted cleanup
 pass broke 8 to 15% of passing SWE-bench Verified fixes, while a variant that
 discarded refinements failing the tests lost none (RECAP, arXiv 2608.13292,
 preprint), hence the checks and rollback. LLM test-smell refactoring broke 11% of
