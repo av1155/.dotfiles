@@ -171,7 +171,8 @@ in every repository before the repo's own hookdir hook, even when `core.hooksPat
 They act only on agent commits (`AI_AGENT` matching `refine.agents` or `buildloop.agents`,
 default `claude-code`), and each command starts with `test -z "$AI_AGENT$CLAUDECODE" ||`,
 so a human commit or push never starts a script. The refine gate blocks
-(`refine.mode = block`); the build-loop checks only warn. Procedure: section 16, "Pause,
+(`refine.mode = block`); the build-loop checks end in `|| true`, so they only warn. The
+scripts need Python 3.11 or later as `python3` on PATH. Procedure: section 16, "Pause,
 tune or extend the agent commit gates".
 
 ## 8. Sub-agents
@@ -679,9 +680,11 @@ ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
 2. Per repository: `git config refine.mode off`, or exempt generated or data paths with
    `git config --add refine.exempt '<glob>'` (repo-local and untracked). invest-platform,
    wedding-site and BAI-Capital-Platform carry their generated paths this way.
-3. Extend the gate to another harness by adding its `AI_AGENT` prefix to `refine.agents` and
-   `buildloop.agents`, for example `pi`. Codex exports `CODEX_THREAD_ID` instead of `AI_AGENT`,
-   so it needs a code change in both scripts and in the hook guard first.
+3. Extend the gates to another harness: add its `AI_AGENT` prefix with
+   `git config --global --add refine.agents <prefix>` and the same for `buildloop.agents`,
+   and drop "Claude Code only." from the refine, build-loop and end-to-end descriptions.
+   Codex exports `CODEX_THREAD_ID` instead of `AI_AGENT`, so it needs a code change in both
+   scripts and in the hook guard first.
 4. Silence the build-loop warnings: `git config --global buildloop.checks off`.
 5. Verify after any change: `git hook list --show-scope pre-commit` lists `refine` and
    `build-loop-tier`, and both suites pass:
@@ -696,7 +699,8 @@ ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
    before the hookdir hook, whatever `core.hooksPath` says.
 2. Keep it fast. When human commits should pass untouched, start the command with
    `test -z "$AI_AGENT$CLAUDECODE" ||`, so a broken or missing script can only block an
-   agent. Test it by driving real commits in throwaway repositories with
+   agent, and end a warn-only hook with `|| true`. Test it by driving real commits in
+   throwaway repositories with
    `GIT_CONFIG_GLOBAL` pointed at a scratch config.
 3. Confirm it is registered with `git hook list --show-scope <event>` in a few repositories.
 
@@ -758,13 +762,14 @@ Codex 0.160.0 charges only project AGENTS.md files against `project_doc_max_byte
 bytes by default). The global file arrives separately as user instructions and is not
 counted, and a project file that crosses the budget keeps its first bytes and loses the
 rest, with a logged warning (`codex-rs/core/src/agents_md.rs`, lines 56 to 116 and 156 to
-164, at tag `rust-v0.160.0`). The figures before this date added the global file in.
+164, at tag `rust-v0.160.0`). The figures before this date added the global file in. Sizes
+are each project's `main`.
 
-| Project         | Project AGENTS.md    | Utilization | Margin      |
-| --------------- | -------------------- | ----------- | ----------- |
-| invest-platform | 518 lines / 27,489 B | 84%         | 5,279 bytes |
-| Houndarr        | 563 lines / 24,773 B | 76%         | 7,995 bytes |
-| wedding-site    | 223 lines / 23,328 B | 71%         | 9,440 bytes |
+| Project         | Project AGENTS.md    | Utilization | Margin       |
+| --------------- | -------------------- | ----------- | ------------ |
+| invest-platform | 518 lines / 27,489 B | 84%         | 5,279 bytes  |
+| Houndarr        | 563 lines / 24,773 B | 76%         | 7,995 bytes  |
+| wedding-site    | 224 lines / 22,549 B | 69%         | 10,219 bytes |
 
 The global file has no cap of its own, but every line of it costs attention in all four
 harnesses.
@@ -788,28 +793,35 @@ Added three user-authored global skills (bucket C), each with its committed
   loops with four risk tiers (T0 gates only; T1 one clean pass or a cap of 2; T2
   two clean or a cap of 4; T3 two clean or a cap of 8), the round prompts, and
   the tree and machine safety rules from both copies. Script `bl`, with tests,
-  keeps per-branch state under `$(git rev-parse --git-common-dir)/build-loop/`.
-  Both repos' `build-loop.md` files became their profiles in place.
+  keeps per-branch state under `$(git rev-parse --git-common-dir)/build-loop/`
+  and archives a finished change's state with `bl reset`. Both repos'
+  `build-loop.md` files became their profiles in place.
 - `end-to-end` is the session lifecycle the user typed every session: resolve the
   work item, workspace, plan and stop for `/compact`, ship, housekeeping, the
   final report, and the multi-session protocol from the 2026-10-01
   concurrent-sessions note.
 
 Also: `Claude/.claude/agents/` with `refine-lens.md` (effort high) and
-`refine-lens-deep.md` (effort xhigh). A Claude Code session only sees this new
-directory after a restart, because the agents watcher covers directories that
-existed at session start. `Git/.gitconfig` gained the three hooks, each behind a
+`refine-lens-deep.md` (effort xhigh). A Claude Code session that started before
+this directory existed did not list the two agents until it was restarted
+(observed 2026-10-02). `Git/.gitconfig` gained the three hooks, each behind a
 `test -z "$AI_AGENT$CLAUDECODE" ||` guard so human commits never start a script,
-and `[refine] mode = block, agents = claude-code`. AGENTS.md gained a two-line
+with the two build-loop checks ending in `|| true` so they only warn, and
+`[refine] mode = block, agents = claude-code`. The three skill descriptions start
+with "Claude Code only.", because Codex, OpenCode and Pi load `~/.agents/skills`
+natively. AGENTS.md gained a two-line
 pointer to build-loop and end-to-end under Operating defaults, and ask-first
 exceptions for refine's file-private helpers and tidy commits. No Claude Code
 settings changed.
 
 Why: in the user's own sessions an advisory "run X before committing" was
-followed about 0% of the time, so a hook enforces the step. A 2026 study found
-an unchecked LLM cleanup pass broke 8 to 15% of working fixes while a variant
-gated by tests broke none, hence the checks and rollback. LLM test consolidation
-changed behavior or coverage in 11 to 15% of cases, hence report-only tests.
+followed about 0% of the time, so a hook enforces the step. A prompted cleanup
+pass broke 8 to 15% of passing SWE-bench Verified fixes, while a variant that
+discarded refinements failing the tests lost none (RECAP, arXiv 2608.13292,
+preprint), hence the checks and rollback. LLM test-smell refactoring broke 11% of
+refactored tests (UTRefactor, arXiv 2409.16739, FSE 2025) and changed test
+behavior in about 15% of cases (SBES 2025, doi:10.5753/sbes.2025.11568), hence
+report-only tests.
 
 To re-apply if overwritten: restore the three skill directories and
 `Claude/.claude/agents/`, the three Claude skill symlinks, the `Git/.gitconfig`
