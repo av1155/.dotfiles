@@ -33,7 +33,7 @@ def _context(line: str) -> tuple[int, bool] | None:
     if record.get("isSidechain"):
         return None
     if record.get("type") == "system" and record.get("subtype") == "compact_boundary":
-        # Claude Code logs a request after its tool calls, so earlier usage is stale
+        # The running request may not be logged yet, so earlier usage is stale
         carried = as_dict(record.get("compactMetadata")).get("postTokens")
         if isinstance(carried, int):
             return carried, True
@@ -42,10 +42,10 @@ def _context(line: str) -> tuple[int, bool] | None:
     if record.get("type") != "assistant":
         return None
     usage = as_dict(as_dict(record.get("message")).get("usage"))
-    if not usage:
-        return None
     counts = [usage.get(key) for key in USAGE_KEYS]
-    return sum(count for count in counts if isinstance(count, int)), False
+    total = sum(count for count in counts if isinstance(count, int))
+    # API errors log synthetic assistant entries with all-zero usage
+    return (total, False) if total else None
 
 
 def tokens(path: Path) -> tuple[int, bool]:
@@ -53,7 +53,8 @@ def tokens(path: Path) -> tuple[int, bool]:
         size = handle.seek(0, os.SEEK_END)
         handle.seek(max(0, size - TAIL_BYTES))
         tail = handle.read().decode("utf-8", "replace")
-    for line in reversed(tail.splitlines()):
+    # splitlines() would also split on U+2028, which JSON leaves unescaped
+    for line in reversed(tail.split("\n")):
         found = _context(line)
         if found is not None:
             return found

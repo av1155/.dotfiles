@@ -75,6 +75,25 @@ class ContextTests(unittest.TestCase):
         )
         self.assertIn("after planning: compact (compacts at 25%)", result.stdout)
         self.assertIn("before a round: continue (compacts at 60%)", result.stdout)
+        self.write(_request(597_000))
+        result = self.context()
+        self.assertIn("59% of a 1,000,000-token window", result.stdout)
+        self.assertIn("before a round: continue", result.stdout)
+
+    def test_skips_api_errors_and_splits_only_on_newlines(self) -> None:
+        keys = (
+            "input_tokens",
+            "cache_creation_input_tokens",
+            "cache_read_input_tokens",
+        )
+        usage = dict.fromkeys(keys, 0)
+        message = {"model": "<synthetic>", "usage": usage}
+        error = {"type": "assistant", "isApiErrorMessage": True, "message": message}
+        self.write(_request(786_168), error, {"type": "user"})
+        self.assertIn("context: 786,168 tokens, 78% of", self.context().stdout)
+        line = json.dumps(_request(640_000) | {"note": "\u2028"}, ensure_ascii=False)
+        self.transcript.write_text(f"{json.dumps(_request(300_000))}\n{line}\n")
+        self.assertIn("context: 640,000 tokens", self.context().stdout)
 
     def test_a_newer_compaction_replaces_the_stale_request(self) -> None:
         carried = _boundary(
@@ -108,14 +127,12 @@ class ContextTests(unittest.TestCase):
     def test_ignores_unusable_config_and_honors_a_moved_config_dir(self) -> None:
         self.write(_request(100_000))
         self.git("config", "buildloop.contextWindow", "0")
-        self.assertIn("10% of a 1,000,000-token window", self.context().stdout)
-        moved = self.home / "moved"
-        self.transcript.parent.rename(moved)
-        result = self.context(CLAUDE_CONFIG_DIR=str(self.home))
-        self.assertEqual(result.returncode, 1)
-        (moved.parent / "projects").mkdir()
-        moved.rename(moved.parent / "projects" / "-repo")
-        result = self.context(CLAUDE_CONFIG_DIR=str(self.home))
+        result = self.context()
+        self.assertIn("10% of a 1,000,000-token window", result.stdout)
+        self.assertIn("ignoring buildloop.contextWindow=0", result.stderr)
+        config = self.home / "config"
+        (self.home / ".claude").rename(config)
+        result = self.context(CLAUDE_CONFIG_DIR=str(config))
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_fails_clearly_without_a_session_or_a_transcript(self) -> None:

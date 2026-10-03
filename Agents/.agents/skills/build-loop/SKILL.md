@@ -86,7 +86,8 @@ A round, for T1 to T3:
 1. Commit, with the gates green on that commit. Then run `bl context`: if it says
    `compact` before a round (60% of the window by default), stop and give the user a
    `/compact` note naming the round number, the commit under review and `bl state`, and
-   resume from `bl state` afterwards.
+   resume from `bl state` afterwards. If `bl context` cannot measure, treat the context
+   as high.
 2. In one message, launch a fresh `/review` subagent (Prompt 2) and a fresh `/deep-audit`
    subagent (Prompt 3) on the change's range, `<range>` as
    [prompts.md](references/prompts.md) defines it.

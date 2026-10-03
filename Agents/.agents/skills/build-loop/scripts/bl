@@ -202,17 +202,19 @@ def cmd_reset(args: argparse.Namespace) -> int:
 
 def _config_int(key: str, default: int) -> int:
     value = core.optional_git("config", "--get", key)
-    return int(value) if value.isdecimal() and int(value) > 0 else default
+    if value.isdecimal() and int(value) > 0:
+        return int(value)
+    if value:
+        print(f"bl: ignoring {key}={value}; using {default}", file=sys.stderr)
+    return default
 
 
 def cmd_context(_args: argparse.Namespace) -> int:
     used, compacted = bl_context.tokens(bl_context.transcript())
     window = _config_int("buildloop.contextWindow", 1_000_000)
-    share = 100 * used / window
+    share = 100 * used // window
     carried = " carried over by a compaction" if compacted else ""
-    print(
-        f"context: {used:,} tokens{carried}, {share:.0f}% of a {window:,}-token window"
-    )
+    print(f"context: {used:,} tokens{carried}, {share}% of a {window:,}-token window")
     for label, key, default in COMPACT_POINTS:
         limit = _config_int(key, default)
         verdict = "compact" if share >= limit else "continue"

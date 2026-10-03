@@ -1,6 +1,6 @@
 ---
 name: end-to-end
-description: Claude Code only. Take a planned work item end to end. Resolves the next wave or issue, sets up the workspace, plans (stopping for /compact or sign-off only when the context or the plan calls for it), implements through the build-loop skill, then ships, merges and cleans up within the session's authorization. Use when asked for the next wave, to work a progress file or a session section of a planning note, or to take a change end to end (PR, green checks, merge, housekeeping). Skip a bare "continue" or "proceed" with no work item, questions, and research.
+description: Claude Code only. Take a planned work item end to end. Resolves the next wave or issue, sets up the workspace, plans, implements through the build-loop skill, then ships, merges and cleans up within the session's authorization. Use when asked for the next wave, to work a progress file or a session section of a planning note, or to take a change end to end (PR, green checks, merge, housekeeping). Skip a bare "continue" or "proceed" with no work item, questions, and research.
 ---
 
 # End to end

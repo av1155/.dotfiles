@@ -793,17 +793,16 @@ a plan review; otherwise it goes straight into implementation. build-loop runs t
 same check before each review round and stops for `/compact` at 60%. `bl context`
 (in `bl_context.py`) reads the latest main-thread request's token usage from the
 session transcript that `CLAUDE_CODE_SESSION_ID` names. When a compaction is logged
-after that request, it reports what the compaction carried over instead, because
-the running request reaches the transcript only after its tool calls finish. Tune
-it with `git config --global` keys `buildloop.compactAfterPlan`,
+after that request, it reports what the compaction carried over instead. Tune it
+with `git config --global` keys `buildloop.compactAfterPlan`,
 `buildloop.compactBeforeRound` and `buildloop.contextWindow` (default 1000000).
 
 Why: long planning sessions reached 30 to 50% of the window before implementation
 started, and a fixed stop also interrupted short ones that had room to spare.
 
 To re-apply if overwritten: restore `bl`, `bl_state.py`, `bl_context.py` and
-`test_context.py` under build-loop's scripts, end-to-end's step 3, and build-loop's
-round step 1.
+`test_context.py` under build-loop's scripts, and the end-to-end and build-loop
+`SKILL.md` files.
 
 ### 2026-10-02: refine, build-loop and end-to-end skills, agent commit gates
 
