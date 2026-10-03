@@ -22,6 +22,7 @@ import os
 import re
 import shutil
 import sys
+from pathlib import Path
 from typing import cast
 
 import refine_core as core
@@ -129,6 +130,11 @@ def _refuse_partial(command: str, entries: list[core.Entry]) -> bool:
     return bool(partial)
 
 
+def _copy(source: Path, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, destination)
+
+
 def cmd_snapshot(args: argparse.Namespace) -> int:
     repo = core.open_repo()
     if args.paths:
@@ -148,9 +154,7 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     target = repo.state_dir / "snapshot"
     shutil.rmtree(target, ignore_errors=True)
     for path in paths:
-        destination = target / path
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(repo.root / path, destination)
+        _copy(repo.root / path, target / path)
     core.write_json(
         manifest, {"created": core.now(), "head": repo.head, "files": blobs}
     )
@@ -192,7 +196,7 @@ def cmd_restore(args: argparse.Namespace) -> int:
         )
         raise core.RefineError(message)
     for path in requested:
-        shutil.copy2(repo.state_dir / "snapshot" / path, repo.root / path)
+        _copy(repo.state_dir / "snapshot" / path, repo.root / path)
     _print_json({"restored": requested})
     return 0
 
@@ -200,7 +204,7 @@ def cmd_restore(args: argparse.Namespace) -> int:
 def cmd_stamp(args: argparse.Namespace) -> int:
     repo = core.open_repo()
     review = core.reviewable(core.staged(repo))
-    if not args.allow_unstaged and _refuse_partial("stamp", review):
+    if _refuse_partial("stamp", review):
         return 2
     if args.mode == "none" and review:
         print(
@@ -307,12 +311,15 @@ def _parser() -> argparse.ArgumentParser:
     diff.add_argument("--shard-lines", type=int, default=0)
     diff.set_defaults(func=cmd_diff)
     snapshot = commands.add_parser(
-        "snapshot", help="copy staged files, or the given tracked files, before editing"
+        "snapshot",
+        help="copy staged files, or the given tracked files (paths from the repo "
+        "root), before editing",
     )
     snapshot.add_argument("paths", nargs="*")
     snapshot.set_defaults(func=cmd_snapshot)
     restore = commands.add_parser(
-        "restore", help="restore files from the last snapshot"
+        "restore",
+        help="restore files (paths from the repo root) from the last snapshot",
     )
     restore.add_argument("paths", nargs="*")
     restore.set_defaults(func=cmd_restore)
@@ -324,7 +331,6 @@ def _parser() -> argparse.ArgumentParser:
     results = ("pass", "rolled-back", "unverified", "none")
     stamp.add_argument("--result", choices=results, default="pass")
     stamp.add_argument("--checks", default="")
-    stamp.add_argument("--allow-unstaged", action="store_true")
     stamp.set_defaults(func=cmd_stamp)
     gate = commands.add_parser("gate", help="pre-commit hook entry point")
     gate.set_defaults(func=cmd_gate)

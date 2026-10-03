@@ -42,9 +42,14 @@ class ScopeTests(GateTestCase):
             "src/components/NoticeBanner.tsx": "code",
             "src/notice.py": "code",
             "CMakeLists.txt": "code",
+            "src/LICENSE_KEY.ts": "code",
+            "CHANGELOG.ts": "code",
+            "requirements.txt": "config",
+            "py/requirements-dev.txt": "config",
             "vendor/lib/x.go": "exempt",
             "web/node_modules/pkg/index.js": "exempt",
             "LICENSE-MIT": "exempt",
+            "LICENSE-2.0.txt": "exempt",
             "COPYING.LESSER": "exempt",
         }
         for path in expected:
@@ -147,6 +152,14 @@ class SnapshotAndStampTests(GateTestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("staged content changed", result.stderr)
         self.assertEqual((self.repo / "app.py").read_text(), "x = 2\n")
+
+    def test_restore_recreates_a_deleted_directory(self) -> None:
+        self.stage("a/b/m.py", "m = 1\n")
+        self.assertEqual(self.refine("snapshot").returncode, 0)
+        (self.repo / "a/b/m.py").unlink()
+        (self.repo / "a/b").rmdir()
+        self.assertEqual(self.refine("restore").returncode, 0)
+        self.assertEqual((self.repo / "a/b/m.py").read_text(), "m = 1\n")
 
     def test_snapshot_of_named_committed_files_for_a_tidy_pass(self) -> None:
         self.stage("app.py", "x = 1\n")

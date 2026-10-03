@@ -59,7 +59,8 @@ result.
 7. Re-stage exactly the files you edited (`git add -- <paths>`), then stamp:
    `refine stamp --mode <light|full> --applied N --reported N --deferred N --result <pass|rolled-back|unverified> --checks "<commands run>"`
 8. The caller commits. After that commit lands, if `tidy.md` lists anything:
-   `refine snapshot <its files>`, apply it, run the same checks, stage those files,
+   `refine snapshot <its files>` (paths from the repo root, as `tidy.md` lists them),
+   apply it, run the same checks, stage those files,
    `refine stamp --mode light --tidy ...`, then commit them on their own as
    `refactor(<scope>): <what got simpler>`. If a check fails, `refine restore` and skip
    the tidy commit. Delete `tidy.md` afterwards.

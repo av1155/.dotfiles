@@ -16,8 +16,10 @@ if sys.version_info < (3, 11):
     sys.exit("refine needs Python 3.11 or later as python3 on PATH")
 
 DOC_SUFFIXES = frozenset({".md", ".mdx", ".markdown", ".rst", ".adoc", ".txt"})
-DOC_NAME = re.compile(r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][\w.-]*)?")
-NOT_DOCS = frozenset({"CMakeLists.txt"})
+DOC_NAME = re.compile(
+    r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][A-Z0-9][A-Z0-9.-]*)?"
+)
+DEPENDENCY_LIST = re.compile(r"(requirements|constraints)[\w.-]*\.txt")
 LOCKFILES = frozenset({
     "pnpm-lock.yaml", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock",
     "bun.lock", "bun.lockb", "deno.lock", "Cargo.lock", "poetry.lock", "uv.lock",
@@ -208,6 +210,11 @@ def _matches(path: str, globs: tuple[str, ...] | list[str]) -> bool:
 def _exempt_reason(path: str, status: str, mode: str, binary: bool) -> str | None:
     pure = PurePosixPath(path)
     name = pure.name
+    prose = (
+        pure.suffix.lower() in DOC_SUFFIXES
+        and name != "CMakeLists.txt"
+        and not DEPENDENCY_LIST.fullmatch(name)
+    )
     reasons = (
         (status == "D", "deleted"),
         (status == "U", "unmerged"),
@@ -215,7 +222,7 @@ def _exempt_reason(path: str, status: str, mode: str, binary: bool) -> str | Non
         (binary, "binary"),
         (name in LOCKFILES or name.endswith(".lock"), "lockfile"),
         (_matches(path, GENERATED_GLOBS), "generated or vendored"),
-        (pure.suffix.lower() in DOC_SUFFIXES and name not in NOT_DOCS, "docs"),
+        (prose, "docs"),
         (DOC_NAME.fullmatch(name) is not None, "docs"),
     )
     return next((reason for hit, reason in reasons if hit), None)
@@ -238,6 +245,7 @@ def classify(
         suffix in CONFIG_SUFFIXES
         or pure.name in CONFIG_NAMES
         or pure.parts[0] == ".github"
+        or DEPENDENCY_LIST.fullmatch(pure.name)
     ):
         return "config", "config"
     return "code", "code"
