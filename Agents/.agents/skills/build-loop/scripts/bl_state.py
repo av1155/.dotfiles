@@ -88,6 +88,7 @@ def load(branch: str) -> dict[str, object]:
         "tier": None,
         "reason": "",
         "base": None,
+        "docs_wave": False,
         "plan": None,
         "rounds": [],
     }
@@ -134,17 +135,24 @@ def finished(state: dict[str, object]) -> bool:
 
 def settle(state: dict[str, object], name: str) -> None:
     tier, entry = state["tier"], loop(state, name)
-    if not isinstance(tier, str) or tier not in CAPS:
+    if not isinstance(tier, str) or tier not in CAPS or entry["last"] == "reopened":
         return
     if entry["ending"] not in (*OPEN_ENDINGS, *COUNTED_ENDINGS):
         return
-    last_clean = entry["last"] in (None, "clean")
-    if _int(entry["clean"]) >= TARGETS[tier] and last_clean:
+    banked = _int(entry["clean"]) >= TARGETS[tier] and entry["last"] in (None, "clean")
+    if banked and not state["docs_wave"]:
         entry["ending"] = "one clean" if TARGETS[tier] == 1 else "two clean"
     elif _int(entry["passes"]) >= CAPS[tier]:
         entry["ending"] = CAP_ENDINGS[tier]
     elif entry["ending"] in COUNTED_ENDINGS:
         entry["ending"] = None
+
+
+def set_ending(state: dict[str, object], name: str, token: str) -> None:
+    entry = loop(state, name)
+    entry["ending"] = token
+    if token == "in progress":
+        entry["last"] = "reopened"
 
 
 def record(state: dict[str, object], name: str, result: str) -> None:

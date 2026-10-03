@@ -24,7 +24,7 @@ you are resuming keeps its state. `bl tier` refuses a change whose loops have bo
 ended until you reset, or pass `--reopen` to retier that same change. Then pick the
 tier before writing code and record it: `bl tier <T> --reason "<why>"`, which also
 records the change's base commit. If you committed first, pass `--base` with the commit
-the hook warning names. Raise the tier the moment new risk appears, which reopens any
+the first hook warning names. Raise the tier the moment new risk appears, which reopens any
 loop the lower tier's target or cap had closed; lower it only when the user says so. The
 user's prompt or the repo profile can set it.
 
@@ -84,12 +84,13 @@ A round, for T1 to T3:
 
 1. Commit, with the gates green on that commit.
 2. In one message, launch a fresh `/review` subagent (Prompt 2) and a fresh `/deep-audit`
-   subagent (Prompt 3) on the change's range, `<base>..<that commit>`, with the base from
-   `bl state`.
+   subagent (Prompt 3) on the change's range, `<range>` as
+   [prompts.md](references/prompts.md) defines it.
 3. Change nothing in the repo while either runs.
 4. Disposition both reports under Prompt 1: a `light` refine pass on the fix hunks, the
    gates, then commit.
-5. Record it: `bl round --review clean|dirty|done --audit clean|dirty|done`.
+5. Record it: `bl round --round <n> --review clean|dirty|done --audit clean|dirty|done`.
+   A round number that is not the next one is refused, so a retry never counts twice.
 6. Start the next round until each loop has an ending.
 
 The prompts are in [prompts.md](references/prompts.md). Counting, endings and the ledger

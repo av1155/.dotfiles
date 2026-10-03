@@ -12,7 +12,8 @@ buildloop.checks (warn|off, default warn), buildloop.agents (AI_AGENT prefixes,
 default claude-code). Needs Python 3.11 or later.
 
 Exit codes: 0 success; 1 a failed command; 2 invalid usage, lowering a tier
-without --force, or retiering a finished change without --reopen.
+without --force, retiering a finished change without --reopen, or a round
+number that is not the next one.
 """
 
 import argparse
@@ -30,13 +31,16 @@ DOC_SUFFIXES = (".md", ".mdx", ".markdown", ".rst", ".adoc", ".txt")
 DOC_NAME = re.compile(
     r"(LICEN[CS]E|NOTICE|AUTHORS|COPYING|CHANGELOG)([-_.][A-Z0-9][A-Z0-9.-]*)?"
 )
-DEPENDENCY_LIST = re.compile(r"(requirements|constraints)[\w.-]*\.txt")
+DEPENDENCY_LIST = re.compile(
+    r"(.*/)?(requirements/[^/]+|[\w.-]*(requirements|constraints)[\w.-]*)\.txt"
+)
 
 
 def _print_state(state: dict[str, object]) -> None:
     print(f"branch: {state['branch']}")
     print(f"updated: {state.get('updated') or 'never'}")
-    print(f"tier: {state['tier'] or 'not set'} {state['reason'] or ''}".rstrip())
+    wave = " (documentation wave)" if state["docs_wave"] else ""
+    print(f"tier: {state['tier'] or 'not set'}{wave} {state['reason'] or ''}".rstrip())
     print(f"base: {state['base'] or 'not recorded'}")
     print(f"plan: {state['plan'] or 'not recorded'}")
     print(f"rounds: {len(cast('list[object]', state['rounds']))}")
@@ -58,8 +62,8 @@ def cmd_state(args: argparse.Namespace) -> int:
     return 0
 
 
-def _refuse(message: str) -> int:
-    print(f"bl tier: {message}", file=sys.stderr)
+def _refuse(command: str, message: str) -> int:
+    print(f"bl {command}: {message}", file=sys.stderr)
     return 2
 
 
@@ -68,17 +72,18 @@ def cmd_tier(args: argparse.Namespace) -> int:
     current = state["tier"]
     if core.finished(state) and not args.reopen:
         return _refuse(
+            "tier",
             "the last change on this branch has rounds and both loop endings. Run bl "
-            "reset to start a new change, or pass --reopen to retier this one."
+            "reset to start a new change (with --base <the commit before it> if it "
+            "is already committed), or pass --reopen to retier this one.",
         )
-    tiers = core.TIERS
-    lowering = isinstance(current, str) and tiers.index(args.tier) < tiers.index(
-        current
-    )
+    order = core.TIERS.index
+    lowering = isinstance(current, str) and order(args.tier) < order(current)
     if lowering and not args.force:
         return _refuse(
+            "tier",
             f"{current} is already recorded. Lower it only when the user says so, "
-            "then pass --force."
+            "then pass --force.",
         )
     if args.base:
         base = core.optional_git(
@@ -91,6 +96,8 @@ def cmd_tier(args: argparse.Namespace) -> int:
     elif not state["base"]:
         state["base"] = core.head()
     state["tier"], state["reason"] = args.tier, args.reason
+    if args.docs_wave:
+        state["docs_wave"] = True
     for name in core.LOOPS:
         core.settle(state, name)
     core.save(state)
@@ -117,7 +124,14 @@ def cmd_round(args: argparse.Namespace) -> int:
     if state["tier"] not in core.CAPS:
         message = "record a tier of T1 or higher before counting rounds"
         raise core.LoopError(message)
-    cast("list[object]", state["rounds"]).append(
+    rounds = cast("list[object]", state["rounds"])
+    if args.round != len(rounds) + 1:
+        return _refuse(
+            "round",
+            f"round {args.round} does not follow the {len(rounds)} on record; check "
+            "bl state before recording again.",
+        )
+    rounds.append(
         {
             "at": core.now(),
             "review": args.review,
@@ -134,7 +148,7 @@ def cmd_round(args: argparse.Namespace) -> int:
 
 def cmd_ending(args: argparse.Namespace) -> int:
     state = core.load(core.current_branch())
-    core.loop(state, args.loop)["ending"] = args.token
+    core.set_ending(state, args.loop, args.token)
     core.save(state)
     print(f"{args.loop} ending: {args.token}")
     return 0
@@ -177,7 +191,7 @@ def _is_doc(path: str) -> bool:
     prose = (
         name.lower().endswith(DOC_SUFFIXES)
         and name != "CMakeLists.txt"
-        and not DEPENDENCY_LIST.fullmatch(name)
+        and not DEPENDENCY_LIST.fullmatch(path)
     )
     return prose or DOC_NAME.fullmatch(name) is not None
 
@@ -255,12 +269,16 @@ def _parser() -> argparse.ArgumentParser:
     tier.add_argument(
         "--reopen", action="store_true", help="retier a change whose loops ended"
     )
+    tier.add_argument(
+        "--docs-wave", action="store_true", help="suspend the clean-pass ending"
+    )
     tier.set_defaults(func=cmd_tier)
     plan = commands.add_parser("plan", help="print the plan path, or record one")
     plan.add_argument("file", nargs="?")
     plan.add_argument("--path", action="store_true")
     plan.set_defaults(func=cmd_plan)
     rnd = commands.add_parser("round", help="record one round's results")
+    rnd.add_argument("--round", type=int, required=True, help="this round's number")
     for loop in core.LOOPS:
         rnd.add_argument(f"--{loop}", choices=("clean", "dirty", "done"), required=True)
     rnd.add_argument("--note", default="")

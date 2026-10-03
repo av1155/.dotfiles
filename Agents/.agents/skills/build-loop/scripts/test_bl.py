@@ -41,18 +41,17 @@ class BlTestCase(unittest.TestCase):
         self.git("add", "seed.txt")
         self.git("commit", "-q", "-m", "seed", agent=None)
 
-    def env(self, agent: str | None) -> dict[str, str]:
+    def env(self, agent: str | None, **extra: str) -> dict[str, str]:
         drop = ("GIT_", "AI_AGENT", "CLAUDECODE")
         env = {k: v for k, v in os.environ.items() if not k.startswith(drop)}
         env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"})
         if agent:
             env["AI_AGENT"] = agent
-        return env
+        return env | extra
 
     def _run(
-        self, argv: list[str], agent: str | None
+        self, argv: list[str], env: dict[str, str]
     ) -> subprocess.CompletedProcess[str]:
-        env = self.env(agent)
         return subprocess.run(
             argv, cwd=self.repo, env=env, capture_output=True, text=True, check=False
         )
@@ -60,10 +59,10 @@ class BlTestCase(unittest.TestCase):
     def git(
         self, *args: str, agent: str | None = AGENT
     ) -> subprocess.CompletedProcess[str]:
-        return self._run(["git", *args], agent)
+        return self._run(["git", *args], self.env(agent))
 
     def bl(self, *args: str) -> subprocess.CompletedProcess[str]:
-        return self._run([str(SCRIPT), *args], AGENT)
+        return self._run([str(SCRIPT), *args], self.env(AGENT))
 
     def state(self) -> dict[str, object]:
         result = self.bl("state", "--json")
@@ -75,8 +74,11 @@ class BlTestCase(unittest.TestCase):
         return cast("dict[str, dict[str, object]]", self.state()["loops"])[name]
 
     def rounds(self, *results: tuple[str, str]) -> None:
-        for review, audit in results:
-            result = self.bl("round", "--review", review, "--audit", audit)
+        start = len(cast("list[object]", self.state()["rounds"])) + 1
+        for number, (review, audit) in enumerate(results, start):
+            result = self.bl(
+                "round", "--round", str(number), "--review", review, "--audit", audit
+            )
             self.assertEqual(result.returncode, 0, result.stderr)
 
 
@@ -158,11 +160,17 @@ class TierAndPlanTests(BlTestCase):
 
     def test_rounds_need_a_tier(self) -> None:
         self.assertEqual(
-            self.bl("round", "--review", "clean", "--audit", "clean").returncode, 1
+            self.bl(
+                "round", "--round", "1", "--review", "clean", "--audit", "clean"
+            ).returncode,
+            1,
         )
         self.bl("tier", "T0", "--reason", "docs")
         self.assertEqual(
-            self.bl("round", "--review", "clean", "--audit", "clean").returncode, 1
+            self.bl(
+                "round", "--round", "1", "--review", "clean", "--audit", "clean"
+            ).returncode,
+            1,
         )
 
 
@@ -226,6 +234,29 @@ class RoundTests(BlTestCase):
         self.bl("tier", "T1", "--reason", "same change", "--reopen")
         self.assertEqual(self.loop("review")["ending"], "one clean")
 
+    def test_retiering_keeps_a_reopened_loop_open(self) -> None:
+        self.bl("tier", "T1", "--reason", "fix")
+        self.rounds(("dirty", "dirty"), ("dirty", "dirty"))
+        self.bl("ending", "--loop", "review", "--token", "in progress")
+        self.bl("tier", "T1", "--reason", "reworded")
+        self.assertEqual(self.loop("review")["ending"], "in progress")
+        self.rounds(("clean", "done"))
+        self.assertEqual(self.loop("review")["ending"], "one clean")
+
+    def test_a_repeated_round_number_is_refused(self) -> None:
+        self.bl("tier", "T2", "--reason", "feature")
+        self.rounds(("clean", "clean"))
+        retry = ("round", "--round", "1", "--review", "clean", "--audit", "clean")
+        self.assertEqual(self.bl(*retry).returncode, 2)
+        self.assertEqual(self.loop("review")["passes"], 1)
+
+    def test_a_documentation_wave_runs_past_two_clean(self) -> None:
+        self.bl("tier", "T3", "--reason", "prose", "--docs-wave")
+        self.rounds(("clean", "clean"), ("clean", "clean"), ("dirty", "dirty"))
+        self.assertEqual(self.loop("review")["ending"], None)
+        self.bl("ending", "--loop", "review", "--token", "documentation wave")
+        self.assertEqual(self.loop("review")["ending"], "documentation wave")
+
     def test_manual_ending(self) -> None:
         self.bl("tier", "T2", "--reason", "feature")
         result = self.bl(
@@ -259,7 +290,7 @@ class HookTests(BlTestCase):
     def test_check_tier_is_quiet_on_docs_only_commits(self) -> None:
         for path in ("NOTES.md", "LICENSE", "LICENSE-2.0.txt", "CHANGELOG.md"):
             self.assertNotIn("no tier recorded", self.commit(AGENT, path).stderr)
-        for path in ("CMakeLists.txt", "requirements.txt", "LICENSE_KEY.ts"):
+        for path in ("CMakeLists.txt", "dev-requirements.txt", "LICENSE_KEY.ts"):
             self.assertIn("no tier recorded", self.commit(AGENT, path).stderr)
 
     def test_late_tier_takes_the_base_the_warning_names(self) -> None:
@@ -277,8 +308,19 @@ class HookTests(BlTestCase):
         self.git("checkout", "-q", "main", agent=None)
         pushed = self.git("push", "-q", "origin", "open-y").stderr
         self.assertIn("pushing open-y before these loops have an ending", pushed)
+        self.bl("tier", "T2", "--reason", "main is open too")
         self.git("tag", "v1", agent=None)
         self.assertNotIn("build-loop", self.git("push", "-q", "origin", "v1").stderr)
+        deleted = self.git("push", "-q", "origin", ":open-y")
+        self.assertEqual(deleted.returncode, 0, deleted.stderr)
+        self.assertNotIn("build-loop", deleted.stderr)
+
+    def test_claudecode_alone_counts_as_an_agent(self) -> None:
+        (self.repo / "app.py").write_text("x = 1\n")
+        self.git("add", "app.py")
+        env = self.env(None, CLAUDECODE="1")
+        result = self._run(["git", "commit", "-q", "-m", "c"], env)
+        self.assertIn("no tier recorded", result.stderr)
 
     def test_hooks_honor_every_configured_agent_prefix(self) -> None:
         self.assertNotIn("no tier recorded", self.commit("codex_1").stderr)
