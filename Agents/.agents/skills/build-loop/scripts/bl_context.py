@@ -24,28 +24,37 @@ def transcript() -> Path:
     return max(matches, key=lambda path: path.stat().st_mtime)
 
 
-def _request_tokens(line: str) -> int | None:
+def _context(line: str) -> tuple[int, bool] | None:
     try:
         entry: object = json.loads(line)
     except ValueError:
         return None
     record = as_dict(entry)
-    if record.get("type") != "assistant" or record.get("isSidechain"):
+    if record.get("isSidechain"):
+        return None
+    if record.get("type") == "system" and record.get("subtype") == "compact_boundary":
+        # Claude Code logs a request after its tool calls, so earlier usage is stale
+        carried = as_dict(record.get("compactMetadata")).get("postTokens")
+        if isinstance(carried, int):
+            return carried, True
+        message = "compacted since the last logged request; run bl context next step"
+        raise LoopError(message)
+    if record.get("type") != "assistant":
         return None
     usage = as_dict(as_dict(record.get("message")).get("usage"))
     if not usage:
         return None
     counts = [usage.get(key) for key in USAGE_KEYS]
-    return sum(count for count in counts if isinstance(count, int))
+    return sum(count for count in counts if isinstance(count, int)), False
 
 
-def tokens(path: Path) -> int:
+def tokens(path: Path) -> tuple[int, bool]:
     with path.open("rb") as handle:
         size = handle.seek(0, os.SEEK_END)
         handle.seek(max(0, size - TAIL_BYTES))
         tail = handle.read().decode("utf-8", "replace")
     for line in reversed(tail.splitlines()):
-        found = _request_tokens(line)
+        found = _context(line)
         if found is not None:
             return found
     message = f"no main-thread request recorded near the end of {path.name}"

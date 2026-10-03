@@ -23,6 +23,10 @@ def _request(tokens: int, *, sidechain: bool = False) -> dict[str, object]:
     return {"type": "assistant", "isSidechain": sidechain, "message": {"usage": usage}}
 
 
+def _boundary(**extra: object) -> dict[str, object]:
+    return {"type": "system", "subtype": "compact_boundary", **extra}
+
+
 class ContextTests(unittest.TestCase):
     def setUp(self) -> None:
         self.home = Path(self.enterContext(tempfile.TemporaryDirectory()))
@@ -71,6 +75,27 @@ class ContextTests(unittest.TestCase):
         )
         self.assertIn("after planning: compact (compacts at 25%)", result.stdout)
         self.assertIn("before a round: continue (compacts at 60%)", result.stdout)
+
+    def test_a_newer_compaction_replaces_the_stale_request(self) -> None:
+        carried = _boundary(
+            compactMetadata={"preTokens": 850_000, "postTokens": 23_460}
+        )
+        summary = {"type": "user", "isCompactSummary": True}
+        self.write(_request(850_000), carried, summary)
+        result = self.context()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "23,460 tokens carried over by a compaction, 2% of", result.stdout
+        )
+        self.assertIn("before a round: continue", result.stdout)
+        self.write(_request(850_000), carried, summary, _request(72_112))
+        self.assertIn("context: 72,112 tokens, 7% of", self.context().stdout)
+        self.write(_request(300_000), carried | {"isSidechain": True})
+        self.assertIn("context: 300,000 tokens, 30% of", self.context().stdout)
+        self.write(_request(850_000), _boundary())
+        unmeasured = self.context()
+        self.assertEqual(unmeasured.returncode, 1)
+        self.assertIn("compacted since the last logged request", unmeasured.stderr)
 
     def test_window_and_thresholds_come_from_git_config(self) -> None:
         self.write(_request(100_000))

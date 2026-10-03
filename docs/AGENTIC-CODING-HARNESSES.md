@@ -792,8 +792,10 @@ planning, when the plan touches a stop-and-ask surface, or when the prompt asks 
 a plan review; otherwise it goes straight into implementation. build-loop runs the
 same check before each review round and stops for `/compact` at 60%. `bl context`
 (in `bl_context.py`) reads the latest main-thread request's token usage from the
-session transcript that `CLAUDE_CODE_SESSION_ID` names. Tune it with
-`git config --global` keys `buildloop.compactAfterPlan`,
+session transcript that `CLAUDE_CODE_SESSION_ID` names. When a compaction is logged
+after that request, it reports what the compaction carried over instead, because
+the running request reaches the transcript only after its tool calls finish. Tune
+it with `git config --global` keys `buildloop.compactAfterPlan`,
 `buildloop.compactBeforeRound` and `buildloop.contextWindow` (default 1000000).
 
 Why: long planning sessions reached 30 to 50% of the window before implementation
