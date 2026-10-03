@@ -25,6 +25,8 @@ If a repo has no local guidance, say so briefly and proceed safely.
 - Stop exploring once there is enough evidence to act.
 - Verify with the smallest relevant check before claiming done.
 - Do not bypass permissions, sandboxing, hooks, denied tools, or runtime safeguards.
+- In Claude Code, run code changes through the `build-loop` skill at the tier it picks,
+  and planned work items through `end-to-end`. Subagents never start a loop of their own.
 
 ## Boundaries
 
@@ -32,8 +34,9 @@ Ask before:
 
 - Dependency installs, upgrades, or lockfile changes
 - Schema, migration, CI, release, deployment, or infrastructure edits
-- New abstractions, helpers, frameworks, or broad refactors
-- Changes outside the stated task scope
+- New abstractions, helpers, frameworks, or broad refactors (the `refine` skill may
+  add file-private helpers)
+- Changes outside the stated task scope (except `refine` tidy commits)
 - `git push`, remote branch creation, PR merge, force-push, or branch deletion
 
 Never:
