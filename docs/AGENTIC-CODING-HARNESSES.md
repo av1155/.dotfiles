@@ -784,6 +784,25 @@ harnesses.
 
 ## 18. Modification Ledger
 
+### 2026-10-03: context-based /compact stops
+
+end-to-end used to stop after every T3 plan with a `/compact` note. It now stops
+only when `bl context` puts the session at 25% of its context window or more after
+planning, when the plan touches a stop-and-ask surface, or when the prompt asks for
+a plan review; otherwise it goes straight into implementation. build-loop runs the
+same check before each review round and stops for `/compact` at 60%. `bl context`
+(in `bl_context.py`) reads the latest main-thread request's token usage from the
+session transcript that `CLAUDE_CODE_SESSION_ID` names. Tune it with
+`git config --global` keys `buildloop.compactAfterPlan`,
+`buildloop.compactBeforeRound` and `buildloop.contextWindow` (default 1000000).
+
+Why: long planning sessions reached 30 to 50% of the window before implementation
+started, and a fixed stop also interrupted short ones that had room to spare.
+
+To re-apply if overwritten: restore `bl`, `bl_state.py`, `bl_context.py` and
+`test_context.py` under build-loop's scripts, end-to-end's step 3, and build-loop's
+round step 1.
+
 ### 2026-10-02: refine, build-loop and end-to-end skills, agent commit gates
 
 Added three user-authored global skills (bucket C), each with its committed
