@@ -18,7 +18,7 @@ This document captures verified behavior per harness, the canonical file layout 
 | Harness                     | Version     | Install path                                                                | Session-start input                                                                                                                                                                    |
 | --------------------------- | ----------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Claude Code** (Anthropic) | per release | `claude` CLI (Homebrew + IDE integrations)                                  | `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md` (matching `paths:`), auto-memory `MEMORY.md`, project `<repo>/CLAUDE.md` (concatenated root-to-cwd), project `<repo>/.claude/rules/*.md` |
-| **Codex CLI** (OpenAI)      | 0.128.0     | `/opt/homebrew/Caskroom/codex/<v>/codex-aarch64-apple-darwin` (Rust binary) | `~/.codex/AGENTS.override.md` then `AGENTS.md`, project `AGENTS.md` walk-up (32 KiB combined cap)                                                                                      |
+| **Codex CLI** (OpenAI)      | 0.160.0     | `/opt/homebrew/Caskroom/codex/<v>/codex-aarch64-apple-darwin` (Rust binary) | `~/.codex/AGENTS.override.md` then `AGENTS.md` (not counted), project `AGENTS.md` walk-up (32 KiB cap on project files)                                                                |
 | **OpenCode** (sst)          | 1.14.41     | npm/Homebrew                                                                | `~/.config/opencode/AGENTS.md` (or `CLAUDE.md` fallback), project `AGENTS.md`. `instructions:` field globs/URLs in `opencode.jsonc`                                                    |
 | **Pi** (earendil-works)     | 0.74.0      | npm `@earendil-works/pi-coding-agent`                                       | `~/.pi/agent/AGENTS.md` (or `CLAUDE.md`), project `.pi/AGENTS.md` walk-up. `SYSTEM.md`/`APPEND_SYSTEM.md` for system prompt customization                                              |
 
@@ -103,7 +103,7 @@ All four harnesses use the SKILL.md `description:` field at session-prompt time 
 | Harness     | File loaded                                                                               | Size cap                                                                                           | `@import` syntax                              | Concatenation                                                                           |
 | ----------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Claude Code | `CLAUDE.md` only (NOT `AGENTS.md`)                                                        | None hard; Anthropic recommends < 200 lines per file (adherence drops above)                       | Yes — `@path/to/file`, max 5 hops             | All files in directory tree concatenated root-to-cwd; subdirectory files load on-demand |
-| Codex CLI   | `AGENTS.override.md` then `AGENTS.md`, plus configurable `project_doc_fallback_filenames` | **32 KiB combined hard cap** (`project_doc_max_bytes`); silent truncation from start when exceeded | No                                            | Concatenated root-to-cwd; later files override earlier                                  |
+| Codex CLI   | `AGENTS.override.md` then `AGENTS.md`, plus configurable `project_doc_fallback_filenames` | **32 KiB hard cap on project files** (`project_doc_max_bytes`); global file not counted            | No                                            | Concatenated root-to-cwd; later files override earlier                                  |
 | OpenCode    | `AGENTS.md`, falls back to `CLAUDE.md` if no AGENTS.md present                            | None documented; community recommends < 300 lines                                                  | No (uses `instructions:` for modular loading) | Project file > global `~/.config/opencode/AGENTS.md` > global `~/.claude/CLAUDE.md`     |
 | Pi          | `AGENTS.md` or `CLAUDE.md` (either name)                                                  | None documented                                                                                    | No                                            | Walk-up from cwd to root, plus global `~/.pi/agent/<file>`                              |
 
@@ -163,6 +163,16 @@ Per-project MCP examples:
 | Pi          | TS extension event handlers via `pi.on(event, handler)`: `session_start`, `session_end`, `turn_start`, `turn_end`, `message_start`, `message_end`, `tool_call`, `tool_result`, `context`, `before_provider_request`, `after_provider_response`, `model_select`, `thinking_level_select`, `input`, `user_bash`, `before_agent_start` | per Pi extensions docs                                                                                                                                                                                                                                                                                                                                                                              |
 
 User's global Claude Code hooks (from `~/.claude/settings.json`): workmux tmux status updates (Notification, PreToolUse, PostToolUse, Stop, UserPromptSubmit) and a SessionStart hook for session tracking.
+
+Global git config hooks (git 2.54+, declared in `Git/.gitconfig`): `hook.refine` runs
+`~/.agents/skills/refine/scripts/refine gate` and `hook.build-loop-tier` runs `bl check-tier`
+on pre-commit; `hook.build-loop-ledger` runs `bl check-ledger` on pre-push. Config hooks run
+in every repository before the repo's own hookdir hook, even when `core.hooksPath` is set.
+They act only on agent commits (`AI_AGENT` matching `refine.agents` or `buildloop.agents`,
+default `claude-code`), and each command starts with `test -z "$AI_AGENT$CLAUDECODE" ||`,
+so a human commit or push never starts a script. The refine gate blocks
+(`refine.mode = block`); the build-loop checks only warn. Procedure: section 16, "Pause,
+tune or extend the agent commit gates".
 
 ## 8. Sub-agents
 
@@ -284,6 +294,9 @@ Per-item mapping with origin classification and bucket assignment, documented du
 | firecrawl-map/SKILL.md                      | Firecrawl CLI                         | C                                    | Added 2026-05-10; verbatim from `firecrawl/cli` commit `efeb34d3fbe936d631e17ab55c19f096fb3ef189`; skill-symlinked for Claude                                                             |
 | prototype/SKILL.md                          | Matt Pocock                           | C                                    | Added 2026-05-13 from `mattpocock/skills` commit `e74f0061bb67222181640effa98c675bdb2fdaa7`; verbatim copy; skill-symlinked for Claude                                                    |
 | handoff/SKILL.md                            | Matt Pocock                           | C                                    | Added 2026-05-13 from `mattpocock/skills` commit `e74f0061bb67222181640effa98c675bdb2fdaa7`; verbatim copy; skill-symlinked for Claude                                                    |
+| refine/SKILL.md                             | user-authored                         | C                                    | Added 2026-10-02 with scripts `refine` and `refine_core.py`, tests, and lens agents in `Claude/.claude/agents/`                                                                           |
+| build-loop/SKILL.md                         | user-authored                         | C                                    | Added 2026-10-02, extracted from the invest-platform and wedding-site build loops; script `bl`, tests                                                                                     |
+| end-to-end/SKILL.md                         | user-authored                         | C                                    | Added 2026-10-02: session lifecycle (workspace, plan and stop, ship, housekeeping, multi-session)                                                                                         |
 
 #### Skills currently in `.dotfiles/Claude/.claude/skills/` (16 personal-workflow)
 
@@ -493,6 +506,7 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 │   └── .claude/
 │       ├── CLAUDE.md       S→ ../../Agents/.agents/AGENTS.md
 │       ├── settings.json   (R)             # permissions, hooks, plugins, statusline
+│       ├── agents/                         # refine-lens, refine-lens-deep (R)
 │       ├── rules/                          # 4 entries
 │       │   ├── context7.md       (R)       # ctx7 CLI wrapper (only "real" global rule)
 │       │   ├── python.md         S→ ../../../Agents/.agents/skills/python/SKILL.md
@@ -658,6 +672,34 @@ is not tracked, so install it after a fresh clone:
 ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
 ```
 
+### Pause, tune or extend the agent commit gates
+
+1. Pause the refine gate everywhere: `git config --global refine.mode warn` (warn and log)
+   or `off`. Let one commit through, only with the user's say-so: `REFINE_SKIP=1 git commit ...`.
+2. Per repository: `git config refine.mode off`, or exempt generated or data paths with
+   `git config --add refine.exempt '<glob>'` (repo-local and untracked). invest-platform,
+   wedding-site and BAI-Capital-Platform carry their generated paths this way.
+3. Extend the gate to another harness by adding its `AI_AGENT` prefix to `refine.agents` and
+   `buildloop.agents`, for example `pi`. Codex exports `CODEX_THREAD_ID` instead of `AI_AGENT`,
+   so it needs a code change in both scripts and in the hook guard first.
+4. Silence the build-loop warnings: `git config --global buildloop.checks off`.
+5. Verify after any change: `git hook list --show-scope pre-commit` lists `refine` and
+   `build-loop-tier`, and both suites pass:
+   `python3 -m unittest discover -s ~/.agents/skills/refine/scripts -p 'test_*.py'`, then the
+   same for `~/.agents/skills/build-loop/scripts`.
+
+### Add a global git hook
+
+1. Declare it in `Git/.gitconfig`: `[hook "<name>"]` with `event = <hook event>` and
+   `command = <command>`. Git runs the command through the shell, so `~` expands and the
+   hook's arguments are appended. Git 2.54 or later runs config hooks in every repository,
+   before the hookdir hook, whatever `core.hooksPath` says.
+2. Keep it fast. When human commits should pass untouched, start the command with
+   `test -z "$AI_AGENT$CLAUDECODE" ||`, so a broken or missing script can only block an
+   agent. Test it by driving real commits in throwaway repositories with
+   `GIT_CONFIG_GLOBAL` pointed at a scratch config.
+3. Confirm it is registered with `git hook list --show-scope <event>` in a few repositories.
+
 ### Debug "skill not loading"
 
 Per-harness diagnostic flow:
@@ -686,7 +728,7 @@ Per-harness diagnostic flow:
 | Harness     | Hard cap                                                   | Soft guideline                                  | Truncation behavior                                          |
 | ----------- | ---------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
 | Claude Code | None                                                       | < 200 lines per CLAUDE.md/AGENTS.md (Anthropic) | None — full file loaded; adherence drops on long files       |
-| Codex CLI   | **32 KiB combined `project_doc_max_bytes`** (configurable) | Same                                            | **Silent truncation from start** when exceeded; no warning   |
+| Codex CLI   | **32 KiB `project_doc_max_bytes`**, project files only     | Same                                            | Keeps the first bytes, drops the rest; logs a warning        |
 | OpenCode    | None documented                                            | < 300 lines (community / agents.md research)    | None documented                                              |
 | Pi          | None documented                                            | Same                                            | None; but skills with empty `description:` hard-fail to load |
 
@@ -710,22 +752,68 @@ Per-harness diagnostic flow:
 
 Practical: critical AGENTS.md content goes near the top OR near the end. Mid-file sections experience reliability drops, especially in files >300 lines. (Stanford 2023 research; persists in 2026 frontier models.)
 
-### Per-project current state (measured 2026-09-18)
+### Per-project current state (measured 2026-10-02)
 
-Cap utilization is the combined global + project figure, which is what Codex
-actually caps at 32,768 bytes. The global file is charged against every project.
+Codex 0.160.0 charges only project AGENTS.md files against `project_doc_max_bytes` (32,768
+bytes by default). The global file arrives separately as user instructions and is not
+counted, and a project file that crosses the budget keeps its first bytes and loses the
+rest, with a logged warning (`codex-rs/core/src/agents_md.rs`, lines 56 to 116 and 156 to
+164, at tag `rust-v0.160.0`). The figures before this date added the global file in.
 
-| Project         | Project AGENTS.md    | Combined with global | Utilization | Margin      |
-| --------------- | -------------------- | -------------------- | ----------- | ----------- |
-| invest-platform | 509 lines / 27,046 B | 32,170 B             | **98%**     | 598 bytes   |
-| Houndarr        | 563 lines / 24,773 B | 29,897 B             | 91%         | 2,871 bytes |
-| wedding-site    | 220 lines / 20,936 B | 26,060 B             | 79%         | 6,708 bytes |
-| Global          | 124 lines / 5,124 B  | n/a                  | n/a         | n/a         |
+| Project         | Project AGENTS.md    | Utilization | Margin      |
+| --------------- | -------------------- | ----------- | ----------- |
+| invest-platform | 518 lines / 27,489 B | 84%         | 5,279 bytes |
+| Houndarr        | 563 lines / 24,773 B | 76%         | 7,995 bytes |
+| wedding-site    | 223 lines / 23,328 B | 71%         | 9,440 bytes |
 
-invest-platform has 598 bytes of headroom. Measure before adding to either that
-file or the global one.
+The global file has no cap of its own, but every line of it costs attention in all four
+harnesses.
 
 ## 18. Modification Ledger
+
+### 2026-10-02: refine, build-loop and end-to-end skills, agent commit gates
+
+Added three user-authored global skills (bucket C), each with its committed
+`Claude/.claude/skills/<name>` symlink, plus a restow of Agents and Claude:
+
+- `refine` simplifies and refines the staged diff before every agent commit:
+  read-only lens subagents (reuse, simplification, efficiency, altitude), edits
+  confined to the change's own lines, pre-existing lines in a separate refactor
+  commit, tests report-only, the repo's fast checks with snapshot rollback, then a
+  stamp bound to the staged blobs. Scripts `refine` and `refine_core.py`, with
+  tests. The bundled `/simplify` is untouched; the different name means Claude
+  Code's built-in "run simplify before each commit" instruction does not fire, so
+  a hook enforces the step instead.
+- `build-loop` is the generic core of the invest-platform and wedding-site build
+  loops with four risk tiers (T0 gates only; T1 one clean pass or a cap of 2; T2
+  two clean or a cap of 4; T3 two clean or a cap of 8), the round prompts, and
+  the tree and machine safety rules from both copies. Script `bl`, with tests,
+  keeps per-branch state under `$(git rev-parse --git-common-dir)/build-loop/`.
+  Both repos' `build-loop.md` files became their profiles in place.
+- `end-to-end` is the session lifecycle the user typed every session: resolve the
+  work item, workspace, plan and stop for `/compact`, ship, housekeeping, the
+  final report, and the multi-session protocol from the 2026-10-01
+  concurrent-sessions note.
+
+Also: `Claude/.claude/agents/` with `refine-lens.md` (effort high) and
+`refine-lens-deep.md` (effort xhigh). A Claude Code session only sees this new
+directory after a restart, because the agents watcher covers directories that
+existed at session start. `Git/.gitconfig` gained the three hooks, each behind a
+`test -z "$AI_AGENT$CLAUDECODE" ||` guard so human commits never start a script,
+and `[refine] mode = block, agents = claude-code`. AGENTS.md gained a two-line
+pointer to build-loop and end-to-end under Operating defaults, and ask-first
+exceptions for refine's file-private helpers and tidy commits. No Claude Code
+settings changed.
+
+Why: in the user's own sessions an advisory "run X before committing" was
+followed about 0% of the time, so a hook enforces the step. A 2026 study found
+an unchecked LLM cleanup pass broke 8 to 15% of working fixes while a variant
+gated by tests broke none, hence the checks and rollback. LLM test consolidation
+changed behavior or coverage in 11 to 15% of cases, hence report-only tests.
+
+To re-apply if overwritten: restore the three skill directories and
+`Claude/.claude/agents/`, the three Claude skill symlinks, the `Git/.gitconfig`
+block and the AGENTS.md lines, then `stow --restow Agents Claude`.
 
 Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
 
