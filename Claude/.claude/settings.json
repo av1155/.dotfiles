@@ -56,6 +56,7 @@
     ],
     "defaultMode": "auto"
   },
+  "model": "opus[1m]",
   "hooks": {
     "Notification": [
       {
@@ -128,7 +129,6 @@
     "refreshInterval": 2
   },
   "enabledPlugins": {
-    "claude-notifications-go@claude-notifications-go": true,
     "code-review@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true,
@@ -137,15 +137,10 @@
     "skill-codex@skill-codex": true,
     "typescript-lsp@claude-plugins-official": true,
     "semgrep@claude-plugins-official": true,
-    "figma@claude-plugins-official": true
+    "figma@claude-plugins-official": true,
+    "claude-notifications-go@claude-notifications-go": true
   },
   "extraKnownMarketplaces": {
-    "claude-notifications-go": {
-      "source": {
-        "source": "github",
-        "repo": "777genius/claude-notifications-go"
-      }
-    },
     "skill-codex": {
       "source": {
         "source": "github",
@@ -169,6 +164,12 @@
         "source": "github",
         "repo": "backnotprop/plannotator"
       }
+    },
+    "claude-notifications-go": {
+      "source": {
+        "source": "github",
+        "repo": "777genius/agent-notifications"
+      }
     }
   },
   "outputStyle": "Default",
@@ -183,5 +184,12 @@
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
-  "model": "opus[1m]"
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "xhigh"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  }
 }
