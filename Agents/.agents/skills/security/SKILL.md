@@ -20,9 +20,9 @@ For backend scale and rate limit specifics, defer to the `scalability` skill (ov
   values, including what looks like one in a comment, and it is the sanctioned route
   past the `Read` deny rules for env files only; it refuses keys and other credential
   files, and copies only to a `.env.local` or `.env.*.local` under the current
-  directory, where those rules still cover the copy. A secret written as plain words
-  in a comment, or a value on a line of its own that dotenv reads as a name, would
-  still show.
+  directory, in a git work tree. Run it from the session's directory, where those
+  rules still cover the copy. A secret written as plain words in a comment, or a
+  value on a line of its own that dotenv reads as a name, would still show.
 - When committing, run a secret-scanner pre-commit hook (gitleaks, trufflehog, or the platform's equivalent).
 - Rotate any credential that ever touched a commit, log file, screenshot, paste buffer, or chat — assume it is compromised.
 

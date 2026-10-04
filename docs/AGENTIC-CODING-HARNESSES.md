@@ -808,7 +808,8 @@ tool and the security skill both name `envfile` as the sanctioned route past the
 end-to-end copies env files into worktrees with it, and build-loop's profile reference
 no longer says env files may not be copied. Below the project root those rules cover
 only `.env.local` and `.env.*.local`, and nothing outside the session's project, so
-`envfile copy` writes only those names, under the current directory.
+`envfile copy` writes only those names, under the current directory, which must be in a
+git work tree. envfile cannot see the session's directory, so agents run it from there.
 
 Why: the user plans with the agent and then leaves it to implement and run the review
 loop overnight, and worktree and `.env.example` work needs env files that the deny

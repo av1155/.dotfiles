@@ -47,6 +47,7 @@ KEY_TAILS = (
     "fakecommented",
     "fakeshort",
     "fakeescaped",
+    "fakechained",
 )
 KEYS = f"""JWT_PRIVATE_KEY=
 -----BEGIN PRIVATE KEY-----
@@ -76,6 +77,8 @@ ESCAPED=-----BEGIN PRIVATE KEY-----\\n\\
 -----END PRIVATE KEY-----\\n
 ONE_LINE="-----BEGIN CERT-----\\nFAKE\\n-----END CERT-----"
 PORT=
+CHAIN=-----BEGIN A-----\\nFAKE\\n-----END A-----\\n-----BEGIN B-----
+{KEY_TAILS[6]}=
 """
 # Short enough to pass as a word, so only the rule for its place hides it
 SHORT = "pw4short"
@@ -94,6 +97,8 @@ SUPABASE_SECRET_KEY={SECRET}
 # token: fake words {SHORT}
 # ssh passphrase: {SHORT}
 # DB_PW:{SHORT}
+# DB password (staging): {SHORT}
+# redis: default:{SHORT}@localhost
 # pasted {KEYLIKE} here
 # CLI login sbp_{HEXLIKE} and FAKE_TOKEN_{HEXLIKE.upper()}
 # {{"client_secret": "{SHORT}"}}
@@ -170,6 +175,7 @@ def _module() -> types.ModuleType:
 class EnvfileTests(unittest.TestCase):
     def setUp(self) -> None:
         self.dir = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        (self.dir / ".git").mkdir()
         self.local = self.dir / ".env.local"
         self.local.write_text(LOCAL)
         self.outputs: list[str] = []
@@ -191,7 +197,7 @@ class EnvfileTests(unittest.TestCase):
                 self.assertNotIn(secret, output)
 
     def envfile(
-        self, *args: str, limit: int | None = None
+        self, *args: str, limit: int | None = None, cwd: Path | None = None
     ) -> subprocess.CompletedProcess[str]:
         def cap_file_size() -> None:
             if limit is not None:
@@ -199,7 +205,7 @@ class EnvfileTests(unittest.TestCase):
 
         result = subprocess.run(
             [str(SCRIPT), *args],
-            cwd=self.dir,
+            cwd=cwd or self.dir,
             capture_output=True,
             text=True,
             check=False,
@@ -268,14 +274,15 @@ class EnvfileTests(unittest.TestCase):
         listed = self.listed(result.stdout)
         expected = {"JWT_PRIVATE_KEY": "empty", "LEGACY_KEY": "set", "SLASHED": "set"}
         expected |= {"SHORT_KEY": "set", "AFTER_KEYS": "set", "ESCAPED": "set"}
-        self.assertEqual(listed, expected | {"ONE_LINE": "set", "PORT": "empty"})
+        expected |= {"ONE_LINE": "set", "PORT": "empty", "CHAIN": "set"}
+        self.assertEqual(listed, expected)
         notes = [line for line in result.stdout.splitlines() if line.startswith("line")]
         skipped, withheld = (
             "is not NAME=value",
             "is withheld: its name looks like a value",
         )
         expected_notes = [(2, skipped), (7, withheld), (9, skipped), (10, withheld)]
-        expected_notes += [(11, skipped), (21, withheld)]
+        expected_notes += [(11, skipped), (21, withheld), (30, withheld)]
         self.assertEqual(
             notes, [f"line {n} of {keys} {kind}" for n, kind in expected_notes]
         )
@@ -310,6 +317,8 @@ SUPABASE_SECRET_KEY  set
 # token: <hidden>
 # ssh passphrase: <hidden>
 # DB_PW:<hidden>
+# DB password (staging): <hidden>
+# redis: default:<hidden>@localhost
 # pasted <hidden> here
 # CLI login <hidden> and <hidden>
 # {"client_secret": <hidden>
@@ -420,7 +429,10 @@ INLINE               set
         self.assertIn(f"{key} is not an env file", other.stderr)
         self.assertFalse(copied.exists())
         outside = Path(self.enterContext(tempfile.TemporaryDirectory()))
-        for target in (self.dir / "notes.txt", self.dir / ".env.test", outside):
+        linkout = self.dir / "linkout"
+        linkout.symlink_to(outside)
+        targets = (self.dir / "notes.txt", self.dir / ".env.test", outside, linkout)
+        for target in targets:
             refused = self.envfile("copy", str(self.local), str(target))
             self.assertIn("is not a .env.local or .env.*.local", refused.stderr)
         self.assertEqual(list(outside.iterdir()), [])
@@ -448,6 +460,17 @@ INLINE               set
         denied = self.envfile("copy", str(self.local), str(blocked / ".env.x.local"))
         self.assertEqual(denied.returncode, 1)
         self.assertIn("cannot write", denied.stderr)
+
+    def test_copy_runs_only_inside_a_git_work_tree(self) -> None:
+        target = self.dir / "apps" / ".env.local"
+        target.parent.mkdir()
+        (self.dir / ".git").rmdir()
+        loose = self.envfile("copy", str(self.local), str(target))
+        self.assertIn("in a git work tree", loose.stderr)
+        self.assertFalse(target.exists())
+        (self.dir / ".git").write_text("gitdir: elsewhere\n")
+        nested = self.envfile("copy", str(self.local), str(target), cwd=target.parent)
+        self.assertEqual(nested.returncode, 0, nested.stderr)
 
     def test_a_reader_that_stops_early_ends_it_quietly(self) -> None:
         many = self.dir / "many.env"

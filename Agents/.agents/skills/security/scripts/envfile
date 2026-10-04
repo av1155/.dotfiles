@@ -6,8 +6,9 @@ Usage: envfile copy <source> <target> [--force]
 
 copy writes the file with mode 600 to <target> or into a directory, refuses to
 replace an existing file unless --force, and leaves the target as it was if it fails.
-It writes only a .env.local or .env.*.local under the current directory, where Claude
-Code's Read deny rules for env files cover it.
+It writes only a .env.local or .env.*.local under the current directory, which must be
+in a git work tree. Run it from the session's directory, where Claude Code's Read deny
+rules for env files cover the copy; envfile cannot tell where that is.
 keys reads the file as Node's dotenv does and prints it in order: each comment line,
 with anything in it that looks like a value hidden, each variable as set or empty (set
 means the file gives it a value, with ${...} references unexpanded), and the numbers of
@@ -59,12 +60,14 @@ ENV_FILE = re.compile(r"\.env.*|.*\.env")
 # Names the Read deny rules cover in any directory of the session's project
 PROTECTED = re.compile(r"\.env\.(?:.*\.)?local")
 QUOTES = "\"'`"
-# In a comment, a value usually follows = or a label such as password:
+LABEL = r"(?:pass(?:word|wd|phrase)?|pwd?|secret|token|key|credential)s?"
+# In a comment, a value follows = or a label, as in password: or password for admin:
 VALUE_TAIL = re.compile(
-    r"(?i)(=|(?:pass(?:word|wd|phrase)?|pwd?|secret|token|key|credential)s?"
-    r"[\"'`]?\s*:)(\s*)\S.*"
+    rf"(?i)(=|{LABEL}[\"'`]?\s*:|{LABEL}\b[^:=\n]*:(?=\s))(\s*)\S.*"
 )
 USERINFO = re.compile(r"(://[^\s:/]*:)\S*@")
+# The same without a scheme, as in default:password@localhost
+BARE_USERINFO = re.compile(r"([\w.-]+:)(?!/)\S*@")
 BASE64 = re.compile(r"[A-Za-z0-9+/=]+")
 # The last line of a key, after a line of base64 or the key's BEGIN line
 KEY_TAIL = re.compile(r"[A-Za-z0-9+/]+=*")
@@ -168,8 +171,8 @@ def _key_block(lines: list[str], begin: int) -> list[int]:
 
 def _is_key_tail(lines: list[str], number: int) -> bool:
     before = _body(lines[number - 2]) if number > 1 else ""
-    # A line that also holds the END, such as a quoted key with \n escapes, is whole
-    opened = "-----BEGIN" in before and "-----END" not in before
+    # Only a BEGIN with no END after it on that line leaves a key open
+    opened = before.rfind("-----BEGIN") > before.rfind("-----END")
     after_key = KEY_BODY.fullmatch(before) is not None or opened
     return after_key and KEY_TAIL.fullmatch(_body(lines[number - 1])) is not None
 
@@ -182,6 +185,7 @@ def _body(line: str) -> str:
 
 def _comment(line: str) -> str:
     text = USERINFO.sub(rf"\1{HIDDEN}@", line.strip(SPACE))
+    text = BARE_USERINFO.sub(rf"\1{HIDDEN}@", text)
     text = VALUE_TAIL.sub(rf"\1\2{HIDDEN}", text, count=1)
     words = re.split(r"(\s+)", text)
     return "".join(_hide_key(word) for word in words).replace(HIDDEN, "<hidden>")
@@ -234,9 +238,14 @@ def cmd_copy(args: argparse.Namespace) -> int:
         raise EnvError(message)
     if target.is_dir():
         target /= source.name
+    here = Path.cwd().resolve()
+    # The session's directory, where the deny rules hold, is a checkout or a worktree
+    if not any((folder / ".git").exists() for folder in (here, *here.parents)):
+        message = "run copy from the session's directory, in a git work tree"
+        raise EnvError(message)
     # Anywhere else the Read tool would open the copy and show its values
-    here = target.parent.resolve().is_relative_to(Path.cwd().resolve())
-    if not (PROTECTED.fullmatch(target.name) and here):
+    inside = target.parent.resolve().is_relative_to(here)
+    if not (PROTECTED.fullmatch(target.name) and inside):
         message = f"{target} is not a .env.local or .env.*.local under this directory"
         raise EnvError(message)
     data = _read(source)
@@ -297,7 +306,10 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     copy = commands.add_parser("copy", help="copy an env file without showing it")
     copy.add_argument("source")
-    copy.add_argument("target", help="a file, or a directory to copy into")
+    copy.add_argument(
+        "target",
+        help="a .env.local or .env.*.local under this directory, or a directory",
+    )
     copy.add_argument("--force", action="store_true", help="replace an existing file")
     copy.set_defaults(func=cmd_copy)
     keys = commands.add_parser("keys", help="list names and comments, values hidden")

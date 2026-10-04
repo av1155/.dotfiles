@@ -30,7 +30,8 @@ AGENTS.md says to stop and ask about: leave it undone and finish the rest, so th
 question waits for the final report. Add each decision and held item, with why, to the
 plan file (`bl plan --path`), which survives a compaction. `bl context plan` and
 `bl context round` say `continue`. End with one report that lists each decision and held
-item from the plan, which `bl reset` moves to the archive path it prints.
+item from the plan, which `bl reset` moves to the archive path it prints, and anything
+held after the reset.
 
 ## Tier
 
