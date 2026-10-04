@@ -823,6 +823,21 @@ end-to-end's `references/workspace.md` and `references/ship.md`, build-loop's
 `references/profile.md` and `references/rounds.md`, and the `envfile` sentence under
 Never in `Agents/.agents/AGENTS.md`.
 
+Verified with the build loop at T3 in dotfiles, 2026-10-03, over seven rounds. The
+review loop ran 7 passes, clean on passes 4 to 7, and ended `two clean` at pass 5; it
+was reopened after rounds 5 and 6, whose fixes touched code it had passed, and a clean
+pass closed it each time. The audit loop ran 7 passes, clean on passes 6 and 7, and
+ended `two clean`. Passes 1 to 3 were dirty on both loops, with findings such as value
+lines listed as names (a quote that closes late, the colon form, Unicode whitespace and
+line ends), a copy that could damage its target, the last lines of keys pasted without
+quotes, and URL passwords and tokens shown in comments. Audit pass 4 found a FAIL, a
+copy under a name the Read deny rules miss, and audit pass 5 another, a copy outside
+the session's directory. Pass 7's findings, all below the threshold (a commented-out
+`NAME: value`, the unattended mark's wording, and a held item that did not hold the
+merge), were fixed after pass 7 and had no further independent pass. A bare token with
+no digit in a comment stays visible, by the long-string rule's design. No round ran
+alone under Prompt 3a.
+
 ### 2026-10-03: context-based /compact stops
 
 end-to-end used to stop after every T3 plan with a `/compact` note. It now stops
