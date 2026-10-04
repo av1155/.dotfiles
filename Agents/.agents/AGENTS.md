@@ -119,6 +119,9 @@ summaries, no boilerplate.
 - Never say a command, test, or check ran or passed unless it did and you read the
   output. Never claim to have inspected or measured what you did not.
 - Before declaring done, say what you could not verify and why.
+- IMPORTANT: Never skip a test, browser check, or gate because one route to it is
+  blocked. Use the sanctioned route (the repo's own helpers, env loaded by name);
+  if none exists, stop and ask. Disclosing a skipped check never replaces it.
 
 Load `evidence-driven-engineering` before wording a defect, a root cause, or a
 completion claim.
