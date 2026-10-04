@@ -1,6 +1,13 @@
 ---
 name: evidence-driven-engineering
-description: Governs what you are allowed to claim and how confident you may sound. Use when wording a finding, a root cause, a risk, or a completion claim. Triggers on is this done, write up what you did, summarize the changes, what is the root cause, can you ship this, are you sure, did you actually run that, how do you know, prove it. Companion to diagnose, review and deep-audit: they do the work, this governs what you say about it. Skip for local reversible edits already covered by the AGENTS.md smallest-relevant-check rule.
+description: >-
+  Governs what you are allowed to claim and how confident you may sound. Use when
+  wording a finding, a root cause, a risk, or a completion claim. Triggers on is
+  this done, write up what you did, summarize the changes, what is the root cause,
+  can you ship this, are you sure, did you actually run that, how do you know,
+  prove it. Companion to diagnose, review and deep-audit: they do the work, this
+  governs what you say about it. Skip for local reversible edits already covered
+  by the AGENTS.md smallest-relevant-check rule.
 ---
 
 # Evidence-Driven Engineering

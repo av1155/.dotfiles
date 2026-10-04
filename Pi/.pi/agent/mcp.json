@@ -3,7 +3,10 @@
         "context-mode": {
             "command": "npx",
             "args": ["-y", "context-mode"],
-            "directTools": ["ctx_execute", "ctx_execute_file"]
+            "toolExposure": {
+                "ctx_execute": "direct",
+                "ctx_execute_file": "direct"
+            }
         }
     }
 }
