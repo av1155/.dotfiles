@@ -5,7 +5,7 @@ Comprehensive reference for the four agentic coding harnesses used across global
 - **Claude Code** (Anthropic, CLI + IDE integrations)
 - **Codex CLI** (OpenAI, terminal coding agent)
 - **OpenCode** (sst, open-source TUI agent)
-- **Pi** (earendil-works/pi v0.74.0, minimalist extensible terminal harness)
+- **Pi** (earendil-works/pi v1.0.0, minimalist extensible terminal harness)
 
 This document captures verified behavior per harness, the canonical file layout in `~/.dotfiles/`, procedures for common operations, and the decision log for the alignment migration. It is the source of truth for how the cross-harness environment is wired.
 
@@ -20,7 +20,7 @@ This document captures verified behavior per harness, the canonical file layout 
 | **Claude Code** (Anthropic) | per release | `claude` CLI (Homebrew + IDE integrations)                                  | `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md` (matching `paths:`), auto-memory `MEMORY.md`, project `<repo>/CLAUDE.md` (concatenated root-to-cwd), project `<repo>/.claude/rules/*.md` |
 | **Codex CLI** (OpenAI)      | 0.160.0     | `/opt/homebrew/Caskroom/codex/<v>/codex-aarch64-apple-darwin` (Rust binary) | `~/.codex/AGENTS.override.md` then `AGENTS.md` (not counted), project `AGENTS.md` walk-up (32 KiB cap on project files)                                                                |
 | **OpenCode** (sst)          | 1.14.41     | npm/Homebrew                                                                | `~/.config/opencode/AGENTS.md` (or `CLAUDE.md` fallback), project `AGENTS.md`. `instructions:` field globs/URLs in `opencode.jsonc`                                                    |
-| **Pi** (earendil-works)     | 0.74.0      | npm `@earendil-works/pi-coding-agent`                                       | `~/.pi/agent/AGENTS.md` (or `CLAUDE.md`), project `.pi/AGENTS.md` walk-up. `SYSTEM.md`/`APPEND_SYSTEM.md` for system prompt customization                                              |
+| **Pi** (earendil-works)     | 1.0.0       | npm `@earendil-works/pi-coding-agent`                                       | `~/.pi/agent/AGENTS.md` (or `CLAUDE.md`), project `.pi/AGENTS.md` walk-up. `SYSTEM.md`/`APPEND_SYSTEM.md` for system prompt customization                                              |
 
 Project-scope artifacts are inspected at session start; subdirectory CLAUDE.md / AGENTS.md load on-demand when those subdirs are accessed (Claude). Pi accepts `--no-context-files` / `-nc` to disable session-start loading.
 
@@ -144,7 +144,7 @@ User's currently enabled Claude Code plugins (per `~/.claude/plugins/installed_p
 | Claude Code | `.mcp.json` (project, committed), `~/.claude.json` (user/local)                                                                                                         | ✓           |
 | Codex CLI   | `[mcp_servers.<name>]` TOML tables in `~/.codex/config.toml` or `.codex/config.toml`                                                                                    | ✓           |
 | OpenCode    | `mcp:` key in `~/.config/opencode/opencode.jsonc` or project `opencode.jsonc`                                                                                           | ✓           |
-| Pi          | Via `pi-mcp-adapter`: `~/.pi/agent/mcp.json` (Pi global override), `.pi/mcp.json` (project override), plus shared `.mcp.json` / `~/.config/mcp/mcp.json` import support | via package |
+| Pi          | Native config in `~/.pi/agent/mcp.json` and `.pi/mcp.json`. The installed `pi-mcp-adapter` replaces built-in MCP in sessions, imports those native files, and also reads shared `.mcp.json` / `~/.config/mcp/mcp.json` files | built in; adapter active |
 
 User's global MCP servers: `context-mode` is enabled across Claude Code, Codex, OpenCode, and Pi via each harness's native config method. `magic` (21st.dev) and `stitch` (Google Stitch) are configured for Codex/OpenCode and disabled by default; enable per-need.
 
@@ -601,6 +601,16 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
     - Merge → manually reconcile, commit with rationale.
 3. **Add ledger entry** documenting the conflict resolution.
 
+### Fix "[claude-notifications] Installation of vX failed"
+
+The claude-notifications-go hook downloads its binary on the first hook run of a new plugin version and prints that line when `bin/install.sh` exits non-zero. The hook discards the installer's output, so the reason is only visible on a manual run.
+
+1. Run the installer the way the hook does: `P=~/.claude/plugins/cache/claude-notifications-go/claude-notifications-go/<new version>; INSTALL_TARGET_DIR="$P/bin" "$P/bin/install.sh"`.
+2. `managed fingerprint changed without transaction: <path>` means a file recorded in `~/Library/Application Support/agent-notifications/ownership.json` no longer matches it. The fingerprint is the content SHA-256 plus the mode bits, or the symlink target.
+3. Compare every ledger entry with disk before changing anything. A file in the version being retired whose content still matches can take back its recorded mode (`chmod`) or link target (`ln -sfn`). Missing files there are tolerated. Never edit `ownership.json`.
+4. Re-run step 1 until it prints "Ready to use!", then check `"$P/bin/claude-notifications" version` and `sh "$P/bin/hook-wrapper.sh" version`.
+5. Remove `~/.cache/claude-notifications-go/install-failed-<version>`. While that marker exists, the hook reports no later failure of that version.
+
 ### Track Pi settings safely
 
 1. Inspect `~/.pi/agent/settings.json` before tracking. It should contain model defaults, package names, extension paths, skill paths, compaction settings, and UI preferences only.
@@ -610,6 +620,20 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 5. Verify the live file is a symlink: `ls -l ~/.pi/agent/settings.json`.
 6. If adding MCP config later, track `mcp.json` only when it uses command/env-var references rather than literal tokens.
 
+### Change Pi model defaults
+
+1. Confirm the model is available with `pi --offline --list-models <model-id>` and check its provider.
+2. Set `defaultProvider`, `defaultModel`, and `defaultThinkingLevel` in `Pi/.pi/agent/settings.json`. If the live `~/.pi/agent/settings.json` is a regular file, apply the same targeted changes there without overwriting unrelated settings.
+3. Validate both files as JSON and confirm the requested defaults. New sessions use these defaults; resumed sessions restore their recorded model and thinking level.
+
+### Keep Pi MCP config compatible with built-in MCP and pi-mcp-adapter
+
+1. Keep standard server fields and Pi-native exposure fields in `~/.pi/agent/mcp.json` or `.pi/mcp.json`. These files belong to Pi's native schema even when `pi-mcp-adapter` is active.
+2. Do not put adapter-only fields such as `directTools`, `settings`, or `imports` in Pi's native files. Put adapter-only global settings in `~/.pi/agent/mcp-adapter.json` and project overrides in `.pi/mcp-adapter.json`.
+3. To expose selected tools directly from a server in Pi's native schema, use exact-name entries under `toolExposure`, for example `"toolExposure": { "ctx_execute": "direct" }`. The adapter translates exact `direct` entries to its direct-tool selection.
+4. Keep MCP server definitions available to Claude Code, Codex, OpenCode, and Pi through each harness's native configuration. Tool-exposure fields are not portable across harnesses, so do not copy Pi's `toolExposure` or the adapter's `directTools` into another harness without checking its schema.
+5. Validate JSON, reload Pi, confirm startup has no ignored-setting warning, and verify both proxy access and the intended direct tools. If the built-in MCP extension is disabled, also inspect `/mcp-adapter` because it owns the live session.
+
 ### Customize Pi Plannotator phase prompts
 
 1. Edit the tracked config at `Pi/.pi/agent/plannotator.json`, not the installed package under Homebrew or npm paths.
@@ -618,14 +642,14 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 4. Validate after edits with `python3 -m json.tool Pi/.pi/agent/plannotator.json >/dev/null`.
 5. Verify the live file is still the stow-managed symlink: `ls -l ~/.pi/agent/plannotator.json`.
 
-### Pin a merged, unreleased Pi package fix
+### Pin or update a Pi package fix
 
 1. Confirm the upstream fix is merged and record its full commit SHA. Inspect the changed source and tests before trusting the pin.
-2. Ask before changing the dependency source. Prefer a merged fix commit over a moving branch.
-3. Replace the package entry in `Pi/.pi/agent/settings.json` with `git:<repo>@<full-sha>`. If the live `~/.pi/agent/settings.json` is a regular file rather than the Stow symlink, make the same targeted replacement there without overwriting unrelated live settings.
-4. Run `pi install git:<repo>@<full-sha>` so Pi materializes the pinned package, then reload Pi.
+2. Ask before changing the dependency source. Prefer a published fixed release; use a merged commit pin only while the release is unavailable or when reproducibility requires the release commit.
+3. Replace the package entry in `Pi/.pi/agent/settings.json` with the approved npm version or `git:<repo>@<full-sha>`. If the live `~/.pi/agent/settings.json` is a regular file rather than the Stow symlink, make the same targeted replacement there without overwriting unrelated live settings.
+4. Run `pi install <approved-source>` so Pi materializes the package, then reload Pi.
 5. Exercise the failing package path end to end. Source inspection or a passing upstream unit test alone is insufficient.
-6. Return to an npm release after it contains the fix, so normal package updates resume.
+6. Return a temporary commit pin to an npm release after that release contains the fix, so normal package updates resume.
 
 ### Track Pi extensions safely
 
@@ -951,7 +975,41 @@ To re-apply if overwritten: restore the three skill directories and
 `Claude/.claude/agents/`, the three Claude skill symlinks, the `Git/.gitconfig`
 block and the AGENTS.md lines, then `stow --restow Agents Claude`.
 
+### 2026-10-02: Pi 1.0 startup compatibility
+
+Fixed three startup diagnostics after Pi 1.0.0: converted the shared
+`evidence-driven-engineering` description to a portable YAML folded scalar;
+replaced adapter-only `directTools` in Pi's native `mcp.json` with exact-name
+`toolExposure` entries; and replaced the pinned `pi-subagents` 0.67.0 git
+checkout with the published `npm:pi-subagents@0.74.0` package, where `typebox`
+is an optional `"*"` peer rather than a bundled runtime dependency.
+
+Validation covered every canonical skill frontmatter file, the Claude and
+`.agents` skill symlinks, Pi's native MCP connection, the adapter's native-field
+translation, a fresh Pi RPC process, package discovery, and the installed
+manifest. The MCP exposure setting remains Pi-specific because the four
+harnesses do not share a tool-exposure schema; their existing native server
+configurations remain separate.
+
+### 2026-10-01: bai-onepager, new skill (bucket C)
+
+Added `Agents/.agents/skills/bai-onepager/` (SKILL.md, `references/design.md`,
+`scripts/onepager.py`) with the committed symlink `Claude/.claude/skills/bai-onepager`
+and a restow of Agents and Claude. The script renders the BAI investment-platform
+progress PDFs (a leadership one-pager and a technical brief) from the forecast folder
+in `~/Downloads/BAI-Capital-Platform/08-Admin/forecast` into
+`~/Downloads/bai-onepager/<date>/`, printing with Chrome headless and pandoc. Fonts are
+downloaded on first run, the logo is read from the files repo; nothing BAI-branded is
+stored in the dotfiles. User-authored.
+
+
 Running log of modifications made to imported / external skills, and of plugin re-install conflicts resolved. Each entry captures: date, skill name, what changed, why, how to re-apply if overwritten. Populated during execution and ongoing thereafter.
+
+### 2026-09-30: claude-notifications-go 1.46.0 install blocked by a reset 1.45.18 cache
+
+Every Stop hook printed "[claude-notifications] Installation of v1.46.0 failed" after the plugin moved from 1.45.18 to 1.46.0 (released that day, 17:25 UTC). The installer downloaded and verified the 1.46.0 binary, then refused to transfer ownership because two files in the retiring 1.45.18 cache no longer matched its ledger: `skills/agent-notify/SKILL.md` had gone from mode 0600 to 0644 with identical content, and `bin/agent-notifications` pointed at `claude-notifications` instead of `claude-notifications-darwin-arm64`. The 1.45.18 binary had also been removed, which the installer tolerates. Everything points to the old cache being reset to the repository's defaults. Which tool did it is not established.
+
+Fixed by restoring the recorded mode and link target on those two files, then re-running the installer (procedure in section 16). The ledger moved to generation 2 with all six managed files under 1.46.0, and the hook wrapper reports v1.46.0. If the next plugin update prints the same line, the same reset has probably happened to 1.46.0; follow the section 16 procedure. Reported upstream as 777genius/agent-notifications#278; check it for a fix first.
 
 ### 2026-09-18 — evidence-driven-engineering: new skill, split against the Codex cap
 
