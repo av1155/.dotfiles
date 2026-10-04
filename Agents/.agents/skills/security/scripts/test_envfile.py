@@ -98,6 +98,8 @@ SUPABASE_SECRET_KEY={SECRET}
 # ssh passphrase: {SHORT}
 # DB_PW:{SHORT}
 # DB password (staging): {SHORT}
+# token for CI:{SHORT}
+# token used by https://ci.example.com: {SHORT}
 # redis: default:{SHORT}@localhost
 # pasted {KEYLIKE} here
 # CLI login sbp_{HEXLIKE} and FAKE_TOKEN_{HEXLIKE.upper()}
@@ -318,6 +320,8 @@ SUPABASE_SECRET_KEY  set
 # ssh passphrase: <hidden>
 # DB_PW:<hidden>
 # DB password (staging): <hidden>
+# token for CI:<hidden>
+# token used by https://ci.example.com: <hidden>
 # redis: default:<hidden>@localhost
 # pasted <hidden> here
 # CLI login <hidden> and <hidden>
@@ -431,10 +435,12 @@ INLINE               set
         outside = Path(self.enterContext(tempfile.TemporaryDirectory()))
         linkout = self.dir / "linkout"
         linkout.symlink_to(outside)
-        targets = (self.dir / "notes.txt", self.dir / ".env.test", outside, linkout)
-        for target in targets:
+        for target in (self.dir / "notes.txt", self.dir / ".env.test"):
             refused = self.envfile("copy", str(self.local), str(target))
             self.assertIn("is not a .env.local or .env.*.local", refused.stderr)
+        for target in (outside, linkout):
+            refused = self.envfile("copy", str(self.local), str(target))
+            self.assertIn("is outside this directory", refused.stderr)
         self.assertEqual(list(outside.iterdir()), [])
         missing_dir = self.dir / "missing"
         slash = self.envfile("copy", str(self.local), f"{missing_dir}/")
@@ -471,6 +477,10 @@ INLINE               set
         (self.dir / ".git").write_text("gitdir: elsewhere\n")
         nested = self.envfile("copy", str(self.local), str(target), cwd=target.parent)
         self.assertEqual(nested.returncode, 0, nested.stderr)
+        root = self.dir / ".env.root.local"
+        above = self.envfile("copy", str(self.local), str(root), cwd=target.parent)
+        self.assertIn("is outside this directory", above.stderr)
+        self.assertFalse(root.exists())
 
     def test_a_reader_that_stops_early_ends_it_quietly(self) -> None:
         many = self.dir / "many.env"
