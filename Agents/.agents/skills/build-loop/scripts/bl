@@ -227,7 +227,7 @@ def cmd_unattended(args: argparse.Namespace) -> int:
         return _refuse("unattended", message)
     state["unattended"] = True
     core.save(state)
-    print(f"unattended on for {state['branch']} until bl unattended --off or bl reset")
+    print(f"unattended on for {state['branch']} until --off or the final report")
     return 0
 
 

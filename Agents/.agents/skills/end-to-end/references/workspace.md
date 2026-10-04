@@ -21,8 +21,8 @@ name") so the tracker links and closes the issue on merge.
 5. Copy the env files the profile lists, such as `.env.local`, with
    `~/.agents/skills/security/scripts/envfile copy`. For a file envfile refuses, or any
    other file the profile says the agent may not copy, hand the user the exact `!` line
-   with absolute paths and wait for it before any gate that needs it, or hold it for the
-   report in an unattended change.
+   with absolute paths and wait for it before any gate that needs it. In an unattended
+   change, hold it for the report, with the gates that need it and the merge.
 6. The main checkout is not yours while you work in a worktree: no `git checkout`,
    `git stash`, `git restore` or edits there. Stage files by explicit path, never
    `git add -A`, never `--amend`.

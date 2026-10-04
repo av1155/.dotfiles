@@ -74,7 +74,7 @@ where that is disclosed.
   other. Fix it a different way, or record it as a trap with the evidence and carry on.
   On a stop-and-ask surface, put it to the user through AskUserQuestion with a
   recommendation, keep the loop running, and do not merge until answered. In an
-  unattended change, hold it instead.
+  unattended change, hold it, and hold the merge with it.
 - A LOW or NIT you consciously skipped recurs every pass by design; that is not the
   signal.
 - A loop that turns up a fresh CRITICAL, HIGH or MEDIUM each pass is working. Keep going

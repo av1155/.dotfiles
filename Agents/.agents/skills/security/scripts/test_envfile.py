@@ -96,11 +96,13 @@ SUPABASE_SECRET_KEY={SECRET}
 # slash: postgres://admin:Xk3/{SHORT}/Zr8@db.example.com:5432/app
 # token: fake words {SHORT}
 # ssh passphrase: {SHORT}
-# DB_PW:{SHORT}
+# db pw:{SHORT}
 # DB password (staging): {SHORT}
 # token for CI:{SHORT}
 # token used by https://ci.example.com: {SHORT}
 # redis: default:{SHORT}@localhost
+# SMTP_AUTH: {SHORT}
+# NOTE: kept
 # pasted {KEYLIKE} here
 # CLI login sbp_{HEXLIKE} and FAKE_TOKEN_{HEXLIKE.upper()}
 # {{"client_secret": "{SHORT}"}}
@@ -318,11 +320,13 @@ SUPABASE_SECRET_KEY  set
 # slash: postgres://admin:<hidden>@db.example.com:5432/app
 # token: <hidden>
 # ssh passphrase: <hidden>
-# DB_PW:<hidden>
+# db pw:<hidden>
 # DB password (staging): <hidden>
 # token for CI:<hidden>
 # token used by https://ci.example.com: <hidden>
 # redis: default:<hidden>@localhost
+# SMTP_AUTH: <hidden>
+# NOTE: kept
 # pasted <hidden> here
 # CLI login <hidden> and <hidden>
 # {"client_secret": <hidden>

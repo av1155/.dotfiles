@@ -787,11 +787,12 @@ harnesses.
 ### 2026-10-03: unattended changes and the envfile helper
 
 A change can now run unattended. When the user hands it over, usually after planning,
-the agent runs `bl unattended`, which is stored with the change's build-loop state and
-lasts until `bl unattended --off` or `bl reset`. While it is on, the agent never stops
-to ask: open decisions take the recommended option, anything on a stop-and-ask surface
-is held while the rest is finished, the plan file records both, `bl context plan` and
-`bl context round` say `continue`, and one report at the end lists both.
+the agent runs `bl unattended`, which `bl state` shows until `bl reset`; the change stays
+unattended until `bl unattended --off` or the final report. While it is on, the agent
+never stops to ask: open decisions take the recommended option, anything on a
+stop-and-ask surface is held while the rest is finished, along with a merge it should
+block, the plan file records both, `bl context plan` and `bl context round` say
+`continue`, and one report at the end lists both.
 `--dangerously-skip-permissions` stays human-in-the-loop; nothing keys on the
 permission mode.
 

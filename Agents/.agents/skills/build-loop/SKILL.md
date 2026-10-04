@@ -132,7 +132,7 @@ are in [rounds.md](references/rounds.md).
   stopping early: ask, and keep going until answered.
 - A CRITICAL, HIGH or MEDIUM that survives two fix cycles is structural. Change approach
   or record it as a trap. On a stop-and-ask surface, ask the user and do not merge until
-  answered.
+  answered; in an unattended change, hold it and the merge.
 - Under ultracode or a workflow, a round replaces any other verification pass for the
   same change, and each round is one review agent plus one audit agent.
 

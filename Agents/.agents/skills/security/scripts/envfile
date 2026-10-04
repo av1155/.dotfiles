@@ -61,9 +61,10 @@ ENV_FILE = re.compile(r"\.env.*|.*\.env")
 PROTECTED = re.compile(r"\.env\.(?:.*\.)?local")
 QUOTES = "\"'`"
 LABEL = r"(?:pass(?:word|wd|phrase)?|pwd?|secret|token|key|credential)s?"
-# In a comment, a value follows = or a label, as in password: or password for admin:
+# In a comment a value follows =, a label as in password for x:, or dotenv's NAME:
 VALUE_TAIL = re.compile(
-    rf"(?i)(=|{LABEL}[\"'`]?\s*:|{LABEL}\b(?:[^:=\n]|://)*:(?!//))(\s*)\S.*"
+    rf"(?i)(=|{LABEL}[\"'`]?\s*:|{LABEL}\b(?:[^:=\n]|://)*:(?!//)"
+    r"|\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\s*:)(\s*)\S.*"
 )
 USERINFO = re.compile(r"(://[^\s:/]*:)\S*@")
 # The same without a scheme, as in default:password@localhost
