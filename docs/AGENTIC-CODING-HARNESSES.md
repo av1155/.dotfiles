@@ -791,23 +791,24 @@ the agent runs `bl unattended`, which is stored with the change's build-loop sta
 lasts until `bl unattended --off` or `bl reset`. While it is on, the agent never stops
 to ask: open decisions take the recommended option, anything on a stop-and-ask surface
 is held while the rest is finished, the plan file records both, `bl context plan` and
-`bl context round` say `continue`, and one report at the end lists both before
-`bl reset` archives the plan.
+`bl context round` say `continue`, and one report at the end lists both.
 `--dangerously-skip-permissions` stays human-in-the-loop; nothing keys on the
 permission mode.
 
 `~/.agents/skills/security/scripts/envfile` copies an env file (mode 600, swapped in
 whole, no overwrite without `--force`) and lists its comments and variable names in
 file order, each variable as set or empty, optionally against `.env.example`. It reads
-and writes only names like `.env*` or `*.env`, parses as Node's dotenv does, withholds
-a name that looks like part of a value, and hides values, including what looks like
-one in a comment. A secret written as plain words in a comment would still show, a
-trade the user accepted, and so would a short value on a line of its own, which
-dotenv itself reads as a name. The `Read` deny rules for env files in
+only names like `.env*` or `*.env`, parses as Node's dotenv does, withholds a name that
+looks like part of a value, and hides values, including what looks like one in a
+comment. A secret written as plain words in a comment would still show, a trade the
+user accepted, and so would a value on a line of its own that dotenv itself reads as a
+name. The `Read` deny rules for env files in
 `Claude/.claude/settings.json` stay: AGENTS.md's rule against routing around a denied
 tool and the security skill both name `envfile` as the sanctioned route past them,
 end-to-end copies env files into worktrees with it, and build-loop's profile reference
-no longer says env files may not be copied.
+no longer says env files may not be copied. Below the project root those rules cover
+only `.env.local` and `.env.*.local`, and nothing outside the session's project, so
+`envfile copy` writes only those names, under the current directory.
 
 Why: the user plans with the agent and then leaves it to implement and run the review
 loop overnight, and worktree and `.env.example` work needs env files that the deny

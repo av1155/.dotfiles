@@ -30,7 +30,7 @@ AGENTS.md says to stop and ask about: leave it undone and finish the rest, so th
 question waits for the final report. Add each decision and held item, with why, to the
 plan file (`bl plan --path`), which survives a compaction. `bl context plan` and
 `bl context round` say `continue`. End with one report that lists each decision and held
-item, and run `bl reset`, which archives the plan, only after it.
+item from the plan, which `bl reset` moves to the archive path it prints.
 
 ## Tier
 
@@ -93,8 +93,8 @@ Step numbers match the repo profiles, so a profile's "step 7" is this step 7.
     have an ending and the local gates are green.
 13. Ledger: record passes run, clean passes banked, each loop's ending token, findings
     above the threshold and the last pass's dispositions where the profile says,
-    usually the progress file, before the push. Then `bl reset`, after the final report
-    in an unattended change, which refuses while a loop is still open.
+    usually the progress file, before the push. Then `bl reset`, which refuses while a
+    loop is still open.
 
 ## Rounds
 

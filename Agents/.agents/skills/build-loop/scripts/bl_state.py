@@ -171,15 +171,13 @@ def next_step(state: dict[str, object]) -> str:
     tier = state["tier"]
     if tier is None:
         return "pick and record a tier (bl tier)"
-    # Reset archives the plan holding an unattended change's decisions, so report first
-    reset = "the final report, then bl reset" if state["unattended"] else "bl reset"
     if tier == "T0":
-        return f"gates, then commit, then {reset}; no rounds at T0"
+        return "gates, then commit, then bl reset; no rounds at T0"
     pending = open_loops(state)
     if pending:
         first = "" if state["rounds"] else "build through step 9, then "
         return f"{first}run a round for: {', '.join(pending)}"
     return (
         "both loops have an ending: dispositions (step 11), ledger (step 13), ship, "
-        f"then {reset}"
+        "then bl reset"
     )

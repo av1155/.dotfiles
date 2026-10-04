@@ -81,7 +81,8 @@ tracker closed the issue.
 
 Say plainly whether the work is done. List what remains, what is still running, and every
 command the user must run, as `!` lines with absolute paths. In an unattended change,
-also list each decision taken and item held, from the plan file, before `bl reset`.
+also list each decision taken and item held, from the plan at the archive path
+`bl reset` printed.
 
 ## Other sessions
 

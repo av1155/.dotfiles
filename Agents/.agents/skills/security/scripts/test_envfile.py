@@ -40,7 +40,14 @@ HEXTAIL = "deadbeefcafe0123fake"
 PADDED = "abcd0123"
 # A pasted key's body, and its last lines in layouts that slip past a block
 BODY = ("FAKEbase64body" * 5)[:60] + "0123"
-KEY_TAILS = ("fakeb64tail", "FAKEB64TAIL9", "faketail7", "fakecommented", "fakeshort")
+KEY_TAILS = (
+    "fakeb64tail",
+    "FAKEB64TAIL9",
+    "faketail7",
+    "fakecommented",
+    "fakeshort",
+    "fakeescaped",
+)
 KEYS = f"""JWT_PRIVATE_KEY=
 -----BEGIN PRIVATE KEY-----
 {BODY}
@@ -58,15 +65,21 @@ SLASHED=-----BEGIN PRIVATE KEY-----\\
 -----END PRIVATE KEY-----
 # -----BEGIN OLD KEY-----
 # {BODY}
-# {KEY_TAILS[3]}=
+# {KEY_TAILS[3]}
 # -----END OLD KEY-----
 SHORT_KEY=-----BEGIN KEY-----
 {KEY_TAILS[4]}=
 AFTER_KEYS=1
+ESCAPED=-----BEGIN PRIVATE KEY-----\\n\\
+{BODY}\\r\\n
+{KEY_TAILS[5]}=\\n\\
+-----END PRIVATE KEY-----\\n
+ONE_LINE="-----BEGIN CERT-----\\nFAKE\\n-----END CERT-----"
+PORT=
 """
 # Short enough to pass as a word, so only the rule for its place hides it
 SHORT = "pw4short"
-KEYLIKE = "AKIAFAKE0123456789XY"
+KEYLIKE = "AKIAFAKE01234567"
 HEXLIKE = "0123456789abcdef" * 2 + "fake0123"
 COMMENTED = f"""# Supabase secret key
 # which is used only for
@@ -78,7 +91,9 @@ SUPABASE_SECRET_KEY={SECRET}
 # at: postgres://admin:Fake@{SHORT}@db.example.com/app
 # azure: postgres://fakeuser@fakeserver:{SHORT}@fakeserver.example.com/app
 # slash: postgres://admin:Xk3/{SHORT}/Zr8@db.example.com:5432/app
-# token: {SHORT}
+# token: fake words {SHORT}
+# ssh passphrase: {SHORT}
+# DB_PW:{SHORT}
 # pasted {KEYLIKE} here
 # CLI login sbp_{HEXLIKE} and FAKE_TOKEN_{HEXLIKE.upper()}
 # {{"client_secret": "{SHORT}"}}
@@ -121,6 +136,9 @@ INNER_J={SECRET}
 last"
 \ufeffMIDBOM="first
 INNER_K={SECRET}
+last"
+\u200aHAIR="first
+INNER_P={SECRET}
 last"
 AFTER_LS="first
 INNER_L={SECRET}
@@ -181,6 +199,7 @@ class EnvfileTests(unittest.TestCase):
 
         result = subprocess.run(
             [str(SCRIPT), *args],
+            cwd=self.dir,
             capture_output=True,
             text=True,
             check=False,
@@ -192,6 +211,7 @@ class EnvfileTests(unittest.TestCase):
     def main(self, module: types.ModuleType, *args: str) -> tuple[int, str]:
         stderr = io.StringIO()
         with (
+            contextlib.chdir(self.dir),
             contextlib.redirect_stderr(stderr),
             contextlib.redirect_stdout(io.StringIO()),
         ):
@@ -228,8 +248,8 @@ class EnvfileTests(unittest.TestCase):
         result = self.envfile("keys", str(tricky))
         self.assertEqual(result.returncode, 0, result.stderr)
         names = """GREETING KEY_BLOCK WIN_DIR SINGLE_BLOCK COLON_BLOCK SPLIT TICK_BLOCK
-            ESCAPED PEM_RAW NBSP_QUOTE LEADING WIDE MIDBOM AFTER_LS COLON_NBSP FORMFEED
-            AFTER_NOTE LS_THEN LS_KEY TRUNCATED REAL_AFTER BLOB"""
+            ESCAPED PEM_RAW NBSP_QUOTE LEADING WIDE MIDBOM HAIR AFTER_LS COLON_NBSP
+            FORMFEED AFTER_NOTE LS_THEN LS_KEY TRUNCATED REAL_AFTER BLOB"""
         self.assertEqual(
             self.listed(result.stdout), dict.fromkeys(names.split(), "set")
         )
@@ -247,7 +267,8 @@ class EnvfileTests(unittest.TestCase):
         result = self.envfile("keys", str(keys))
         listed = self.listed(result.stdout)
         expected = {"JWT_PRIVATE_KEY": "empty", "LEGACY_KEY": "set", "SLASHED": "set"}
-        self.assertEqual(listed, expected | {"SHORT_KEY": "set", "AFTER_KEYS": "set"})
+        expected |= {"SHORT_KEY": "set", "AFTER_KEYS": "set", "ESCAPED": "set"}
+        self.assertEqual(listed, expected | {"ONE_LINE": "set", "PORT": "empty"})
         notes = [line for line in result.stdout.splitlines() if line.startswith("line")]
         skipped, withheld = (
             "is not NAME=value",
@@ -260,12 +281,17 @@ class EnvfileTests(unittest.TestCase):
         )
         comments = [line for line in result.stdout.splitlines() if line.startswith("#")]
         self.assertEqual(comments[1:3], ["# <hidden>", "# <hidden>"])
+        keys.write_text(KEYS.replace("\n", "\r"))
+        self.assertEqual(self.envfile("keys", str(keys)).stdout, result.stdout)
 
-    def test_keys_trims_values_as_javascript_does(self) -> None:
+    def test_keys_reads_set_and_empty_as_dotenv_does(self) -> None:
         spaced = self.dir / ".env.spaced"
-        spaced.write_text("BOM_ONLY=\ufeff\nSEPARATOR=\x1c\n", encoding="utf-8")
+        spaced.write_text(
+            'BOM_ONLY=\ufeff\nSEPARATOR=\x1c\nOPEN_QUOTE="x\n', encoding="utf-8"
+        )
         listed = self.listed(self.envfile("keys", str(spaced)).stdout)
-        self.assertEqual(listed, {"BOM_ONLY": "empty", "SEPARATOR": "set"})
+        expected = {"BOM_ONLY": "empty", "SEPARATOR": "set", "OPEN_QUOTE": "set"}
+        self.assertEqual(listed, expected)
 
     def test_keys_shows_comments_with_their_values_hidden(self) -> None:
         commented = self.dir / ".env.commented"
@@ -282,6 +308,8 @@ SUPABASE_SECRET_KEY  set
 # azure: postgres://fakeuser@fakeserver:<hidden>@fakeserver.example.com/app
 # slash: postgres://admin:<hidden>@db.example.com:5432/app
 # token: <hidden>
+# ssh passphrase: <hidden>
+# DB_PW:<hidden>
 # pasted <hidden> here
 # CLI login <hidden> and <hidden>
 # {"client_secret": <hidden>
@@ -332,7 +360,7 @@ INLINE               set
         self.assertEqual([path.name for path in worktree.iterdir()], [".env.local"])
         same = self.envfile("copy", str(self.local), str(self.dir))
         self.assertIn("are the same file", same.stderr)
-        linked = self.dir / ".env.linked"
+        linked = self.dir / ".env.linked.local"
         linked.hardlink_to(self.local)
         hard = self.envfile("copy", str(self.local), str(linked), "--force")
         self.assertIn("are the same file", hard.stderr)
@@ -341,25 +369,26 @@ INLINE               set
         worktree = self.dir / "worktree"
         worktree.mkdir()
         target = worktree / ".env.local"
-        target.symlink_to(self.dir / "elsewhere")
+        outside = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        target.symlink_to(outside / "elsewhere")
         refused = self.envfile("copy", str(self.local), str(worktree))
         self.assertIn("pass --force", refused.stderr)
         forced = self.envfile("copy", str(self.local), str(worktree), "--force")
         self.assertEqual(forced.returncode, 0, forced.stderr)
         self.assertFalse(target.is_symlink())
-        self.assertFalse((self.dir / "elsewhere").exists())
+        self.assertFalse((outside / "elsewhere").exists())
         target.write_text("KEEP=1\n")
         args = ("copy", str(self.local), str(target), "--force")
         self.assertIn("cannot write", self.envfile(*args, limit=0).stderr)
         self.assertEqual(target.read_text(), "KEEP=1\n")
         fresh = self.envfile(
-            "copy", str(self.local), str(worktree / ".env.new"), limit=0
+            "copy", str(self.local), str(worktree / ".env.new.local"), limit=0
         )
         self.assertEqual(fresh.returncode, 1)
         self.assertEqual([path.name for path in worktree.iterdir()], [".env.local"])
 
     def test_copy_never_replaces_a_file_that_appears_meanwhile(self) -> None:
-        late = self.dir / "late.env"
+        late = self.dir / ".env.late.local"
         late.write_text("KEEP=1\n")
         with mock.patch("os.path.lexists", return_value=False):
             code, stderr = self.main(_module(), "copy", str(self.local), str(late))
@@ -375,7 +404,7 @@ INLINE               set
             link(source, target)
 
         with mock.patch("os.link", side_effect=watch):
-            target = str(self.dir / "fake.env")
+            target = str(self.dir / ".env.fake.local")
             code, _ = self.main(_module(), "copy", str(self.local), target)
         self.assertEqual(code, 0)
         self.assertRegex(staged[0], r"^\.env\..+\.local$")
@@ -386,18 +415,23 @@ INLINE               set
         self.assertIn("cannot read", missing.stderr)
         key = self.dir / "id_rsa"
         key.write_text(f"KEY={SECRET}\n")
-        other = self.envfile("copy", str(key), str(self.dir / ".env.copied"))
+        copied = self.dir / ".env.copied.local"
+        other = self.envfile("copy", str(key), str(copied))
         self.assertIn(f"{key} is not an env file", other.stderr)
-        self.assertFalse((self.dir / ".env.copied").exists())
-        notes = self.envfile("copy", str(self.local), str(self.dir / "notes.txt"))
-        self.assertIn("is not an env file name", notes.stderr)
+        self.assertFalse(copied.exists())
+        outside = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        for target in (self.dir / "notes.txt", self.dir / ".env.test", outside):
+            refused = self.envfile("copy", str(self.local), str(target))
+            self.assertIn("is not a .env.local or .env.*.local", refused.stderr)
+        self.assertEqual(list(outside.iterdir()), [])
         missing_dir = self.dir / "missing"
         slash = self.envfile("copy", str(self.local), f"{missing_dir}/")
         self.assertIn("is not a directory", slash.stderr)
         dotted = self.envfile("copy", str(self.local), f"{self.dir / '.env.d'}/.")
         self.assertIn("is not a directory", dotted.stderr)
         self.assertFalse((self.dir / ".env.d").exists())
-        self.assertFalse((self.dir / "notes.txt").exists() or missing_dir.exists())
+        made = (self.dir / name for name in ("notes.txt", ".env.test", "missing"))
+        self.assertFalse(any(path.exists() for path in made))
         alias = self.dir / ".env.alias"
         alias.symlink_to(key)
         self.assertIn("is not an env file", self.envfile("keys", str(alias)).stderr)
@@ -411,7 +445,7 @@ INLINE               set
         blocked.mkdir()
         blocked.chmod(0o500)
         self.addCleanup(blocked.chmod, 0o700)
-        denied = self.envfile("copy", str(self.local), str(blocked / ".env.x"))
+        denied = self.envfile("copy", str(self.local), str(blocked / ".env.x.local"))
         self.assertEqual(denied.returncode, 1)
         self.assertIn("cannot write", denied.stderr)
 

@@ -200,15 +200,9 @@ class ContextTests(unittest.TestCase):
         self.assertIn("compact: 900,000 tokens", self.context("round").stdout)
         self.assertEqual(self.bl("unattended").returncode, 0)
         self.assertEqual(self.context("round").stdout, "continue\n")
-        self.assertIn(
-            "ship, then the final report, then bl reset", self.bl("state").stdout
-        )
         self.bl("reset", "--force")
         self.assertNotIn("unattended", self.bl("state").stdout)
         self.assertIn("compact: 900,000 tokens", self.context("round").stdout)
-        self.bl("tier", "T0", "--reason", "test")
-        self.bl("unattended")
-        self.assertIn("then the final report, then bl reset", self.bl("state").stdout)
 
     def test_an_unreadable_transcript_fails_loudly(self) -> None:
         reply = {"type": "assistant", "message": {"model": "claude-opus-5-5"}}
