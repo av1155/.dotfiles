@@ -577,6 +577,15 @@ Canonical tree of `~/.dotfiles/` after the alignment migration. **R** = real fil
 4. Run `cd ~/.dotfiles && stow --restow Agents Claude` to wire `$HOME` symlinks.
 5. Verify all 4 harnesses see the skill: `ls ~/.agents/skills/<name>/SKILL.md` and `ls -L ~/.claude/skills/<name>/SKILL.md`.
 
+### Keep a private skill in its own repo
+
+For a skill whose content should stay out of this public repo.
+
+1. Put the skill in the private repo at `<repo>/.claude/skills/<name>/`, where it also loads as a project skill.
+2. Link both skill homes to it, outside Stow: `ln -sfn <relative path to the skill> ~/.agents/skills/<name>`, and the same for `~/.claude/skills/<name>`. Claude Code reads a symlinked skill folder and loads it once even when several locations point at it.
+3. Keep it out of `Agents/` and `Claude/` here.
+4. Verify: `ls -L ~/.agents/skills/<name>/SKILL.md ~/.claude/skills/<name>/SKILL.md`.
+
 ### Modify an imported skill (Matt Pocock or installer-managed)
 
 1. Edit the file directly under `~/.dotfiles/Agents/.agents/skills/<name>/SKILL.md`.
@@ -807,6 +816,15 @@ The global file has no cap of its own, but every line of it costs attention in a
 harnesses.
 
 ## 18. Modification Ledger
+
+### 2026-10-03: bai-onepager moved to its private repo
+
+The skill holds BAI project status, so before its first commit it moved from
+`Agents/.agents/skills/bai-onepager/` and its `Claude/.claude/skills` symlink to the
+private `av1155/BAI-Capital-Platform` repo, at `.claude/skills/bai-onepager/` (PR #50).
+`~/.claude/skills/bai-onepager` and `~/.agents/skills/bai-onepager` link there, so it
+still loads in every project with the same paths; the procedure is in section 16. Its
+files are unchanged.
 
 ### 2026-10-03: unattended changes and the envfile helper
 
